@@ -1,0 +1,268 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal);
+  background: rgba(15, 15, 25, 0.6);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  animation: aparecer 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  position: relative;
+  background: var(--color-superficie);
+  border-radius: var(--radio-lg);
+  max-width: 760px;
+  width: 100%;
+  max-height: 92vh;
+  overflow-y: auto;
+  box-shadow: var(--sombra-lg);
+  animation: subir 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes subir {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.cerrar {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 0;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: var(--sombra-sm);
+  font-size: 16px;
+  color: var(--color-texto);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.25s ease;
+}
+
+.cerrar:hover {
+  transform: rotate(90deg) scale(1.05);
+}
+
+.encabezado {
+  position: sticky;
+  top: 0;
+  background: var(--color-superficie);
+  padding: 24px;
+  border-bottom: 1px solid var(--color-borde);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.numero {
+  font-size: 26px;
+  letter-spacing: -0.02em;
+}
+
+.fecha {
+  color: var(--color-texto-suave);
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.seccion {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.tituloSeccion {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-texto-suave);
+  margin-bottom: 12px;
+}
+
+.clienteNombre {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.clienteTelefono {
+  color: var(--color-marca);
+  font-weight: 600;
+}
+
+.tienda {
+  color: var(--color-texto-suave);
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.texto {
+  color: var(--color-texto);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.item {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo);
+}
+
+.itemImagen {
+  width: 72px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: var(--radio-sm);
+  flex-shrink: 0;
+}
+
+.itemCuerpo {
+  min-width: 0;
+  flex: 1;
+}
+
+.itemNombre {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 4px;
+}
+
+.itemDetalle {
+  color: var(--color-texto-suave);
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.itemPrecio {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 6px;
+}
+
+.itemNota {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.stock {
+  margin-top: 10px;
+}
+
+.stockTitulo {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+  margin-bottom: 6px;
+}
+
+.stockTabla {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  overflow: hidden;
+  max-width: 360px;
+}
+
+.stockFila {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  font-size: 13px;
+}
+
+.stockFila span {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.stockFila:last-child span {
+  border-bottom: 0;
+}
+
+.stockFila:first-child {
+  background: var(--color-superficie);
+  font-weight: 700;
+  color: var(--color-texto-suave);
+}
+
+.stockAgotado {
+  color: #c0392b;
+  font-weight: 700;
+}
+
+.estados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.armarVenta {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 0;
+  background: var(--color-marca);
+  color: #fff;
+  border-radius: var(--radio-pill);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.armarVenta:hover {
+  background: var(--color-marca-oscuro);
+  transform: translateY(-1px);
+}
+
+.estadoBoton {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-pill);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.estadoBoton:hover:not(:disabled) {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.estadoBoton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

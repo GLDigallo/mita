@@ -1,0 +1,20 @@
+# Java / Maven
+backend/target/
+*.class
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Build del frontend servido por Spring Boot
+backend/src/main/resources/static/assets/
+backend/src/main/resources/static/index.html
+
+# IDE / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Logs
+*.log

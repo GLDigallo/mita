@@ -1,0 +1,29 @@
+.error {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.titulo {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.mensaje {
+  color: var(--color-texto-suave);
+  margin-bottom: 20px;
+}
+
+.boton {
+  background: var(--color-texto);
+  color: #fff;
+  font-weight: 600;
+  border: 0;
+  padding: 12px 24px;
+  border-radius: var(--radio-pill);
+  transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.boton:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}

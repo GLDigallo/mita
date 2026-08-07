@@ -1,0 +1,35 @@
+.vacio {
+  text-align: center;
+  padding: 60px 20px;
+  background: var(--color-superficie);
+  border: 1px dashed var(--color-borde);
+  border-radius: var(--radio-lg);
+}
+
+.icono {
+  font-size: 42px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.titulo {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.texto {
+  color: var(--color-texto-suave);
+  margin-bottom: 20px;
+}
+
+.enlace {
+  display: inline-block;
+  font-weight: 700;
+  color: var(--color-marca);
+  border-bottom: 2px solid transparent;
+  transition: border-color 0.25s ease;
+}
+
+.enlace:hover {
+  border-color: currentColor;
+}

@@ -1,0 +1,83 @@
+.footer {
+  background: var(--color-marca-oscuro);
+  color: #fff;
+  margin-top: 80px;
+}
+
+.contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 44px 20px 32px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+.marca {
+  font-family: var(--fuente-display);
+  font-size: 28px;
+  font-weight: 700;
+  color: #a5b4fc;
+  margin-bottom: 12px;
+}
+
+.titulo {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #a5b4fc;
+}
+
+.texto {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.lista {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.enlace {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enlace:hover {
+  color: #fff;
+}
+
+.etiqueta {
+  display: block;
+  font-size: 13px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.pie {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.pie p {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 18px 20px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (min-width: 768px) {
+  .contenido {
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 40px;
+    padding: 56px 24px 32px;
+  }
+}

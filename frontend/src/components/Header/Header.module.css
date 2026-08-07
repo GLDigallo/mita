@@ -1,0 +1,40 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-header);
+  background: rgba(247, 246, 243, 0.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--color-borde);
+}
+
+.contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.marca {
+  font-family: var(--fuente-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--color-marca);
+  transition: opacity 0.25s ease;
+}
+
+.marcaTilde {
+  color: var(--color-texto);
+}
+
+.marca:hover {
+  opacity: 0.8;
+}
+
+@media (min-width: 768px) {
+  .contenido {
+    padding: 16px 24px;
+  }
+}

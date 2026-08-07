@@ -1,0 +1,30 @@
+.contenido {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 80px 20px 40px;
+}
+
+.enlaces {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.enlace {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--color-texto-suave);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.enlace:hover {
+  color: var(--color-texto);
+  border-color: var(--color-texto);
+  transform: translateY(-2px);
+}

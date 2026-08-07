@@ -1,0 +1,61 @@
+.tarjeta {
+  background: var(--color-superficie);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+  border: 1px solid var(--color-borde);
+}
+
+.imagen {
+  aspect-ratio: 4 / 5;
+  background: linear-gradient(100deg, #eeece6 40%, #f7f5f0 50%, #eeece6 60%);
+  background-size: 200% 100%;
+  animation: brillar 1.4s linear infinite;
+}
+
+.cuerpo {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.linea,
+.lineaMedia,
+.lineaCorta {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(100deg, #eeece6 40%, #f7f5f0 50%, #eeece6 60%);
+  background-size: 200% 100%;
+  animation: brillar 1.4s linear infinite;
+}
+
+.linea {
+  width: 100%;
+}
+
+.lineaMedia {
+  width: 60%;
+}
+
+.lineaCorta {
+  width: 35%;
+  height: 11px;
+}
+
+@keyframes brillar {
+  from {
+    background-position: 200% 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .imagen,
+  .linea,
+  .lineaMedia,
+  .lineaCorta {
+    animation: none;
+  }
+}

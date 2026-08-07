@@ -1,0 +1,107 @@
+.hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1e1b4b 0%, #4f46e5 55%, #7c3aed 100%);
+  color: #fff;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(255, 255, 255, 0.14), transparent 40%),
+    radial-gradient(circle at 15% 80%, rgba(255, 255, 255, 0.08), transparent 45%);
+  pointer-events: none;
+}
+
+.contenido {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 56px 20px 72px;
+}
+
+.bajada {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radio-pill);
+  padding: 8px 14px;
+  margin-bottom: 20px;
+}
+
+.titulo {
+  font-size: clamp(34px, 9vw, 48px);
+  letter-spacing: -0.03em;
+  max-width: 780px;
+}
+
+.resaltado {
+  background: linear-gradient(120deg, #fbbf24, #fb7185);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.subtitulo {
+  margin-top: 18px;
+  font-size: 16px;
+  color: rgba(255, 255, 255, 0.82);
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+.cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 28px;
+  background: #fff;
+  color: var(--color-marca-oscuro);
+  font-weight: 700;
+  font-size: 16px;
+  padding: 16px 28px;
+  border-radius: var(--radio-pill);
+  box-shadow: var(--sombra-md);
+  text-align: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.cta:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--sombra-lg);
+}
+
+@media (min-width: 480px) {
+  .cta {
+    display: inline-flex;
+    margin-top: 32px;
+  }
+}
+
+@media (min-width: 768px) {
+  .contenido {
+    padding: 80px 20px 96px;
+  }
+
+  .titulo {
+    font-size: clamp(44px, 6vw, 64px);
+  }
+
+  .subtitulo {
+    font-size: 18px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .contenido {
+    padding: 96px 24px 110px;
+  }
+}
