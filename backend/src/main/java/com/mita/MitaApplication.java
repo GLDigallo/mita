@@ -31,10 +31,15 @@ public class MitaApplication {
             int port = uri.getPort() == -1 ? 5432 : uri.getPort();
             String database = uri.getPath() != null ? uri.getPath().replaceFirst("^/", "") : "";
 
+            String query = "?sslmode=require";
+            if (host != null && host.contains("-pooler")) {
+                query += "&prepareThreshold=0";
+            }
+
             System.setProperty("spring.datasource.username", username);
             System.setProperty("spring.datasource.password", password);
             System.setProperty("spring.datasource.url",
-                    "jdbc:postgresql://" + host + ":" + port + "/" + database + "?sslmode=require");
+                    "jdbc:postgresql://" + host + ":" + port + "/" + database + query);
         } catch (Exception ex) {
             System.err.println("No se pudo parsear DATABASE_URL: " + ex.getMessage());
         }
