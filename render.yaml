@@ -5,19 +5,13 @@ services:
     dockerfilePath: ./Dockerfile
     plan: free
     envVars:
+      # BD externa free (Neon o Supabase): pegar el connection string en el dashboard de Render.
+      # La cuenta free de Render solo permite UNA base de datos y está usada por SrPipa.
       - key: DATABASE_URL
-        fromDatabase:
-          name: mita-db
-          property: connectionString
+        sync: false
       # Credenciales de empleado (admin). Fijar en el dashboard de Render antes de usar en producción.
       # - key: MITM_ADMIN_USERNAME
       #   value: ""
       # - key: MITM_ADMIN_PASSWORD
       #   value: ""
     healthCheckPath: /api/health
-
-databases:
-  - name: mita-db
-    databaseName: mita
-    plan: free
-    postgresMajorVersion: 16
