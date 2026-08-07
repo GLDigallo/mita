@@ -1,53 +1,44 @@
-# Reglas específicas - Mitã
+# Mitã · Conocimiento del proyecto
 
-## Descripción
-Grupo de tiendas de ropa para bebés, niños, niñas y adolescentes, con locales propios e identidad independiente. Los clientes eligen la tienda que corresponde a su edad desde la página principal.
+Mapa de hechos y decisiones del dominio. El `AGENTS.md` define cómo trabaja el agente; este archivo es la memoria del proyecto.
 
-Marca provisoria: **Mitã** (palabra guaraní para "niño/niña"). Los 4 locales provisorios se dividen por franja de edad (ninguno es exclusivo de un género; cada tienda vende para varones, mujeres y unisex de su franja):
-- **Mokositos** (`mokositos-bebes`) — Bebés (0-2 años)
-- **Mokositos** (`mokositos-ninos`) — Niños (2-8 años)
-- **Agrandaditos** (`agrandaditos`) — Preadolescentes (8-12 años)
-- **Mood Teens** (`mood-teens`) — Adolescentes (12-16 años)
+## Qué es
 
-Los nombres son datos, no código: se cambian en la base de datos, no recompilando.
+Grupo de **4 tiendas de ropa para chicos**, cada una con local propio e identidad independiente. El cliente elige la tienda que corresponde a su edad desde la página principal.
 
-## Arquitectura
-Fullstack: Spring Boot (backend + API REST + sirve SPA) + React (frontend).
+| Tienda | Slug | Franja |
+|--------|------|--------|
+| Mokositos | `mokositos-bebes` | Bebés (0-2) |
+| Mokositos | `mokositos-ninos` | Niños (2-8) |
+| Agrandaditos | `agrandaditos` | Preadolescentes (8-12) |
+| Mood Teens | `mood-teens` | Adolescentes (12-16) |
 
-## Tecnologías utilizadas
-- Backend: Java 21, Spring Boot 3.4, Spring Data JPA, PostgreSQL 16
-- Frontend: React 18, Vite, React Router v6, CSS Modules
+Ninguna tienda es exclusiva de un género: cada una vende para varones, mujeres y unisex de su franja. Los nombres y colores son datos de la BD, no código.
 
-## Configuración
-- Puerto backend: 8080
-- Puerto frontend (dev): 5173
-- Base de datos local: `mita` (postgres/postgres)
+## Stack y configuración
 
-## Funcionalidades principales
-1. Página principal con selector de tiendas por franja de edad
-2. Página de cada tienda con identidad propia (nombre, colores, edad)
-3. Filtro por categoría dentro de cada tienda
-4. Filtro por género dentro de cada tienda (los géneros disponibles salen del catálogo de esa tienda)
-5. Grid de productos con distribución uniforme de imágenes
-6. Modal de producto con talles y consulta por WhatsApp
-7. Panel de gestión `/gestion` (login de empleado): consultas y ventas
+- **Backend**: Java 21, Spring Boot 3.4, Spring Data JPA, PostgreSQL 16 (`backend/`).
+- **Frontend**: React 18, Vite, React Router v6, CSS Modules (`frontend/`).
+- **Build**: el frontend compila a `backend/src/main/resources/static`; Spring Boot sirve el SPA (una sola URL).
+- **Local**: backend `http://localhost:8080`, dev frontend `http://localhost:5173`, BD `mita` (postgres/postgres).
+- **Producción**: `DATABASE_URL` convertida en dos niveles (shell + `main()`), puerto `PORT`, credenciales de empleado por env vars. Deploy Docker + Render.
 
-## Flujo de venta (dos fases)
-1. Desde una consulta se arma la venta en **EN_PREPARACION** (solo ítems de la consulta).
-2. Se editan ítems vía servidor (cambiar variante/talle/color, cantidad, quitar, agregar del catálogo). Nada se descuenta todavía.
-3. Al **confirmar**: descuento atómico de stock (update con guarda `stock >= cantidad`, rollback si no alcanza) y consulta → CONFIRMADA.
-4. Al **entregar**: consulta → FINALIZADA. Al **cancelar**: si estaba CONFIRMADA se repone stock y consulta → CANCELADA.
-5. La venta se numera con secuencia independiente (`venta_numero_seq`, formato V-%06d).
+## El dominio en una pasada
 
-## Flujo de trabajo
-1. Desarrollador expresa una idea
-2. Agente implementa
-3. Agente ejecuta y muestra URL
-4. Desarrollador revisa
-5. Se repite hasta lograr el resultado
+- **Consulta** (pública): el cliente la genera desde el modal de producto y contacta por WhatsApp. Estados: `PENDIENTE`, `EN_PREPARACION`, `CONFIRMADA`, `FINALIZADA`, `CANCELADA`. Número secuencial `C-%06d`.
+- **Venta** (empleado, en `/gestion`): se arma desde una consulta en dos fases — armado `EN_PREPARACION` (editar variante/talle/color, cantidad, quitar/agregar productos del catálogo) → confirmación `CONFIRMADA` que descuenta stock de las variantes → `ENTREGADA` (consulta FINALIZADA) o `CANCELADA` (reponer stock si estaba confirmada). Número secuencial `V-%06d`.
+- **Métodos de pago**: `EFECTIVO`, `TARJETA_DEBITO`, `TARJETA_CREDITO`, `TRANSFERENCIA`, `MERCADO_PAGO`.
+- **Identidad por tienda**: `colorPrimario`, `colorSecundario`, descripción, rango de edad — data-driven desde la API.
 
-## Lecciones técnicas (evitar errores repetidos)
-- Hibernate 6 NO permite `@GeneratedValue` sobre una columna que no es el `@Id`. Para un número único generado por secuencia, crear la secuencia con `JdbcTemplate` al arranque (`create sequence if not exists`) y asignar el valor con `select nextval(...)` (query nativa) antes del insert.
-- Spring Security 6 no persiste el `SecurityContext` en la sesión HTTP por defecto: hay que configurar `securityContext.securityContextRepository(new HttpSessionSecurityContextRepository())` y `requireExplicitSave(false)`. Sin esto, la sesión no sobrevive entre requests.
-- El `numero` (C-0000X) de una consulta es una secuencia independiente del `id` de fila; puede haber "huecos" tras intentos fallidos (nextval se consume antes de validar los ítems). No es un bug.
-- El descuento de stock ante concurrencia NO se hace leyendo stock y restando en Java (race condition): se hace con `UPDATE variante_producto SET stock = stock - :cantidad WHERE id = :id AND stock >= :cantidad` y se verifica el count de filas afectadas. Si una variante no alcanza, rollback de todo.
+## Modelo de datos
+
+`tienda` → `categoria` y `producto`; `producto` → `variante_producto` (color + talle + stock). `cliente` → `consulta` → `producto_consultado`. `venta` → `venta_item` (producto + variante + cantidad + precio). La venta guarda su consulta y su cliente (trazabilidad).
+
+## Acceso
+
+- **Público**: catálogo, `POST /api/consultas`, `GET /api/tiendas`, productos/destacados.
+- **Empleado**: `/gestion` con login (`POST /api/auth/login`, sesión HTTP). Consultas (GET/PATCH) y `/api/ventas/**` requieren autenticación. Admin local: `admin` / `admin123` (env vars en producción).
+
+## Lecciones del proyecto
+
+Ver `AGENTS.md` → "Lecciones que ya pagó Mitã" (secuencias con `nextval`, sesión Spring Security, stock atómico con guarda, cola de guardado en el frontend).
