@@ -14,6 +14,8 @@ import com.mita.entity.VarianteProducto;
 import com.mita.exception.ConsultaInvalidaException;
 import com.mita.exception.RecursoNoEncontradoException;
 import com.mita.mapper.ConsultaMapper;
+import com.mita.security.Seguridad;
+import com.mita.security.UsuarioPrincipal;
 import com.mita.repository.ClienteRepository;
 import com.mita.repository.ConsultaRepository;
 import com.mita.repository.ProductoRepository;
@@ -105,7 +107,7 @@ public class ConsultaService {
     public List<ConsultaResumenDTO> listar(EstadoConsulta estado, Long tiendaId, String busqueda) {
         String termino = (busqueda == null || busqueda.isBlank()) ? null
                 : "%" + busqueda.trim().toLowerCase() + "%";
-        List<Consulta> consultas = consultaRepository.buscar(estado, tiendaId, termino);
+        List<Consulta> consultas = consultaRepository.buscar(estado, tiendaIdPermitida(tiendaId), termino);
         Map<Long, Integer> itemsPorConsulta = contarItems(consultas);
         return consultas.stream()
                 .map(c -> new ConsultaResumenDTO(
@@ -125,6 +127,7 @@ public class ConsultaService {
     public ConsultaDTO obtener(Long id) {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
         return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()));
     }
 
@@ -132,9 +135,28 @@ public class ConsultaService {
     public ConsultaDTO cambiarEstado(Long id, EstadoConsulta estado) {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
         consulta.setEstado(estado);
         Consulta guardada = consultaRepository.save(consulta);
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()));
+    }
+
+    private Long tiendaIdPermitida(Long tiendaId) {
+        UsuarioPrincipal principal = Seguridad.principalRequerido();
+        if (principal.esEncargada()) {
+            if (tiendaId != null && !tiendaId.equals(principal.tiendaId())) {
+                throw new ConsultaInvalidaException("No tiene acceso a esa tienda");
+            }
+            return principal.tiendaId();
+        }
+        return tiendaId;
+    }
+
+    private void verificarAcceso(Consulta consulta) {
+        UsuarioPrincipal principal = Seguridad.principalRequerido();
+        if (principal.esEncargada() && !consulta.getTienda().getId().equals(principal.tiendaId())) {
+            throw new ConsultaInvalidaException("No tiene acceso a esa consulta");
+        }
     }
 
     private Map<Long, Integer> contarItems(List<Consulta> consultas) {

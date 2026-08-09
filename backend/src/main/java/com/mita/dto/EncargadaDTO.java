@@ -2,12 +2,13 @@ package com.mita.dto;
 
 import com.mita.entity.RolUsuario;
 
-public record UsuarioActualDTO(
+public record EncargadaDTO(
         Long id,
-        String usuario,
         String nombre,
+        String username,
         RolUsuario rol,
         String tiendaSlug,
-        String tiendaNombre
+        String tiendaNombre,
+        boolean activo
 ) {
 }

@@ -5,11 +5,11 @@ import com.mita.dto.ConfirmarVentaRequest;
 import com.mita.dto.VentaDTO;
 import com.mita.dto.VentaResumenDTO;
 import com.mita.entity.EstadoVenta;
+import com.mita.security.Seguridad;
 import com.mita.service.VentaService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +25,9 @@ public class VentaController {
     }
 
     @PostMapping("/consultas/{id}/ventas")
-    public ResponseEntity<VentaDTO> crearDesdeConsulta(@PathVariable Long id, Authentication authentication) {
+    public ResponseEntity<VentaDTO> crearDesdeConsulta(@PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ventaService.crearDesdeConsulta(id, authentication.getName()));
+                .body(ventaService.crearDesdeConsulta(id, Seguridad.principalRequerido().nombre()));
     }
 
     @GetMapping("/ventas")
@@ -49,25 +49,23 @@ public class VentaController {
 
     @PutMapping("/ventas/{id}/items")
     public VentaDTO actualizarItems(@PathVariable Long id,
-                                    @Valid @RequestBody ActualizarItemsVentaRequest request,
-                                    Authentication authentication) {
-        return ventaService.actualizarItems(id, request, authentication.getName());
+                                    @Valid @RequestBody ActualizarItemsVentaRequest request) {
+        return ventaService.actualizarItems(id, request, Seguridad.principalRequerido().nombre());
     }
 
     @PostMapping("/ventas/{id}/confirmar")
     public VentaDTO confirmar(@PathVariable Long id,
-                              @Valid @RequestBody ConfirmarVentaRequest request,
-                              Authentication authentication) {
-        return ventaService.confirmar(id, request, authentication.getName());
+                              @Valid @RequestBody ConfirmarVentaRequest request) {
+        return ventaService.confirmar(id, request, Seguridad.principalRequerido().nombre());
     }
 
     @PostMapping("/ventas/{id}/entregar")
-    public VentaDTO entregar(@PathVariable Long id, Authentication authentication) {
-        return ventaService.entregar(id, authentication.getName());
+    public VentaDTO entregar(@PathVariable Long id) {
+        return ventaService.entregar(id, Seguridad.principalRequerido().nombre());
     }
 
     @PostMapping("/ventas/{id}/cancelar")
-    public VentaDTO cancelar(@PathVariable Long id, Authentication authentication) {
-        return ventaService.cancelar(id, authentication.getName());
+    public VentaDTO cancelar(@PathVariable Long id) {
+        return ventaService.cancelar(id, Seguridad.principalRequerido().nombre());
     }
 }

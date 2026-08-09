@@ -54,6 +54,8 @@ function GestionPage() {
   const [armando, setArmando] = useState(null)
   const [ventaDetalleId, setVentaDetalleId] = useState(null)
 
+  const esDueño = usuario?.rol === 'DUENO'
+
   useEffect(() => {
     let activo = true
     fetchMe()
@@ -254,7 +256,10 @@ function GestionPage() {
           Mitã
         </Link>
         <div className={styles.usuario}>
-          <span className={styles.usuarioNombre}>{usuario?.usuario}</span>
+          <span className={styles.usuarioNombre}>
+            {usuario?.nombre ?? usuario?.usuario}
+            {esDueño ? ' · Dueño' : usuario?.tiendaNombre ? ` · ${usuario.tiendaNombre}` : ''}
+          </span>
           <button type="button" className={styles.salir} onClick={manejarLogout}>
             Salir
           </button>
@@ -306,19 +311,21 @@ function GestionPage() {
                   </option>
                 ))}
               </select>
-              <select
-                className={styles.select}
-                value={tiendaIdFiltro}
-                onChange={(evento) => setTiendaIdFiltro(evento.target.value)}
-                aria-label="Filtrar por tienda"
-              >
-                <option value="">Todas las tiendas</option>
-                {tiendas.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.nombre}
-                  </option>
-                ))}
-              </select>
+              {esDueño && (
+                <select
+                  className={styles.select}
+                  value={tiendaIdFiltro}
+                  onChange={(evento) => setTiendaIdFiltro(evento.target.value)}
+                  aria-label="Filtrar por tienda"
+                >
+                  <option value="">Todas las tiendas</option>
+                  {tiendas.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
             </form>
 
             {error && <ErrorMessage message={error} />}
@@ -380,19 +387,21 @@ function GestionPage() {
                   </option>
                 ))}
               </select>
-              <select
-                className={styles.select}
-                value={ventaTiendaIdFiltro}
-                onChange={(evento) => setVentaTiendaIdFiltro(evento.target.value)}
-                aria-label="Filtrar ventas por tienda"
-              >
-                <option value="">Todas las tiendas</option>
-                {tiendas.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.nombre}
-                  </option>
-                ))}
-              </select>
+              {esDueño && (
+                <select
+                  className={styles.select}
+                  value={ventaTiendaIdFiltro}
+                  onChange={(evento) => setVentaTiendaIdFiltro(evento.target.value)}
+                  aria-label="Filtrar ventas por tienda"
+                >
+                  <option value="">Todas las tiendas</option>
+                  {tiendas.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.nombre}
+                    </option>
+                  ))}
+                </select>
+              )}
             </form>
 
             {errorVentas && <ErrorMessage message={errorVentas} />}

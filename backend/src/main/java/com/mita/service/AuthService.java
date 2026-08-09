@@ -3,6 +3,7 @@ package com.mita.service;
 import com.mita.dto.LoginRequest;
 import com.mita.dto.UsuarioActualDTO;
 import com.mita.exception.NoAutenticadoException;
+import com.mita.security.UsuarioPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -51,10 +52,21 @@ public class AuthService {
     }
 
     private UsuarioActualDTO toDTO(Authentication authentication) {
-        String rol = authentication.getAuthorities().stream()
-                .map(a -> a.getAuthority())
-                .findFirst()
-                .orElse("USUARIO");
-        return new UsuarioActualDTO(authentication.getName(), rol);
+        if (authentication.getPrincipal() instanceof UsuarioPrincipal principal) {
+            return new UsuarioActualDTO(
+                    principal.id(),
+                    principal.getUsername(),
+                    principal.nombre(),
+                    principal.rol(),
+                    principal.tiendaSlug(),
+                    principal.tiendaNombre());
+        }
+        return new UsuarioActualDTO(
+                null,
+                authentication.getName(),
+                null,
+                null,
+                null,
+                null);
     }
 }

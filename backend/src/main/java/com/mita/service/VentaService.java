@@ -20,6 +20,8 @@ import com.mita.repository.ConsultaRepository;
 import com.mita.repository.ProductoRepository;
 import com.mita.repository.VarianteProductoRepository;
 import com.mita.repository.VentaRepository;
+import com.mita.security.Seguridad;
+import com.mita.security.UsuarioPrincipal;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +63,7 @@ public class VentaService {
     public VentaDTO crearDesdeConsulta(Long consultaId, String empleado) {
         Consulta consulta = consultaRepository.findDetalle(consultaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + consultaId));
+        verificarAcceso(consulta);
         if (consulta.getEstado() == EstadoConsulta.CANCELADA || consulta.getEstado() == EstadoConsulta.FINALIZADA) {
             throw new VentaInvalidaException(
                     "No se puede generar una venta de una consulta " + etiquetaEstado(consulta.getEstado()));
@@ -102,6 +105,7 @@ public class VentaService {
     public VentaDTO actualizarItems(Long ventaId, ActualizarItemsVentaRequest request, String empleado) {
         Venta venta = ventaRepository.findDetalle(ventaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
+        verificarAcceso(venta);
         if (venta.getEstado() != EstadoVenta.EN_PREPARACION) {
             throw new VentaInvalidaException("Solo se pueden modificar los productos de una venta en preparación");
         }
@@ -148,6 +152,7 @@ public class VentaService {
     public VentaDTO confirmar(Long ventaId, ConfirmarVentaRequest request, String empleado) {
         Venta venta = ventaRepository.findDetalle(ventaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
+        verificarAcceso(venta);
         if (venta.getEstado() != EstadoVenta.EN_PREPARACION) {
             throw new VentaInvalidaException("Solo se puede confirmar una venta en preparación");
         }
@@ -188,6 +193,7 @@ public class VentaService {
     public VentaDTO entregar(Long ventaId, String empleado) {
         Venta venta = ventaRepository.findDetalle(ventaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
+        verificarAcceso(venta);
         if (venta.getEstado() != EstadoVenta.CONFIRMADA) {
             throw new VentaInvalidaException("Solo se puede entregar una venta confirmada");
         }
@@ -206,6 +212,7 @@ public class VentaService {
     public VentaDTO cancelar(Long ventaId, String empleado) {
         Venta venta = ventaRepository.findDetalle(ventaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
+        verificarAcceso(venta);
         if (venta.getEstado() == EstadoVenta.CANCELADA) {
             throw new VentaInvalidaException("La venta ya está cancelada");
         }
@@ -233,7 +240,7 @@ public class VentaService {
     public List<VentaResumenDTO> listar(EstadoVenta estado, Long tiendaId, String busqueda) {
         String termino = (busqueda == null || busqueda.isBlank()) ? null
                 : "%" + busqueda.trim().toLowerCase() + "%";
-        List<Venta> ventas = ventaRepository.buscar(estado, tiendaId, termino);
+        List<Venta> ventas = ventaRepository.buscar(estado, tiendaIdPermitida(tiendaId), termino);
         Map<Long, Integer> itemsPorVenta = contarItems(ventas);
         return ventas.stream()
                 .map(v -> new VentaResumenDTO(
@@ -255,6 +262,7 @@ public class VentaService {
     public VentaDTO obtener(Long id) {
         Venta venta = ventaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + id));
+        verificarAcceso(venta);
         return ventaMapper.toDTO(venta);
     }
 
@@ -262,7 +270,30 @@ public class VentaService {
     public VentaDTO obtenerPorConsulta(Long consultaId) {
         Venta venta = ventaRepository.findByConsultaId(consultaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("La consulta no tiene una venta asociada"));
+        verificarAcceso(venta);
         return ventaMapper.toDTO(venta);
+    }
+
+    private Long tiendaIdPermitida(Long tiendaId) {
+        UsuarioPrincipal principal = Seguridad.principalRequerido();
+        if (principal.esEncargada()) {
+            if (tiendaId != null && !tiendaId.equals(principal.tiendaId())) {
+                throw new VentaInvalidaException("No tiene acceso a esa tienda");
+            }
+            return principal.tiendaId();
+        }
+        return tiendaId;
+    }
+
+    private void verificarAcceso(Venta venta) {
+        verificarAcceso(venta.getConsulta());
+    }
+
+    private void verificarAcceso(Consulta consulta) {
+        UsuarioPrincipal principal = Seguridad.principalRequerido();
+        if (principal.esEncargada() && !consulta.getTienda().getId().equals(principal.tiendaId())) {
+            throw new VentaInvalidaException("No tiene acceso a esa venta");
+        }
     }
 
     private Map<Long, Integer> contarItems(List<Venta> ventas) {
