@@ -188,7 +188,6 @@ function GestionPage() {
     setCambiandoEstado(true)
     try {
       const actualizada = await cambiarEstadoConsulta(detalle.id, estado)
-      setDetalle(actualizada)
       const indices = consultas
         .map((c, i) => (c.id === actualizada.id ? i : -1))
         .filter((i) => i !== -1)
@@ -198,6 +197,12 @@ function GestionPage() {
           copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
           return copia
         })
+      }
+      if (estado === 'CANCELADA' || estado === 'FINALIZADA') {
+        setDetalleId(null)
+        setDetalle(null)
+      } else {
+        setDetalle(actualizada)
       }
     } catch (err) {
       setError(err.message)

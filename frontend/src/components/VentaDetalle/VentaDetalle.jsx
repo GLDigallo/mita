@@ -54,9 +54,11 @@ function VentaDetalle({ ventaId, onCerrar, onActualizada, onEditar }) {
         aria-label="Detalle de venta"
         onClick={(evento) => evento.stopPropagation()}
       >
-        <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar detalle de venta">
-          ✕
-        </button>
+        <div className={styles.cerrarZona}>
+          <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar detalle de venta">
+            ✕
+          </button>
+        </div>
 
         {cargando && !venta ? (
           <div className={styles.cargando}>Cargando venta…</div>

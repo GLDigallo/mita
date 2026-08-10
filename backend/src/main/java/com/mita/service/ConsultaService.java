@@ -177,6 +177,10 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
+        if (esEstadoCerrado(consulta.getEstado())) {
+            throw new ConsultaInvalidaException(
+                    "La consulta está " + etiquetaEstado(consulta.getEstado()) + " y no admite cambios de estado");
+        }
         consulta.setEstado(estado);
         Consulta guardada = consultaRepository.save(consulta);
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
@@ -226,8 +230,7 @@ public class ConsultaService {
     }
 
     private void validarModificable(Consulta consulta) {
-        if (consulta.getEstado() == EstadoConsulta.CONFIRMADA
-                || consulta.getEstado() == EstadoConsulta.FINALIZADA) {
+        if (esEstadoCerrado(consulta.getEstado())) {
             throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
         }
         if (ventaRepository.existsByConsultaId(consulta.getId())) {
@@ -236,9 +239,14 @@ public class ConsultaService {
     }
 
     private boolean esEditable(Consulta consulta) {
-        return consulta.getEstado() != EstadoConsulta.CONFIRMADA
-                && consulta.getEstado() != EstadoConsulta.FINALIZADA
+        return !esEstadoCerrado(consulta.getEstado())
                 && !ventaRepository.existsByConsultaId(consulta.getId());
+    }
+
+    private boolean esEstadoCerrado(EstadoConsulta estado) {
+        return estado == EstadoConsulta.CONFIRMADA
+                || estado == EstadoConsulta.CANCELADA
+                || estado == EstadoConsulta.FINALIZADA;
     }
 
     private void guardarVersion(Consulta consulta, MotivoModificacion motivo, String empleado,

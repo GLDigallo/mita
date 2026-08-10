@@ -52,6 +52,7 @@ function ConsultaDetalle({
   const [nuevoCantidad, setNuevoCantidad] = useState(1)
 
   const puedeArmarVenta = ['PENDIENTE', 'EN_REVISION', 'ESPERANDO_CLIENTE'].includes(consulta.estado)
+  const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta.estado)
   const tieneVentaConfirmada = consulta.estado === 'CONFIRMADA'
   const cantidadVersiones = consulta.version + 1
 
@@ -219,9 +220,11 @@ function ConsultaDetalle({
         aria-label={`Consulta ${consulta.numero}`}
         onClick={(evento) => evento.stopPropagation()}
       >
-        <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar detalle">
-          ✕
-        </button>
+        <div className={styles.cerrarZona}>
+          <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar detalle">
+            ✕
+          </button>
+        </div>
 
         {vista !== 'actual' && (
           <header className={styles.encabezado}>
@@ -245,6 +248,7 @@ function ConsultaDetalle({
               consulta={consulta}
               puedeArmarVenta={puedeArmarVenta}
               tieneVentaConfirmada={tieneVentaConfirmada}
+              esCerrada={esCerrada}
               cambiandoEstado={cambiandoEstado}
               cantidadVersiones={cantidadVersiones}
               onCambiarEstado={onCambiarEstado}
@@ -319,6 +323,7 @@ function VistaActual({
   consulta,
   puedeArmarVenta,
   tieneVentaConfirmada,
+  esCerrada,
   cambiandoEstado,
   cantidadVersiones,
   onCambiarEstado,
@@ -435,29 +440,12 @@ function VistaActual({
         </div>
       </section>
 
-      <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>Actualizar estado</p>
-        <div className={styles.estados}>
-          {estadosDisponibles.map((e) => (
-            <button
-              key={e.valor}
-              type="button"
-              className={styles.estadoBoton}
-              onClick={() => onCambiarEstado(e.valor)}
-              disabled={cambiandoEstado}
-            >
-              {etiquetaEstado(e.valor)}
-            </button>
-          ))}
-        </div>
-      </section>
-
       <footer className={styles.pie}>
         <button
           type="button"
           className={`${styles.pieBoton} ${consulta.estado === 'PENDIENTE' ? styles.pieBotonActivo : ''}`}
           onClick={() => onCambiarEstado('PENDIENTE')}
-          disabled={cambiandoEstado}
+          disabled={cambiandoEstado || esCerrada}
         >
           Pendiente
         </button>
@@ -468,7 +456,7 @@ function VistaActual({
               type="button"
               className={`${styles.pagoOpcion} ${consulta.formaPago !== 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
               onClick={() => onCambiarFormaPago('EFECTIVO')}
-              disabled={cambiandoEstado}
+              disabled={cambiandoEstado || esCerrada}
             >
               Efectivo
             </button>
@@ -476,7 +464,7 @@ function VistaActual({
               type="button"
               className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
               onClick={() => onCambiarFormaPago('DIGITAL')}
-              disabled={cambiandoEstado}
+              disabled={cambiandoEstado || esCerrada}
             >
               Digital
             </button>
@@ -486,7 +474,7 @@ function VistaActual({
           type="button"
           className={`${styles.pieBoton} ${styles.pieBotonCancelar} ${consulta.estado === 'CANCELADA' ? styles.pieBotonActivo : ''}`}
           onClick={() => onCambiarEstado('CANCELADA')}
-          disabled={cambiandoEstado}
+          disabled={cambiandoEstado || esCerrada}
         >
           Cancelar
         </button>
@@ -494,7 +482,7 @@ function VistaActual({
           type="button"
           className={`${styles.pieBoton} ${styles.pieBotonExitoso} ${consulta.estado === 'FINALIZADA' ? styles.pieBotonActivo : ''}`}
           onClick={() => onCambiarEstado('FINALIZADA')}
-          disabled={cambiandoEstado}
+          disabled={cambiandoEstado || esCerrada}
         >
           Exitoso
         </button>

@@ -214,9 +214,11 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
         aria-label="Armar venta"
         onClick={(evento) => evento.stopPropagation()}
       >
-        <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar armado de venta">
-          ✕
-        </button>
+        <div className={styles.cerrarZona}>
+          <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar armado de venta">
+            ✕
+          </button>
+        </div>
 
         {cargando ? (
           <div className={styles.cargando}>Cargando venta…</div>
