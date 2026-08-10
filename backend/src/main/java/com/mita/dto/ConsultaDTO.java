@@ -8,6 +8,8 @@ import java.util.List;
 public record ConsultaDTO(
         Long id,
         String numero,
+        int version,
+        boolean editable,
         EstadoConsulta estado,
         Instant fechaConsulta,
         String tiendaSlug,

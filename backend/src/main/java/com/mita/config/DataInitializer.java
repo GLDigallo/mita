@@ -96,6 +96,9 @@ public class DataInitializer implements CommandLineRunner {
         jdbcTemplate.execute("create sequence if not exists consulta_numero_seq start with 1 increment by 1");
         jdbcTemplate.execute("create sequence if not exists venta_numero_seq start with 1 increment by 1");
         jdbcTemplate.execute("create unique index if not exists uk_cliente_telefono on cliente (telefono)");
+        jdbcTemplate.execute("create unique index if not exists uk_venta_consulta on venta (consulta_id)");
+        jdbcTemplate.execute("create unique index if not exists uk_cv_consulta_version on consulta_version (consulta_id, version)");
+        jdbcTemplate.execute("alter table consulta add column if not exists version integer not null default 0");
     }
 
     private Tienda crearTienda(String nombre, String slug, RangoEdad rango, String etiqueta,

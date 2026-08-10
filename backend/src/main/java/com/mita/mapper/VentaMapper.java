@@ -36,7 +36,7 @@ public class VentaMapper {
                 venta.getCliente().getNombre(),
                 venta.getCliente().getTelefono(),
                 venta.getConsulta().getId(),
-                consultaMapper.formatearNumero(venta.getConsulta().getNumero()),
+                consultaMapper.formatearNumeroConVersion(venta.getConsulta().getNumero(), venta.getConsulta().getVersion()),
                 venta.getMetodoPago(),
                 venta.getImporteTotal(),
                 totalItems,

@@ -109,6 +109,26 @@ export async function cambiarEstadoConsulta(id, estado) {
   })
 }
 
+export async function modificarConsulta(id, payload) {
+  return enviarJson(`${API_BASE}/consultas/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function fetchHistorialConsulta(id) {
+  return enviarJson(`${API_BASE}/consultas/${id}/versiones`)
+}
+
+export const MOTIVOS_MODIFICACION = [
+  { valor: 'CAMBIO_TALLE', etiqueta: 'Cambió el talle' },
+  { valor: 'CAMBIO_PRODUCTO', etiqueta: 'Cambió el producto' },
+  { valor: 'CAMBIO_CANTIDAD', etiqueta: 'Cambió la cantidad' },
+  { valor: 'CAMBIO_COLOR', etiqueta: 'Cambió el color' },
+  { valor: 'CORRECCION', etiqueta: 'Corrección de datos' },
+  { valor: 'OTRO', etiqueta: 'Otro' },
+]
+
 export async function fetchVentas({ estado = '', tiendaId = '', busqueda = '' } = {}) {
   const params = new URLSearchParams()
   if (estado) params.set('estado', estado)

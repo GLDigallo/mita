@@ -23,6 +23,8 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
 
     @Query("""
             select c from Consulta c
+            left join fetch c.cliente
+            left join fetch c.tienda
             where (:estado is null or c.estado = :estado)
               and (:tiendaId is null or c.tienda.id = :tiendaId)
               and (:termino is null or :termino = ''

@@ -266,3 +266,332 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.volver {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  margin-bottom: 6px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-marca);
+  cursor: pointer;
+}
+
+.accionesTitulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.accionesTitulo .tituloSeccion {
+  margin-bottom: 0;
+}
+
+.badgeCuenta {
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--radio-pill);
+  background: var(--color-marca);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.botonSecundario {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-pill);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.botonSecundario:hover:not(:disabled) {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.seccionTitulo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.agregarBoton {
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-pill);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-marca);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.agregarBoton:hover {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.agregador {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo);
+  margin-bottom: 14px;
+}
+
+.agregadorFila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.input,
+.select,
+.inputCantidad {
+  min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus,
+.select:focus,
+.inputCantidad:focus {
+  outline: none;
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.inputCantidad {
+  max-width: 90px;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 88px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-texto);
+  resize: vertical;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.sinItems {
+  color: var(--color-texto-suave);
+  font-size: 14px;
+}
+
+.itemControles {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cantidadLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.inputNota {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.inputNota:focus {
+  outline: none;
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.quitar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  color: #c0392b;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.quitar:hover:not(:disabled) {
+  background: #fee2e2;
+  border-color: #c0392b;
+}
+
+.quitar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.botonPrimario {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 0;
+  background: var(--color-marca);
+  color: #fff;
+  border-radius: var(--radio-pill);
+  font-size: 14px;
+  font-weight: 700;
+  transition: background-color 0.2s ease;
+}
+
+.botonPrimario:hover:not(:disabled) {
+  background: var(--color-marca-oscuro);
+}
+
+.botonPrimario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error {
+  margin-top: 10px;
+  color: #c0392b;
+  font-size: 14px;
+}
+
+.versionLista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.versionFila {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo);
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.versionFila:hover {
+  border-color: var(--color-marca);
+  transform: translateY(-1px);
+}
+
+.versionFilaPrincipal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.versionEtiqueta {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--color-marca);
+}
+
+.versionDetalle {
+  color: var(--color-texto-suave);
+  font-size: 13px;
+}
+
+.versionInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.cambios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cambio {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-fondo);
+}
+
+.cambioAgregado {
+  border-color: #86efac;
+  background: #f0fdf4;
+}
+
+.cambioQuitado {
+  border-color: #fca5a5;
+  background: #fef2f2;
+}
+
+.cambioEtiqueta {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-suave);
+}
+
+.cambioDescripcion {
+  font-size: 14px;
+  color: var(--color-texto);
+}
+

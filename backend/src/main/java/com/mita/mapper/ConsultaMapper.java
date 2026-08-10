@@ -1,9 +1,15 @@
 package com.mita.mapper;
 
 import com.mita.dto.ConsultaDTO;
+import com.mita.dto.ConsultaVersionCambioDTO;
+import com.mita.dto.ConsultaVersionDTO;
+import com.mita.dto.ConsultaVersionItemDTO;
 import com.mita.dto.ProductoConsultadoDTO;
 import com.mita.dto.VarianteDTO;
 import com.mita.entity.Consulta;
+import com.mita.entity.ConsultaVersion;
+import com.mita.entity.ConsultaVersionCambio;
+import com.mita.entity.ConsultaVersionItem;
 import com.mita.entity.ProductoConsultado;
 import com.mita.entity.VarianteProducto;
 import org.springframework.stereotype.Component;
@@ -20,7 +26,9 @@ public class ConsultaMapper {
         this.varianteMapper = varianteMapper;
     }
 
-    public ConsultaDTO toDTO(Consulta consulta, Map<Long, List<VarianteProducto>> variantesPorProducto) {
+    public ConsultaDTO toDTO(Consulta consulta,
+                             Map<Long, List<VarianteProducto>> variantesPorProducto,
+                             boolean editable) {
         List<ProductoConsultadoDTO> productos = consulta.getProductosConsultados().stream()
                 .map(pc -> toProductoDTO(pc, variantesPorProducto))
                 .toList();
@@ -29,7 +37,9 @@ public class ConsultaMapper {
                 .sum();
         return new ConsultaDTO(
                 consulta.getId(),
-                formatearNumero(consulta.getNumero()),
+                formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion()),
+                consulta.getVersion(),
+                editable,
                 consulta.getEstado(),
                 consulta.getFechaConsulta(),
                 consulta.getTienda().getSlug(),
@@ -41,6 +51,40 @@ public class ConsultaMapper {
                 totalItems,
                 productos
         );
+    }
+
+    public ConsultaVersionDTO toVersionDTO(Consulta consulta, ConsultaVersion version) {
+        return new ConsultaVersionDTO(
+                version.getId(),
+                version.getVersion(),
+                formatearNumeroConVersion(consulta.getNumero(), version.getVersion()),
+                sufijoVersion(version.getVersion()),
+                version.getEstado(),
+                version.getFecha(),
+                version.getEmpleado(),
+                version.getMotivo(),
+                version.getMotivo() == null ? null : version.getMotivo().getEtiqueta(),
+                version.getObservaciones(),
+                version.getItems().stream().map(this::toVersionItemDTO).toList(),
+                version.getCambios().stream().map(this::toVersionCambioDTO).toList()
+        );
+    }
+
+    private ConsultaVersionItemDTO toVersionItemDTO(ConsultaVersionItem item) {
+        return new ConsultaVersionItemDTO(
+                item.getProductoId(),
+                item.getProductoNombre(),
+                item.getProductoImagen(),
+                item.getTalle(),
+                item.getColor(),
+                item.getCantidad(),
+                item.getPrecioUnitario(),
+                item.getObservaciones()
+        );
+    }
+
+    private ConsultaVersionCambioDTO toVersionCambioDTO(ConsultaVersionCambio cambio) {
+        return new ConsultaVersionCambioDTO(cambio.getTipo(), cambio.getDescripcion());
     }
 
     private ProductoConsultadoDTO toProductoDTO(ProductoConsultado pc,
@@ -65,6 +109,17 @@ public class ConsultaMapper {
     }
 
     public String formatearNumero(Long numero) {
-        return String.format("C-%06d", numero);
+        return formatearNumeroConVersion(numero, 0);
+    }
+
+    public String formatearNumeroConVersion(Long numero, int version) {
+        return String.format("C-%06d%s", numero, sufijoVersion(version));
+    }
+
+    private String sufijoVersion(int version) {
+        if (version <= 0) {
+            return "";
+        }
+        return String.valueOf((char) ('a' + (version - 1) % 26));
     }
 }

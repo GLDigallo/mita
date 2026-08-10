@@ -28,6 +28,9 @@ public class Consulta {
     @Column(nullable = false, unique = true, updatable = false)
     private Long numero;
 
+    @Column(nullable = false)
+    private int version;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private EstadoConsulta estado = EstadoConsulta.PENDIENTE;

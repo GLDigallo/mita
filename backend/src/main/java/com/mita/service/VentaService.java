@@ -14,6 +14,7 @@ import com.mita.entity.Venta;
 import com.mita.entity.VentaItem;
 import com.mita.exception.RecursoNoEncontradoException;
 import com.mita.exception.VentaInvalidaException;
+import org.springframework.dao.DataIntegrityViolationException;
 import com.mita.mapper.ConsultaMapper;
 import com.mita.mapper.VentaMapper;
 import com.mita.repository.ConsultaRepository;
@@ -68,12 +69,14 @@ public class VentaService {
             throw new VentaInvalidaException(
                     "No se puede generar una venta de una consulta " + etiquetaEstado(consulta.getEstado()));
         }
-        ventaRepository.findByConsultaId(consultaId).ifPresent(existente -> {
+        Venta existente = ventaRepository.findByConsultaId(consultaId).orElse(null);
+        if (existente != null) {
             if (existente.getEstado() != EstadoVenta.EN_PREPARACION) {
                 throw new VentaInvalidaException(
                         "La consulta ya tiene una venta asociada (" + etiquetaEstado(existente.getEstado()) + ")");
             }
-        });
+            return ventaMapper.toDTO(existente);
+        }
 
         Venta venta = new Venta();
         venta.setNumero(ventaRepository.siguienteNumero());
@@ -97,8 +100,17 @@ public class VentaService {
                     pc.getPrecioUnitario()));
         }
 
-        Venta guardada = ventaRepository.save(venta);
-        return ventaMapper.toDTO(ventaRepository.findDetalle(guardada.getId()).orElseThrow());
+        try {
+            Venta guardada = ventaRepository.saveAndFlush(venta);
+            return ventaMapper.toDTO(ventaRepository.findDetalle(guardada.getId()).orElseThrow());
+        } catch (DataIntegrityViolationException conflicto) {
+            Venta ganadora = ventaRepository.findByConsultaId(consultaId).orElseThrow();
+            if (ganadora.getEstado() != EstadoVenta.EN_PREPARACION) {
+                throw new VentaInvalidaException(
+                        "La consulta ya tiene una venta asociada (" + etiquetaEstado(ganadora.getEstado()) + ")");
+            }
+            return ventaMapper.toDTO(ganadora);
+        }
     }
 
     @Transactional
@@ -316,7 +328,8 @@ public class VentaService {
     }
 
     private String consultaNumero(Consulta consulta) {
-        return consulta == null ? null : consultaMapper.formatearNumero(consulta.getNumero());
+        return consulta == null ? null
+                : consultaMapper.formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion());
     }
 
     private String etiquetaEstado(EstadoConsulta estado) {

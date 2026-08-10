@@ -25,6 +25,8 @@ public interface VentaRepository extends JpaRepository<Venta, Long> {
 
     Optional<Venta> findByConsultaId(Long consultaId);
 
+    boolean existsByConsultaId(Long consultaId);
+
     @Query("""
             select v from Venta v
             left join fetch v.cliente

@@ -75,10 +75,17 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.FORBIDDEN.value(), "Acceso denegado"));
     }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex) {
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<ApiError> handleConflicto(ConflictoException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiError(HttpStatus.CONFLICT.value(), ex.getMessage()));
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrity(DataIntegrityViolationException ex) {
+        log.warn("Conflicto de integridad en base de datos", ex);
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ApiError(HttpStatus.CONFLICT.value(), "La operación no se pudo completar por un conflicto de datos"));
     }
 
     @ExceptionHandler(Exception.class)

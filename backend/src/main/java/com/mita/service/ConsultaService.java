@@ -3,32 +3,46 @@ package com.mita.service;
 import com.mita.dto.ConsultaCreadaDTO;
 import com.mita.dto.ConsultaDTO;
 import com.mita.dto.ConsultaResumenDTO;
+import com.mita.dto.ConsultaVersionDTO;
 import com.mita.dto.CrearConsultaRequest;
+import com.mita.dto.ModificarConsultaRequest;
 import com.mita.entity.Cliente;
 import com.mita.entity.Consulta;
+import com.mita.entity.ConsultaVersion;
+import com.mita.entity.ConsultaVersionCambio;
+import com.mita.entity.ConsultaVersionItem;
 import com.mita.entity.EstadoConsulta;
+import com.mita.entity.MotivoModificacion;
 import com.mita.entity.Producto;
 import com.mita.entity.ProductoConsultado;
 import com.mita.entity.Tienda;
+import com.mita.entity.TipoCambio;
 import com.mita.entity.VarianteProducto;
 import com.mita.exception.ConsultaInvalidaException;
 import com.mita.exception.RecursoNoEncontradoException;
 import com.mita.mapper.ConsultaMapper;
-import com.mita.security.Seguridad;
-import com.mita.security.UsuarioPrincipal;
 import com.mita.repository.ClienteRepository;
 import com.mita.repository.ConsultaRepository;
+import com.mita.repository.ConsultaVersionRepository;
 import com.mita.repository.ProductoRepository;
 import com.mita.repository.VarianteProductoRepository;
+import com.mita.repository.VentaRepository;
+import com.mita.security.Seguridad;
+import com.mita.security.UsuarioPrincipal;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Service
 public class ConsultaService {
@@ -39,19 +53,25 @@ public class ConsultaService {
     private final VarianteProductoRepository varianteProductoRepository;
     private final TiendaService tiendaService;
     private final ConsultaMapper consultaMapper;
+    private final ConsultaVersionRepository consultaVersionRepository;
+    private final VentaRepository ventaRepository;
 
     public ConsultaService(ConsultaRepository consultaRepository,
                            ClienteRepository clienteRepository,
                            ProductoRepository productoRepository,
                            VarianteProductoRepository varianteProductoRepository,
                            TiendaService tiendaService,
-                           ConsultaMapper consultaMapper) {
+                           ConsultaMapper consultaMapper,
+                           ConsultaVersionRepository consultaVersionRepository,
+                           VentaRepository ventaRepository) {
         this.consultaRepository = consultaRepository;
         this.clienteRepository = clienteRepository;
         this.productoRepository = productoRepository;
         this.varianteProductoRepository = varianteProductoRepository;
         this.tiendaService = tiendaService;
         this.consultaMapper = consultaMapper;
+        this.consultaVersionRepository = consultaVersionRepository;
+        this.ventaRepository = ventaRepository;
     }
 
     @Transactional
@@ -65,35 +85,54 @@ public class ConsultaService {
         consulta.setEstado(EstadoConsulta.PENDIENTE);
         consulta.setNumero(consultaRepository.siguienteNumero());
         consulta.setObservaciones(observacionLimpia(request.observaciones()));
-
-        for (CrearConsultaRequest.ItemConsultaRequest item : request.items()) {
-            Producto producto = productoRepository.findById(item.productoId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId()));
-            if (!producto.getTienda().getId().equals(tienda.getId())) {
-                throw new ConsultaInvalidaException(
-                        "El producto '" + producto.getNombre() + "' no pertenece a la sucursal " + tienda.getNombre());
-            }
-            String color = colorLimpio(item.color());
-            varianteProductoRepository.findByProductoIdAndColorAndTalle(producto.getId(), color, item.talle().trim())
-                    .orElseThrow(() -> new ConsultaInvalidaException(
-                            "Variante no disponible: " + producto.getNombre()
-                                    + " (" + (color == null ? "sin color" : color) + ", " + item.talle() + ")"));
-
-            consulta.agregarProductoConsultado(new ProductoConsultado(
-                    producto,
-                    item.talle().trim(),
-                    color,
-                    item.cantidad(),
-                    observacionLimpia(item.observaciones()),
-                    producto.getPrecio()));
-        }
+        agregarProductos(consulta, request.items());
 
         Consulta guardada = consultaRepository.save(consulta);
-        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()));
+        guardarVersion(guardada, null, null, List.of());
+
+        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
         String mensaje = construirMensaje(guardada);
         String enlace = "https://wa.me/" + tienda.getWhatsapp() + "?text="
                 + URLEncoder.encode(mensaje, StandardCharsets.UTF_8);
         return new ConsultaCreadaDTO(dto, mensaje, enlace);
+    }
+
+    @Transactional
+    public ConsultaDTO modificar(Long id, ModificarConsultaRequest request) {
+        Consulta consulta = consultaRepository.findDetalle(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
+        validarModificable(consulta);
+
+        List<LineaItem> anteriores = consulta.getProductosConsultados().stream()
+                .map(this::aLinea)
+                .toList();
+
+        consulta.getProductosConsultados().clear();
+        agregarProductos(consulta, request.items());
+        consulta.setObservaciones(observacionLimpia(request.observaciones()));
+        consulta.setVersion(consulta.getVersion() + 1);
+        Consulta guardada = consultaRepository.save(consulta);
+
+        List<LineaItem> nuevos = guardada.getProductosConsultados().stream()
+                .map(this::aLinea)
+                .toList();
+        List<ConsultaVersionCambio> cambios = calcularCambios(anteriores, nuevos);
+        guardarVersion(guardada, request.motivo(), Seguridad.principalRequerido().nombre(), cambios);
+
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+    }
+
+    @Transactional(readOnly = true)
+    public List<ConsultaVersionDTO> historial(Long id) {
+        Consulta consulta = consultaRepository.findDetalle(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
+        List<ConsultaVersion> versiones = new ArrayList<>(consultaVersionRepository.findHistorialCompleto(id));
+        versiones.sort(Comparator.comparingInt(ConsultaVersion::getVersion));
+        return versiones.stream()
+                .map(version -> consultaMapper.toVersionDTO(consulta, version))
+                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -105,7 +144,7 @@ public class ConsultaService {
         return consultas.stream()
                 .map(c -> new ConsultaResumenDTO(
                         c.getId(),
-                        consultaMapper.formatearNumero(c.getNumero()),
+                        consultaMapper.formatearNumeroConVersion(c.getNumero(), c.getVersion()),
                         c.getEstado(),
                         c.getFechaConsulta(),
                         c.getTienda().getSlug(),
@@ -121,7 +160,7 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
-        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()));
+        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()), esEditable(consulta));
     }
 
     @Transactional
@@ -131,7 +170,7 @@ public class ConsultaService {
         verificarAcceso(consulta);
         consulta.setEstado(estado);
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()));
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
     }
 
     private Long tiendaIdPermitida(Long tiendaId) {
@@ -150,6 +189,171 @@ public class ConsultaService {
         if (principal.esEncargada() && !consulta.getTienda().getId().equals(principal.tiendaId())) {
             throw new ConsultaInvalidaException("No tiene acceso a esa consulta");
         }
+    }
+
+    private void validarModificable(Consulta consulta) {
+        if (consulta.getEstado() == EstadoConsulta.CONFIRMADA
+                || consulta.getEstado() == EstadoConsulta.CANCELADA
+                || consulta.getEstado() == EstadoConsulta.FINALIZADA) {
+            throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
+        }
+        if (ventaRepository.existsByConsultaId(consulta.getId())) {
+            throw new ConsultaInvalidaException("No se puede modificar una consulta que ya tiene una venta asociada");
+        }
+    }
+
+    private boolean esEditable(Consulta consulta) {
+        return consulta.getEstado() != EstadoConsulta.CONFIRMADA
+                && consulta.getEstado() != EstadoConsulta.CANCELADA
+                && consulta.getEstado() != EstadoConsulta.FINALIZADA
+                && !ventaRepository.existsByConsultaId(consulta.getId());
+    }
+
+    private void guardarVersion(Consulta consulta, MotivoModificacion motivo, String empleado,
+                                List<ConsultaVersionCambio> cambios) {
+        ConsultaVersion version = new ConsultaVersion();
+        version.setConsulta(consulta);
+        version.setVersion(consulta.getVersion());
+        version.setEstado(consulta.getEstado());
+        version.setObservaciones(consulta.getObservaciones());
+        version.setMotivo(motivo);
+        version.setEmpleado(empleado);
+        version.setFecha(Instant.now());
+        for (ProductoConsultado pc : consulta.getProductosConsultados()) {
+            version.agregarItem(new ConsultaVersionItem(
+                    pc.getProducto().getId(),
+                    pc.getProducto().getNombre(),
+                    pc.getProducto().getImagen(),
+                    pc.getTalle(),
+                    pc.getColor(),
+                    pc.getCantidad(),
+                    pc.getPrecioUnitario(),
+                    pc.getObservaciones()));
+        }
+        for (ConsultaVersionCambio cambio : cambios) {
+            version.agregarCambio(cambio);
+        }
+        consultaVersionRepository.save(version);
+    }
+
+    private void agregarProductos(Consulta consulta, List<CrearConsultaRequest.ItemConsultaRequest> items) {
+        for (CrearConsultaRequest.ItemConsultaRequest item : items) {
+            Producto producto = productoRepository.findById(item.productoId())
+                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId()));
+            if (!producto.getTienda().getId().equals(consulta.getTienda().getId())) {
+                throw new ConsultaInvalidaException(
+                        "El producto '" + producto.getNombre() + "' no pertenece a la sucursal " + consulta.getTienda().getNombre());
+            }
+            String color = colorLimpio(item.color());
+            varianteProductoRepository.findByProductoIdAndColorAndTalle(producto.getId(), color, item.talle().trim())
+                    .orElseThrow(() -> new ConsultaInvalidaException(
+                            "Variante no disponible: " + producto.getNombre()
+                                    + " (" + (color == null ? "sin color" : color) + ", " + item.talle() + ")"));
+
+            consulta.agregarProductoConsultado(new ProductoConsultado(
+                    producto,
+                    item.talle().trim(),
+                    color,
+                    item.cantidad(),
+                    observacionLimpia(item.observaciones()),
+                    producto.getPrecio()));
+        }
+    }
+
+    private List<ConsultaVersionCambio> calcularCambios(List<LineaItem> anteriores, List<LineaItem> nuevos) {
+        List<ConsultaVersionCambio> cambios = new ArrayList<>();
+        for (LineaItem anterior : anteriores) {
+            LineaItem igual = coincidenciaExacta(nuevos, anterior);
+            if (igual != null) {
+                if (igual.cantidad() != anterior.cantidad()) {
+                    cambios.add(new ConsultaVersionCambio(TipoCambio.CAMBIO_CANTIDAD,
+                            "Cantidad de «" + etiquetaLinea(igual) + "»: " + anterior.cantidad() + " → " + igual.cantidad()));
+                }
+                if (!Objects.equals(igual.observaciones(), anterior.observaciones())) {
+                    cambios.add(new ConsultaVersionCambio(TipoCambio.CAMBIO_OBSERVACIONES,
+                            "Se modificó la nota del producto «" + igual.productoNombre() + "»"));
+                }
+                continue;
+            }
+            LineaItem mismoProductoMismoColor = coincidenciaPorProductoYColor(nuevos, anterior);
+            LineaItem mismoProductoMismoTalle = coincidenciaPorProductoYTalle(nuevos, anterior);
+            if (mismoProductoMismoColor != null && mismoProductoMismoTalle == null) {
+                cambios.add(new ConsultaVersionCambio(TipoCambio.CAMBIO_TALLE,
+                        "«" + anterior.productoNombre() + "» pasó del talle " + anterior.talle()
+                                + " al talle " + mismoProductoMismoColor.talle()));
+            } else if (mismoProductoMismoTalle != null && mismoProductoMismoColor == null) {
+                cambios.add(new ConsultaVersionCambio(TipoCambio.CAMBIO_COLOR,
+                        "«" + anterior.productoNombre() + "» pasó de color " + colorTexto(anterior.color())
+                                + " a color " + colorTexto(mismoProductoMismoTalle.color())));
+            } else if (mismoProductoMismoColor != null && mismoProductoMismoTalle != null) {
+                cambios.add(new ConsultaVersionCambio(TipoCambio.CAMBIO_TALLE,
+                        "«" + anterior.productoNombre() + "» cambió de variante: ("
+                                + colorTexto(anterior.color()) + ", talle " + anterior.talle() + ") → ("
+                                + colorTexto(mismoProductoMismoColor.color()) + ", talle " + mismoProductoMismoColor.talle() + ")"));
+            } else {
+                cambios.add(new ConsultaVersionCambio(TipoCambio.PRODUCTO_QUITADO,
+                        "Se quitó «" + anterior.productoNombre() + "» ("
+                                + colorTexto(anterior.color()) + ", talle " + anterior.talle() + ")"));
+            }
+        }
+        for (LineaItem nuevo : nuevos) {
+            if (coincidenciaExacta(anteriores, nuevo) == null && coincidenciaPorProducto(anteriores, nuevo) == null) {
+                cambios.add(new ConsultaVersionCambio(TipoCambio.PRODUCTO_AGREGADO,
+                        "Se agregó «" + nuevo.productoNombre() + "» ("
+                                + colorTexto(nuevo.color()) + ", talle " + nuevo.talle() + ") × " + nuevo.cantidad()));
+            }
+        }
+        return cambios;
+    }
+
+    private LineaItem coincidenciaExacta(List<LineaItem> lineas, LineaItem buscada) {
+        return lineas.stream()
+                .filter(l -> l.productoId().equals(buscada.productoId())
+                        && Objects.equals(l.talle(), buscada.talle())
+                        && Objects.equals(l.color(), buscada.color()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private LineaItem coincidenciaPorProducto(List<LineaItem> lineas, LineaItem buscada) {
+        return lineas.stream()
+                .filter(l -> l.productoId().equals(buscada.productoId()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private LineaItem coincidenciaPorProductoYColor(List<LineaItem> lineas, LineaItem buscada) {
+        return lineas.stream()
+                .filter(l -> l.productoId().equals(buscada.productoId()) && Objects.equals(l.color(), buscada.color()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private LineaItem coincidenciaPorProductoYTalle(List<LineaItem> lineas, LineaItem buscada) {
+        return lineas.stream()
+                .filter(l -> l.productoId().equals(buscada.productoId()) && Objects.equals(l.talle(), buscada.talle()))
+                .findFirst()
+                .orElse(null);
+    }
+
+    private LineaItem aLinea(ProductoConsultado pc) {
+        return new LineaItem(
+                pc.getProducto().getId(),
+                pc.getProducto().getNombre(),
+                pc.getProducto().getImagen(),
+                pc.getTalle(),
+                pc.getColor(),
+                pc.getCantidad(),
+                pc.getPrecioUnitario(),
+                pc.getObservaciones());
+    }
+
+    private String etiquetaLinea(LineaItem linea) {
+        return linea.productoNombre() + " (" + colorTexto(linea.color()) + ", talle " + linea.talle() + ")";
+    }
+
+    private String colorTexto(String color) {
+        return color == null ? "sin color" : color;
     }
 
     private Cliente obtenerOCrearCliente(String nombre, String telefono) {
@@ -205,7 +409,7 @@ public class ConsultaService {
         sb.append("\nSoy ")
                 .append(consulta.getCliente().getNombre() == null ? "un cliente" : consulta.getCliente().getNombre())
                 .append(" (tel. ").append(consulta.getCliente().getTelefono()).append(").");
-        sb.append("\nMi consulta es la N° ").append(consultaMapper.formatearNumero(consulta.getNumero()))
+        sb.append("\nMi consulta es la N° ").append(consultaMapper.formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion()))
                 .append(" (").append(etiquetaEstado(consulta.getEstado())).append(").\n\n");
         int indice = 1;
         for (ProductoConsultado pc : consulta.getProductosConsultados()) {
@@ -247,5 +451,10 @@ public class ConsultaService {
 
     private String colorLimpio(String color) {
         return (color == null || color.isBlank()) ? null : color.trim();
+    }
+
+    private record LineaItem(Long productoId, String productoNombre, String productoImagen,
+                             String talle, String color, int cantidad, BigDecimal precioUnitario,
+                             String observaciones) {
     }
 }

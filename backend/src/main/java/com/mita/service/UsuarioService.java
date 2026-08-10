@@ -6,11 +6,11 @@ import com.mita.dto.EncargadaDTO;
 import com.mita.entity.RolUsuario;
 import com.mita.entity.Tienda;
 import com.mita.entity.Usuario;
+import com.mita.exception.ConflictoException;
 import com.mita.exception.RecursoNoEncontradoException;
 import com.mita.exception.ReglaNegocioException;
 import com.mita.repository.TiendaRepository;
 import com.mita.repository.UsuarioRepository;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,13 +75,13 @@ public class UsuarioService {
 
     private void validarUsernameDisponible(String username) {
         if (usuarioRepository.existsByUsername(username.trim())) {
-            throw new DataIntegrityViolationException("El usuario '" + username + "' ya existe");
+            throw new ConflictoException("El usuario '" + username + "' ya existe");
         }
     }
 
     private void validarSinEncargadaEn(Tienda tienda) {
         if (usuarioRepository.existsByRolAndTiendaId(RolUsuario.ENCARGADA, tienda.getId())) {
-            throw new DataIntegrityViolationException(
+            throw new ConflictoException(
                     "La tienda " + tienda.getNombre() + " ya tiene una encargada asignada");
         }
     }

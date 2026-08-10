@@ -32,14 +32,19 @@ public class SecurityConfig {
                                 "/favicon.ico",
                                 "/manifest.json"
                         ).permitAll()
+                        .requestMatchers("/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/tiendas", "/api/tiendas/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/productos/destacados").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/consultas").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/consultas/**").authenticated()
                         .requestMatchers("/api/auth/login", "/api/auth/me").permitAll()
                         .requestMatchers("/api/dueño/**").hasRole("DUENO")
                         .requestMatchers(HttpMethod.GET, "/api/consultas/**").authenticated()
                         .requestMatchers(HttpMethod.PATCH, "/api/consultas/**").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/consultas/**").authenticated()
                         .requestMatchers("/api/ventas/**").authenticated()
                         .requestMatchers("/api/auth/logout").authenticated()
-                        .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/**").denyAll()
                         .anyRequest().permitAll()
                 )
                 .exceptionHandling(handling -> handling

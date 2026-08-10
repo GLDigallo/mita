@@ -195,6 +195,24 @@ function GestionPage() {
     }
   }
 
+  function manejarModificada(actualizada) {
+    setDetalle(actualizada)
+    const indices = consultas
+      .map((c, i) => (c.id === actualizada.id ? i : -1))
+      .filter((i) => i !== -1)
+    if (indices.length > 0) {
+      setConsultas((actuales) => {
+        const copia = [...actuales]
+        copia[indices[0]] = {
+          ...copia[indices[0]],
+          numero: actualizada.numero,
+          totalItems: actualizada.totalItems,
+        }
+        return copia
+      })
+    }
+  }
+
   function manejarArmarVenta(consulta) {
     setDetalleId(null)
     setArmando({ consulta, ventaInicial: null })
@@ -453,6 +471,7 @@ function GestionPage() {
           cambiandoEstado={cambiandoEstado}
           onArmarVenta={manejarArmarVenta}
           onVerVenta={manejarVerVenta}
+          onModificada={manejarModificada}
         />
       )}
 
