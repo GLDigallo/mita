@@ -57,8 +57,8 @@ public class ConsultaMapper {
         return new ConsultaVersionDTO(
                 version.getId(),
                 version.getVersion(),
-                formatearNumeroConVersion(consulta.getNumero(), version.getVersion()),
-                sufijoVersion(version.getVersion()),
+                formatearNumero(consulta.getNumero()),
+                String.format("v%d", version.getVersion() + 1),
                 version.getEstado(),
                 version.getFecha(),
                 version.getEmpleado(),
@@ -109,17 +109,10 @@ public class ConsultaMapper {
     }
 
     public String formatearNumero(Long numero) {
-        return formatearNumeroConVersion(numero, 0);
+        return String.format("C-%06d", numero);
     }
 
     public String formatearNumeroConVersion(Long numero, int version) {
-        return String.format("C-%06d%s", numero, sufijoVersion(version));
-    }
-
-    private String sufijoVersion(int version) {
-        if (version <= 0) {
-            return "";
-        }
-        return String.valueOf((char) ('a' + (version - 1) % 26));
+        return formatearNumero(numero);
     }
 }

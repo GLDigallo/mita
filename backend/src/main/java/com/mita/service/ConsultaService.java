@@ -30,12 +30,16 @@ import com.mita.repository.VentaRepository;
 import com.mita.security.Seguridad;
 import com.mita.security.UsuarioPrincipal;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,6 +50,9 @@ import java.util.Objects;
 
 @Service
 public class ConsultaService {
+
+    private static final Logger log = LoggerFactory.getLogger(ConsultaService.class);
+    private static final Duration TIEMPO_CANCELACION_PENDIENTE = Duration.ofHours(48);
 
     private final ConsultaRepository consultaRepository;
     private final ClienteRepository clienteRepository;
@@ -173,6 +180,21 @@ public class ConsultaService {
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
     }
 
+    @Scheduled(fixedDelay = 60_000)
+    @Transactional
+    public void cancelarPendientesVencidas() {
+        Instant limite = Instant.now().minus(TIEMPO_CANCELACION_PENDIENTE);
+        List<Consulta> vencidas = consultaRepository.vencidasSinVenta(EstadoConsulta.PENDIENTE, limite);
+        if (vencidas.isEmpty()) {
+            return;
+        }
+        for (Consulta consulta : vencidas) {
+            consulta.setEstado(EstadoConsulta.CANCELADA);
+        }
+        consultaRepository.saveAll(vencidas);
+        log.info("{} consulta(s) PENDIENTE canceladas automáticamente por superar las 48h", vencidas.size());
+    }
+
     private Long tiendaIdPermitida(Long tiendaId) {
         UsuarioPrincipal principal = Seguridad.principalRequerido();
         if (principal.esEncargada()) {
@@ -193,7 +215,6 @@ public class ConsultaService {
 
     private void validarModificable(Consulta consulta) {
         if (consulta.getEstado() == EstadoConsulta.CONFIRMADA
-                || consulta.getEstado() == EstadoConsulta.CANCELADA
                 || consulta.getEstado() == EstadoConsulta.FINALIZADA) {
             throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
         }
@@ -204,7 +225,6 @@ public class ConsultaService {
 
     private boolean esEditable(Consulta consulta) {
         return consulta.getEstado() != EstadoConsulta.CONFIRMADA
-                && consulta.getEstado() != EstadoConsulta.CANCELADA
                 && consulta.getEstado() != EstadoConsulta.FINALIZADA
                 && !ventaRepository.existsByConsultaId(consulta.getId());
     }
