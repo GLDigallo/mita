@@ -8,9 +8,7 @@ import lombok.Setter;
 import java.time.Instant;
 
 @Entity
-@Table(name = "cliente", indexes = {
-        @Index(name = "idx_cliente_telefono", columnList = "telefono")
-})
+@Table(name = "cliente")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,7 +21,7 @@ public class Cliente {
     @Column(length = 120)
     private String nombre;
 
-    @Column(nullable = false, length = 30)
+    @Column(nullable = false, unique = true, length = 30)
     private String telefono;
 
     @Column(nullable = false, updatable = false)

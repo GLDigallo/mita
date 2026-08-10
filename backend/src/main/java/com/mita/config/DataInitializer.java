@@ -51,7 +51,7 @@ public class DataInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        crearSecuenciaConsultas();
+        asegurarEsquemaBase();
         if (tiendaRepository.count() > 0) {
             log.info("Base de datos ya contiene datos, se omite el seed.");
             return;
@@ -92,9 +92,10 @@ public class DataInitializer implements CommandLineRunner {
         log.info("Seed finalizado.");
     }
 
-    private void crearSecuenciaConsultas() {
+    private void asegurarEsquemaBase() {
         jdbcTemplate.execute("create sequence if not exists consulta_numero_seq start with 1 increment by 1");
         jdbcTemplate.execute("create sequence if not exists venta_numero_seq start with 1 increment by 1");
+        jdbcTemplate.execute("create unique index if not exists uk_cliente_telefono on cliente (telefono)");
     }
 
     private Tienda crearTienda(String nombre, String slug, RangoEdad rango, String etiqueta,

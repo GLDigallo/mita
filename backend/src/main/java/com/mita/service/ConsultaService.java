@@ -20,6 +20,7 @@ import com.mita.repository.ClienteRepository;
 import com.mita.repository.ConsultaRepository;
 import com.mita.repository.ProductoRepository;
 import com.mita.repository.VarianteProductoRepository;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,15 +57,7 @@ public class ConsultaService {
     @Transactional
     public ConsultaCreadaDTO crear(CrearConsultaRequest request) {
         Tienda tienda = tiendaService.obtenerEntidadPorSlug(request.tiendaSlug());
-        Cliente cliente = clienteRepository.findByTelefono(request.telefono().trim())
-                .map(existente -> {
-                    if (request.nombre() != null && !request.nombre().isBlank()) {
-                        existente.setNombre(request.nombre().trim());
-                    }
-                    return existente;
-                })
-                .orElseGet(() -> clienteRepository.save(
-                        new Cliente(nombreLimpio(request.nombre()), request.telefono().trim())));
+        Cliente cliente = obtenerOCrearCliente(request.nombre(), request.telefono());
 
         Consulta consulta = new Consulta();
         consulta.setTienda(tienda);
@@ -157,6 +150,25 @@ public class ConsultaService {
         if (principal.esEncargada() && !consulta.getTienda().getId().equals(principal.tiendaId())) {
             throw new ConsultaInvalidaException("No tiene acceso a esa consulta");
         }
+    }
+
+    private Cliente obtenerOCrearCliente(String nombre, String telefono) {
+        String telefonoLimpio = telefono.trim();
+        String nombreLimpio = nombreLimpio(nombre);
+        return clienteRepository.findByTelefono(telefonoLimpio)
+                .map(existente -> {
+                    if (nombreLimpio != null) {
+                        existente.setNombre(nombreLimpio);
+                    }
+                    return existente;
+                })
+                .orElseGet(() -> {
+                    try {
+                        return clienteRepository.save(new Cliente(nombreLimpio, telefonoLimpio));
+                    } catch (DataIntegrityViolationException conflicto) {
+                        return clienteRepository.findByTelefono(telefonoLimpio).orElseThrow();
+                    }
+                });
     }
 
     private Map<Long, Integer> contarItems(List<Consulta> consultas) {
