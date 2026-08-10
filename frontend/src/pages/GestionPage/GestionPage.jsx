@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
 import LoginForm from '../../components/LoginForm/LoginForm'
 import EstadoBadge from '../../components/EstadoBadge/EstadoBadge'
 import ConsultaDetalle from '../../components/ConsultaDetalle/ConsultaDetalle'
@@ -7,6 +7,8 @@ import VentaArmado from '../../components/VentaArmado/VentaArmado'
 import VentaDetalle from '../../components/VentaDetalle/VentaDetalle'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
+import PromosView from './PromosView/PromosView'
+import MetricasView from './MetricasView/MetricasView'
 import {
   cambiarEstadoConsulta,
   fetchConsulta,
@@ -26,7 +28,9 @@ import styles from './GestionPage.module.css'
 function GestionPage() {
   const [sesion, setSesion] = useState('cargando')
   const [usuario, setUsuario] = useState(null)
-  const [vista, setVista] = useState('consultas')
+
+  const { pathname } = useLocation()
+  const seccion = pathname.replace(/\/+$/, '').split('/')[2] ?? 'inicio'
 
   const [tiendas, setTiendas] = useState([])
 
@@ -116,12 +120,18 @@ function GestionPage() {
   }, [ventaEstadoFiltro, ventaTiendaIdFiltro, ventaBusquedaAplicada])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && vista === 'consultas') cargarConsultas()
-  }, [sesion, vista, cargarConsultas])
+    if (sesion === 'autenticado' && seccion === 'consultas') cargarConsultas()
+  }, [sesion, seccion, cargarConsultas])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && vista === 'ventas') cargarVentas()
-  }, [sesion, vista, cargarVentas])
+    if (sesion === 'autenticado' && seccion === 'ventas') cargarVentas()
+  }, [sesion, seccion, cargarVentas])
+
+  useEffect(() => {
+    if (sesion !== 'autenticado' || seccion !== 'metricas') return
+    cargarConsultas()
+    cargarVentas()
+  }, [sesion, seccion, cargarConsultas, cargarVentas])
 
   useEffect(() => {
     if (!detalleId) {
@@ -243,7 +253,7 @@ function GestionPage() {
   }
 
   function refrescar() {
-    if (vista === 'consultas') cargarConsultas()
+    if (seccion === 'consultas') cargarConsultas()
     cargarVentas()
   }
 
@@ -258,7 +268,7 @@ function GestionPage() {
           <Link to="/" className={styles.marca}>
             Mitã
           </Link>
-          <span className={styles.marcaEtiqueta}>gestión</span>
+          <span className={styles.marcaEtiqueta}>home</span>
         </header>
         <main className={styles.centrado}>
           <LoginForm onLogin={manejarLogin} />
@@ -285,27 +295,91 @@ function GestionPage() {
       </header>
 
       <main className={styles.contenedor}>
-        <div className={styles.tituloBarra}>
-          <h1 className={styles.titulo}>Gestión</h1>
-          <nav className={styles.tabs} aria-label="Secciones de gestión">
-            <button
-              type="button"
-              className={`${styles.tab} ${vista === 'consultas' ? styles.tabActivo : ''}`}
-              onClick={() => setVista('consultas')}
-            >
-              Consultas
-            </button>
-            <button
-              type="button"
-              className={`${styles.tab} ${vista === 'ventas' ? styles.tabActivo : ''}`}
-              onClick={() => setVista('ventas')}
-            >
-              Ventas
-            </button>
-          </nav>
-        </div>
+        {seccion !== 'inicio' && (
+          <Link to="/home" className={styles.volver}>
+            ← Volver al inicio
+          </Link>
+        )}
 
-        {vista === 'consultas' ? (
+        {seccion === 'inicio' ? (
+          <section className={styles.inicio}>
+            <h2 className={styles.saludoTitulo}>Hola, {usuario?.nombre ?? usuario?.usuario}</h2>
+            <p className={styles.saludoTexto}>¿Qué necesitás hacer hoy?</p>
+            <div className={styles.mosaico}>
+              <Link to="/home/consultas" className={styles.tarjeta}>
+                <svg
+                  className={styles.tarjetaIcono}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <span className={styles.tarjetaTitulo}>Consultas</span>
+                <span className={styles.tarjetaDetalle}>
+                  {consultas.length} en total · {consultas.filter((c) => c.estado === 'PENDIENTE').length} pendientes
+                </span>
+              </Link>
+              <Link to="/home/ventas" className={styles.tarjeta}>
+                <svg
+                  className={styles.tarjetaIcono}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <path d="M3 6h18" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                <span className={styles.tarjetaTitulo}>Ventas</span>
+                <span className={styles.tarjetaDetalle}>{ventas.length} registradas</span>
+              </Link>
+              <Link to="/home/promos" className={styles.tarjeta}>
+                <svg
+                  className={styles.tarjetaIcono}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20.59 13.41 12 22 2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                  <circle cx="7.5" cy="7.5" r="0.5" fill="currentColor" />
+                </svg>
+                <span className={styles.tarjetaTitulo}>Promos</span>
+                <span className={styles.tarjetaDetalle}>Organizá promociones</span>
+              </Link>
+              <Link to="/home/metricas" className={styles.tarjeta}>
+                <svg
+                  className={styles.tarjetaIcono}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 20v-6" />
+                  <path d="M6 20V10" />
+                  <path d="M18 20V4" />
+                </svg>
+                <span className={styles.tarjetaTitulo}>Métricas</span>
+                <span className={styles.tarjetaDetalle}>Resultados por tienda</span>
+              </Link>
+            </div>
+          </section>
+        ) : seccion === 'consultas' ? (
           <>
             <form className={styles.filtros} onSubmit={manejarBusqueda}>
               <input
@@ -381,7 +455,7 @@ function GestionPage() {
               </div>
             )}
           </>
-        ) : (
+        ) : seccion === 'ventas' ? (
           <>
             <form className={styles.filtros} onSubmit={manejarBusquedaVentas}>
               <input
@@ -459,6 +533,12 @@ function GestionPage() {
               </div>
             )}
           </>
+        ) : seccion === 'promos' ? (
+          <PromosView tiendas={tiendas} />
+        ) : seccion === 'metricas' ? (
+          <MetricasView tiendas={tiendas} consultas={consultas} ventas={ventas} />
+        ) : (
+          <Navigate to="/home" replace />
         )}
       </main>
 

@@ -30,11 +30,15 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .usuarioNombre {
   font-size: 14px;
   font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .salir {
@@ -69,55 +73,90 @@
   padding: 24px 16px 48px;
 }
 
-.tituloBarra {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  margin-bottom: 18px;
-}
-
-.titulo {
-  font-size: 26px;
-  letter-spacing: -0.02em;
-}
-
-.contador {
-  color: var(--color-texto-suave);
-  font-size: 14px;
-}
-
-.tabs {
-  display: flex;
+.volver {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  background: var(--color-superficie);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-pill);
-  padding: 4px;
-}
-
-.tab {
-  min-height: 38px;
-  padding: 6px 16px;
-  border: 0;
-  border-radius: var(--radio-pill);
-  background: transparent;
+  margin-bottom: 16px;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-texto-suave);
-  transition: background-color 0.2s ease, color 0.2s ease;
+  text-decoration: none;
+  transition: color 0.2s ease;
 }
 
-.tab:hover {
-  color: var(--color-texto);
+.volver:hover {
+  color: var(--color-marca);
 }
 
-.tabActivo {
-  background: var(--color-marca);
-  color: #fff;
+.inicio {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-.tabActivo:hover {
-  color: #fff;
+.saludoTitulo {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.saludoTexto {
+  font-size: 15px;
+  color: var(--color-texto-suave);
+  margin-top: 4px;
+}
+
+.mosaico {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+.tarjeta {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  font-family: inherit;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.tarjeta:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-md);
+  border-color: var(--color-marca);
+}
+
+.tarjetaIcono {
+  width: 32px;
+  height: 32px;
+  color: var(--color-marca);
+}
+
+.tarjetaTitulo {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.tarjetaDetalle {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .mosaico {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .filtros {

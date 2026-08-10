@@ -1,0 +1,179 @@
+.contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.titulo {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.rangos {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  align-self: flex-start;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  padding: 4px;
+}
+
+.rango {
+  min-height: 34px;
+  padding: 4px 14px;
+  border: 0;
+  border-radius: var(--radio-pill);
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.rango:hover {
+  color: var(--color-texto);
+}
+
+.rangoActivo {
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.rangoActivo:hover {
+  color: #fff;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .tarjetas {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.tarjetaNumero {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.tarjetaNumeroValor {
+  font-family: var(--fuente-display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--color-marca);
+}
+
+.tarjetaNumeroEtiqueta {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.bloque {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bloquesDoble {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+@media (min-width: 640px) {
+  .bloquesDoble {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.bloqueTitulo {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.vacio {
+  font-size: 14px;
+  color: var(--color-texto-suave);
+}
+
+.tabla {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  overflow: hidden;
+}
+
+.tablaEncabezado,
+.tablaFila {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 8px;
+  padding: 10px 14px;
+  align-items: center;
+}
+
+.tablaEncabezado {
+  background: var(--color-superficie);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tablaFila {
+  font-size: 14px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.tablaTienda {
+  font-weight: 600;
+}
+
+.estados {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.estado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  font-size: 14px;
+}
+
+.estadoEtiqueta {
+  color: var(--color-texto-suave);
+}
+
+.estadoCantidad {
+  font-weight: 700;
+}

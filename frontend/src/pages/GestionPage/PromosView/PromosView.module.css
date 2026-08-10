@@ -1,0 +1,187 @@
+.contenido {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.titulo {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.subtitulo {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.fila {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .fila {
+    grid-template-columns: 1fr 1fr 1fr;
+  }
+}
+
+.input {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--color-marca);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+}
+
+.input:disabled {
+  opacity: 0.5;
+}
+
+.botonPrimario {
+  min-height: 48px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: var(--radio-sm);
+  background: var(--color-marca);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.botonPrimario:hover {
+  opacity: 0.9;
+}
+
+.aviso {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.vacio {
+  font-size: 14px;
+  color: var(--color-texto-suave);
+}
+
+.lista {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 640px) {
+  .lista {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.promo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+}
+
+.promoInactiva {
+  opacity: 0.55;
+}
+
+.promoInfo {
+  flex: 1;
+}
+
+.promoNombre {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.promoDetalle {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+  margin-top: 4px;
+}
+
+.promoEtiqueta {
+  align-self: flex-start;
+  padding: 4px 12px;
+  border-radius: var(--radio-pill);
+  background: rgba(79, 70, 229, 0.1);
+  color: var(--color-marca);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.promoAcciones {
+  display: flex;
+  gap: 8px;
+}
+
+.botonSecundario {
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.botonSecundario:hover {
+  border-color: var(--color-marca);
+  color: var(--color-marca);
+}
+
+.botonPeligro {
+  min-height: 38px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  background: var(--color-superficie);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c0392b;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.botonPeligro:hover {
+  border-color: #c0392b;
+}
