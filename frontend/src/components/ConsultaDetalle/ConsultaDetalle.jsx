@@ -232,7 +232,7 @@ function ConsultaDetalle({
                 ← Volver
               </button>
               <h2 className={styles.numero}>
-                {vista === 'version' ? `Versión ${versionAbierta?.etiqueta ?? ''}` : 'Historial de versiones'}
+                {vista === 'version' ? `Versión ${versionAbierta?.numero ?? ''}` : 'Historial de versiones'}
               </h2>
               <p className={styles.fecha}>{consulta.numero}</p>
             </div>
@@ -689,7 +689,7 @@ function VistaHistorial({ cargando, historial, error, onAbrirVersion }) {
                 onClick={() => onAbrirVersion(version)}
               >
                 <div className={styles.versionFilaPrincipal}>
-                  <span className={styles.versionEtiqueta}>{version.etiqueta}</span>
+                  <span className={styles.versionEtiqueta}>{version.numero}</span>
                   <EstadoBadge estado={version.estado} />
                 </div>
                 <p className={styles.versionDetalle}>
