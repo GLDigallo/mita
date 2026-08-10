@@ -1,0 +1,47 @@
+.disney {
+  font-family: 'Pacifico', 'Comic Sans MS', cursive;
+  font-weight: 400;
+  letter-spacing: normal;
+  background: linear-gradient(90deg, #ff2d78, #ff8a1e, #f9d423, #2fb45f, #2f8cff, #a13dff, #ff2d78);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  -webkit-text-fill-color: transparent !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
+  animation: brilloDisney 9s linear infinite;
+}
+
+@keyframes brilloDisney {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 300% 0;
+  }
+}
+
+.moodTeens {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.24em;
+  text-transform: uppercase;
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  font-weight: 400;
+  line-height: 1.05;
+}
+
+.mood {
+  color: #ffffff !important;
+  letter-spacing: 0.05em;
+  -webkit-text-stroke: 3px #000000;
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.teens {
+  color: #000000 !important;
+  font-family: 'Barlow Condensed', 'Anton', 'Arial Narrow', sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}

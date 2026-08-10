@@ -29,6 +29,14 @@
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.destacado {
+  color: #b7791f;
+}
+
+.destacado.activo {
+  color: #fff;
+}
+
 .chip:hover {
   border-color: var(--color-texto);
   color: var(--color-texto);

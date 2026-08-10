@@ -6,18 +6,20 @@ const GENERO_ETIQUETAS = {
   UNISEX: 'Unisex',
 }
 
-function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario }) {
+function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onTodo, todoActivo }) {
   return (
     <div className={styles.filtro} role="group" aria-label="Filtrar por género">
-      <button
-        type="button"
-        className={`${styles.chip} ${seleccionado === '' ? styles.activo : ''}`}
-        style={seleccionado === '' ? { '--chip-color': colorPrimario } : undefined}
-        onClick={() => onSeleccionar('')}
-        aria-pressed={seleccionado === ''}
-      >
-        Todos
-      </button>
+      {onTodo && (
+        <button
+          type="button"
+          className={`${styles.chip} ${todoActivo ? styles.activo : ''}`}
+          style={todoActivo ? { '--chip-color': colorPrimario } : undefined}
+          onClick={onTodo}
+          aria-pressed={todoActivo}
+        >
+          Todo
+        </button>
+      )}
       {generos.map((genero) => {
         const activo = seleccionado === genero
         return (

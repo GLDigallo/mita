@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Header from '../../components/Header/Header'
 import Footer from '../../components/Footer/Footer'
@@ -8,6 +8,7 @@ import ProductGrid from '../../components/ProductGrid/ProductGrid'
 import ProductModal from '../../components/ProductModal/ProductModal'
 import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
+import NombreTienda from '../../components/NombreTienda/NombreTienda'
 import { useFetch } from '../../hooks/useFetch'
 import {
   fetchCategorias,
@@ -20,22 +21,38 @@ import styles from './TiendaPage.module.css'
 
 function TiendaPage() {
   const { slug } = useParams()
-  const [categoria, setCategoria] = useState('')
+  const [categoria, setCategoria] = useState('destacados')
   const [genero, setGenero] = useState('')
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
+  const productosRef = useRef(null)
+
+  const todoActivo = categoria === '' && genero === ''
+
+  const seleccionarTodo = () => {
+    setCategoria('')
+    setGenero('')
+    productosRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const tienda = useFetch(() => fetchTienda(slug), [slug])
   const categorias = useFetch(() => fetchCategorias(slug), [slug])
   const generos = useFetch(() => fetchGeneros(slug), [slug])
-  const productos = useFetch(() => fetchProductos(slug, categoria, genero), [slug, categoria, genero])
+  const productos = useFetch(() => {
+    const categoriaBackend = categoria === 'destacados' ? '' : categoria
+    return fetchProductos(slug, categoriaBackend, genero)
+  }, [slug, categoria, genero])
   const tiendas = useFetch(fetchTiendas, [])
 
   useEffect(() => {
-    setCategoria('')
+    setCategoria('destacados')
     setGenero('')
     setProductoSeleccionado(null)
     window.scrollTo(0, 0)
   }, [slug])
+
+  const productosVisibles = categoria === 'destacados'
+    ? (productos.data ?? []).filter((p) => p.destacado)
+    : (productos.data ?? [])
 
   if (tienda.isLoading) {
     return (
@@ -69,11 +86,13 @@ function TiendaPage() {
           style={{ '--primario': tiendaActual.colorPrimario, '--secundario': tiendaActual.colorSecundario }}
         >
           <div className={styles.heroContenido}>
-            <Link to="/" className={styles.volver}>
-              ← Volver al grupo
-            </Link>
-            <span className={styles.badge}>{tiendaActual.etiquetaEdad}</span>
-            <h1 className={styles.nombre}>{tiendaActual.nombre}</h1>
+            <div className={styles.heroBarra}>
+              <Link to="/" className={styles.volver}>
+                <span className={styles.volverIcono} aria-hidden="true">←</span>
+                Volver al grupo
+              </Link>
+            </div>
+            <NombreTienda tienda={tiendaActual} className={styles.nombre} />
             <p className={styles.descripcion}>{tiendaActual.descripcion}</p>
           </div>
         </section>
@@ -81,6 +100,26 @@ function TiendaPage() {
         <section className={styles.contenido}>
           <div className={styles.filtroBarra}>
             <div className={styles.filtros}>
+              {generos.isLoading ? (
+                <div className={styles.skeletonFiltros}>
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              ) : (
+                generos.data &&
+                generos.data.length > 1 && (
+                  <GeneroFilter
+                    generos={generos.data}
+                    seleccionado={genero}
+                    onSeleccionar={setGenero}
+                    colorPrimario={tiendaActual.colorPrimario}
+                    onTodo={seleccionarTodo}
+                    todoActivo={todoActivo}
+                  />
+                )
+              )}
               {categorias.isLoading ? (
                 <div className={styles.skeletonFiltros}>
                   <span />
@@ -98,44 +137,37 @@ function TiendaPage() {
                   />
                 )
               )}
-              {generos.isLoading ? (
-                <div className={styles.skeletonFiltros}>
-                  <span />
-                  <span />
-                  <span />
-                </div>
-              ) : (
-                generos.data &&
-                generos.data.length > 1 && (
-                  <GeneroFilter
-                    generos={generos.data}
-                    seleccionado={genero}
-                    onSeleccionar={setGenero}
-                    colorPrimario={tiendaActual.colorPrimario}
-                  />
-                )
-              )}
             </div>
             {!categorias.isLoading && !categorias.error && categorias.data && (
               <p className={styles.contador}>
                 {productos.isLoading
                   ? 'Cargando…'
-                  : `${productos.data?.length ?? 0} prenda${productos.data?.length === 1 ? '' : 's'}`}
+                  : `${productosVisibles.length} prenda${productosVisibles.length === 1 ? '' : 's'}`}
               </p>
             )}
           </div>
 
-          {productos.isLoading && (
-            <div className={styles.grid}>
-              {Array.from({ length: 8 }).map((_, indice) => (
-                <SkeletonCard key={indice} />
-              ))}
-            </div>
-          )}
-          {productos.error && <ErrorMessage message={productos.error} />}
-          {productos.data && (
-            <ProductGrid productos={productos.data} onSeleccionar={setProductoSeleccionado} />
-          )}
+          <div ref={productosRef}>
+            {productos.isLoading && (
+              <div className={styles.grid}>
+                {Array.from({ length: 8 }).map((_, indice) => (
+                  <SkeletonCard key={indice} />
+                ))}
+              </div>
+            )}
+            {productos.error && <ErrorMessage message={productos.error} />}
+            {productos.data && (
+              <ProductGrid
+                productos={productosVisibles}
+                onSeleccionar={setProductoSeleccionado}
+                mensajeVacio={
+                  categoria === 'destacados'
+                    ? 'Todavía no hay prendas destacadas en esta tienda. ¡Volvé pronto!'
+                    : undefined
+                }
+              />
+            )}
+          </div>
         </section>
       </main>
       <Footer tiendas={tiendas.data ?? []} />

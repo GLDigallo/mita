@@ -9,17 +9,42 @@
   padding: 44px 16px 52px;
 }
 
+.heroBarra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  margin-bottom: 28px;
+}
+
 .volver {
-  display: inline-block;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10.5px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.85);
-  margin-bottom: 20px;
-  transition: color 0.25s ease;
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  padding: 5px 9px;
+  border-radius: var(--radio-pill);
+  transition: background-color 0.25s ease, transform 0.25s ease;
 }
 
 .volver:hover {
+  background: rgba(0, 0, 0, 0.35);
   color: #fff;
+}
+
+.volverIcono {
+  font-size: 12px;
+  line-height: 1;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.volver:hover .volverIcono {
+  transform: translateX(-3px);
 }
 
 .badge {
@@ -28,9 +53,8 @@
   border: 1px solid rgba(255, 255, 255, 0.35);
   font-size: 13.5px;
   font-weight: 600;
-  padding: 7px 14px;
+  padding: 8px 16px;
   border-radius: var(--radio-pill);
-  margin-bottom: 14px;
 }
 
 .nombre {

@@ -1,7 +1,9 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import styles from './Footer.module.css'
 
 function Footer({ tiendas = [] }) {
+  const ubicacion = useLocation()
+  const enTienda = ubicacion.pathname.startsWith('/tienda/')
   return (
     <footer className={styles.footer}>
       <div className={styles.contenido}>
@@ -17,7 +19,8 @@ function Footer({ tiendas = [] }) {
             {tiendas.map((tienda) => (
               <li key={tienda.id}>
                 <Link to={`/tienda/${tienda.slug}`} className={styles.enlace}>
-                  {tienda.nombre} <span className={styles.etiqueta}>{tienda.etiquetaEdad}</span>
+                  {tienda.nombre}
+                  {!enTienda && <span className={styles.etiqueta}>{tienda.etiquetaEdad}</span>}
                 </Link>
               </li>
             ))}

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import NombreTienda from '../NombreTienda/NombreTienda'
 import styles from './StoreCard.module.css'
 
 function StoreCard({ tienda }) {
@@ -17,7 +18,7 @@ function StoreCard({ tienda }) {
         />
         <span className={styles.badge}>{tienda.etiquetaEdad}</span>
         <div className={styles.overlay}>
-          <h3 className={styles.nombre}>{tienda.nombre}</h3>
+          <NombreTienda tienda={tienda} className={styles.nombre} />
           <span className={styles.flecha} aria-hidden="true">→</span>
         </div>
       </div>

@@ -22,7 +22,7 @@ function NotFoundPage() {
           <nav className={styles.enlaces} aria-label="Tiendas disponibles">
             {tiendas.data.map((tienda) => (
               <Link key={tienda.id} to={`/tienda/${tienda.slug}`} className={styles.enlace}>
-                {tienda.nombre} — {tienda.etiquetaEdad}
+                {tienda.nombre}
               </Link>
             ))}
           </nav>
