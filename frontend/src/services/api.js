@@ -109,6 +109,13 @@ export async function cambiarEstadoConsulta(id, estado) {
   })
 }
 
+export async function cambiarFormaPagoConsulta(id, formaPago) {
+  return enviarJson(`${API_BASE}/consultas/${id}/forma-pago`, {
+    method: 'PATCH',
+    body: JSON.stringify({ formaPago }),
+  })
+}
+
 export async function modificarConsulta(id, payload) {
   return enviarJson(`${API_BASE}/consultas/${id}`, {
     method: 'PUT',

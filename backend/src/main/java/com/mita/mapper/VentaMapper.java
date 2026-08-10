@@ -65,6 +65,6 @@ public class VentaMapper {
     }
 
     public String formatearNumero(Long numero) {
-        return String.format("V-%06d", numero);
+        return "V-" + numero;
     }
 }

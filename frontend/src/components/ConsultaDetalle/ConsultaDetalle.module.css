@@ -28,6 +28,7 @@
   width: 100%;
   max-height: 92vh;
   overflow-y: auto;
+  overflow-x: clip;
   box-shadow: var(--sombra-lg);
   animation: subir 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -235,13 +236,6 @@
   color: #c0392b;
   font-weight: 700;
 }
-
-.estados {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .armarVenta {
   min-height: 44px;
   padding: 8px 18px;
@@ -257,30 +251,6 @@
 .armarVenta:hover {
   background: var(--color-marca-oscuro);
   transform: translateY(-1px);
-}
-
-.estadoBoton {
-  min-height: 44px;
-  padding: 8px 16px;
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
-  border-radius: var(--radio-pill);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--color-texto);
-  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.estadoBoton:hover:not(:disabled) {
-  border-color: var(--color-marca);
-  background: var(--color-marca);
-  color: #fff;
-  transform: translateY(-1px);
-}
-
-.estadoBoton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .volver {
@@ -609,5 +579,120 @@
 .cambioDescripcion {
   font-size: 14px;
   color: var(--color-texto);
+}
+
+.pie {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid var(--color-borde);
+  box-shadow: 0 -6px 20px rgba(15, 15, 25, 0.06);
+}
+
+.pieBoton {
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto);
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.pieBoton:hover:not(:disabled) {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.pieBoton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pieBotonActivo {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.pieBotonCancelar:hover:not(:disabled),
+.pieBotonCancelar.pieBotonActivo {
+  border-color: #dc2626;
+  background: #dc2626;
+  color: #fff;
+}
+
+.pieBotonExitoso:hover:not(:disabled),
+.pieBotonExitoso.pieBotonActivo {
+  border-color: #16a34a;
+  background: #16a34a;
+  color: #fff;
+}
+
+.piePago {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 4px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-pill);
+  background: var(--color-fondo);
+}
+
+.piePagoEtiqueta {
+  padding-left: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-texto-suave);
+}
+
+.pagoOpciones {
+  display: flex;
+  gap: 2px;
+}
+
+.pagoOpcion {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.pagoOpcion:hover:not(:disabled) {
+  color: var(--color-texto);
+}
+
+.pagoOpcion:disabled {
+  cursor: not-allowed;
+}
+
+.pagoOpcionActivo {
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.pagoOpcionActivo:hover:not(:disabled) {
+  color: #fff;
 }
 

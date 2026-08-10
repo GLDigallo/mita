@@ -49,6 +49,10 @@ public class Consulta {
     @Column(length = 1000)
     private String observaciones;
 
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private FormaPago formaPago;
+
     @OneToMany(mappedBy = "consulta", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<ProductoConsultado> productosConsultados = new ArrayList<>();
 

@@ -1,6 +1,7 @@
 package com.mita.dto;
 
 import com.mita.entity.EstadoConsulta;
+import com.mita.entity.FormaPago;
 
 import java.time.Instant;
 import java.util.List;
@@ -11,6 +12,7 @@ public record ConsultaDTO(
         int version,
         boolean editable,
         EstadoConsulta estado,
+        FormaPago formaPago,
         Instant fechaConsulta,
         String tiendaSlug,
         String tiendaNombre,

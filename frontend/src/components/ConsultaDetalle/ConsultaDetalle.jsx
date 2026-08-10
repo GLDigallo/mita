@@ -5,8 +5,6 @@ import {
   formatearPrecio,
   MOTIVOS_MODIFICACION,
   modificarConsulta,
-  ESTADOS_CONSULTA,
-  etiquetaEstado,
 } from '../../services/api'
 import EstadoBadge from '../EstadoBadge/EstadoBadge'
 import styles from './ConsultaDetalle.module.css'
@@ -30,6 +28,7 @@ function ConsultaDetalle({
   onCerrar,
   onCambiarEstado,
   cambiandoEstado,
+  onCambiarFormaPago,
   onArmarVenta,
   onVerVenta,
   onModificada,
@@ -52,7 +51,6 @@ function ConsultaDetalle({
   const [nuevoVarianteId, setNuevoVarianteId] = useState('')
   const [nuevoCantidad, setNuevoCantidad] = useState(1)
 
-  const estadosDisponibles = ESTADOS_CONSULTA.filter((e) => e.valor !== consulta.estado)
   const puedeArmarVenta = ['PENDIENTE', 'EN_REVISION', 'ESPERANDO_CLIENTE'].includes(consulta.estado)
   const tieneVentaConfirmada = consulta.estado === 'CONFIRMADA'
   const cantidadVersiones = consulta.version + 1
@@ -247,10 +245,10 @@ function ConsultaDetalle({
               consulta={consulta}
               puedeArmarVenta={puedeArmarVenta}
               tieneVentaConfirmada={tieneVentaConfirmada}
-              estadosDisponibles={estadosDisponibles}
               cambiandoEstado={cambiandoEstado}
               cantidadVersiones={cantidadVersiones}
               onCambiarEstado={onCambiarEstado}
+              onCambiarFormaPago={onCambiarFormaPago}
               onArmarVenta={onArmarVenta}
               onVerVenta={onVerVenta}
               onEditar={() => {
@@ -321,10 +319,10 @@ function VistaActual({
   consulta,
   puedeArmarVenta,
   tieneVentaConfirmada,
-  estadosDisponibles,
   cambiandoEstado,
   cantidadVersiones,
   onCambiarEstado,
+  onCambiarFormaPago,
   onArmarVenta,
   onVerVenta,
   onEditar,
@@ -453,6 +451,54 @@ function VistaActual({
           ))}
         </div>
       </section>
+
+      <footer className={styles.pie}>
+        <button
+          type="button"
+          className={`${styles.pieBoton} ${consulta.estado === 'PENDIENTE' ? styles.pieBotonActivo : ''}`}
+          onClick={() => onCambiarEstado('PENDIENTE')}
+          disabled={cambiandoEstado}
+        >
+          Pendiente
+        </button>
+        <div className={styles.piePago}>
+          <span className={styles.piePagoEtiqueta}>Pago</span>
+          <div className={styles.pagoOpciones}>
+            <button
+              type="button"
+              className={`${styles.pagoOpcion} ${consulta.formaPago !== 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
+              onClick={() => onCambiarFormaPago('EFECTIVO')}
+              disabled={cambiandoEstado}
+            >
+              Efectivo
+            </button>
+            <button
+              type="button"
+              className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
+              onClick={() => onCambiarFormaPago('DIGITAL')}
+              disabled={cambiandoEstado}
+            >
+              Digital
+            </button>
+          </div>
+        </div>
+        <button
+          type="button"
+          className={`${styles.pieBoton} ${styles.pieBotonCancelar} ${consulta.estado === 'CANCELADA' ? styles.pieBotonActivo : ''}`}
+          onClick={() => onCambiarEstado('CANCELADA')}
+          disabled={cambiandoEstado}
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
+          className={`${styles.pieBoton} ${styles.pieBotonExitoso} ${consulta.estado === 'FINALIZADA' ? styles.pieBotonActivo : ''}`}
+          onClick={() => onCambiarEstado('FINALIZADA')}
+          disabled={cambiandoEstado}
+        >
+          Exitoso
+        </button>
+      </footer>
     </>
   )
 }

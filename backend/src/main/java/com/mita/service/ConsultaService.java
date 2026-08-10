@@ -12,6 +12,7 @@ import com.mita.entity.ConsultaVersion;
 import com.mita.entity.ConsultaVersionCambio;
 import com.mita.entity.ConsultaVersionItem;
 import com.mita.entity.EstadoConsulta;
+import com.mita.entity.FormaPago;
 import com.mita.entity.MotivoModificacion;
 import com.mita.entity.Producto;
 import com.mita.entity.ProductoConsultado;
@@ -153,6 +154,7 @@ public class ConsultaService {
                         c.getId(),
                         consultaMapper.formatearNumeroConVersion(c.getNumero(), c.getVersion()),
                         c.getEstado(),
+                        c.getFormaPago(),
                         c.getFechaConsulta(),
                         c.getTienda().getSlug(),
                         c.getTienda().getNombre(),
@@ -176,6 +178,16 @@ public class ConsultaService {
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
         consulta.setEstado(estado);
+        Consulta guardada = consultaRepository.save(consulta);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+    }
+
+    @Transactional
+    public ConsultaDTO cambiarFormaPago(Long id, FormaPago formaPago) {
+        Consulta consulta = consultaRepository.findDetalle(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
+        consulta.setFormaPago(formaPago);
         Consulta guardada = consultaRepository.save(consulta);
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
     }

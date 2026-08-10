@@ -1,6 +1,7 @@
 package com.mita.controller;
 
 import com.mita.dto.CambiarEstadoConsultaRequest;
+import com.mita.dto.CambiarFormaPagoRequest;
 import com.mita.dto.ConsultaCreadaDTO;
 import com.mita.dto.ConsultaDTO;
 import com.mita.dto.ConsultaResumenDTO;
@@ -47,6 +48,12 @@ public class ConsultaController {
     public ConsultaDTO cambiarEstado(@PathVariable Long id,
                                      @Valid @RequestBody CambiarEstadoConsultaRequest request) {
         return consultaService.cambiarEstado(id, request.estado());
+    }
+
+    @PatchMapping("/{id}/forma-pago")
+    public ConsultaDTO cambiarFormaPago(@PathVariable Long id,
+                                        @RequestBody CambiarFormaPagoRequest request) {
+        return consultaService.cambiarFormaPago(id, request.formaPago());
     }
 
     @PutMapping("/{id}")

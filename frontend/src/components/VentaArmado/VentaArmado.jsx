@@ -19,7 +19,7 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
   const [confirmando, setConfirmando] = useState(false)
   const [cancelando, setCancelando] = useState(false)
   const [error, setError] = useState('')
-  const [metodoPago, setMetodoPago] = useState('EFECTIVO')
+  const [metodoPago, setMetodoPago] = useState(consulta.formaPago === 'DIGITAL' ? 'MERCADO_PAGO' : 'EFECTIVO')
   const [agregarAbierto, setAgregarAbierto] = useState(false)
   const [busquedaNuevo, setBusquedaNuevo] = useState('')
   const [nuevoProductoId, setNuevoProductoId] = useState('')

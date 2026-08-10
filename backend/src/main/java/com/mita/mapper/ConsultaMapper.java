@@ -41,6 +41,7 @@ public class ConsultaMapper {
                 consulta.getVersion(),
                 editable,
                 consulta.getEstado(),
+                consulta.getFormaPago(),
                 consulta.getFechaConsulta(),
                 consulta.getTienda().getSlug(),
                 consulta.getTienda().getNombre(),
@@ -109,7 +110,7 @@ public class ConsultaMapper {
     }
 
     public String formatearNumero(Long numero) {
-        return String.format("C-%06d", numero);
+        return "O-" + numero;
     }
 
     public String formatearNumeroConVersion(Long numero, int version) {

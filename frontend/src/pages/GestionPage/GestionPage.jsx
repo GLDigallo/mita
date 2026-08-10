@@ -11,6 +11,7 @@ import PromosView from './PromosView/PromosView'
 import MetricasView from './MetricasView/MetricasView'
 import {
   cambiarEstadoConsulta,
+  cambiarFormaPagoConsulta,
   fetchConsulta,
   fetchConsultas,
   fetchMe,
@@ -195,6 +196,29 @@ function GestionPage() {
         setConsultas((actuales) => {
           const copia = [...actuales]
           copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
+          return copia
+        })
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
+
+  async function manejarCambioFormaPago(formaPago) {
+    if (!detalle) return
+    setCambiandoEstado(true)
+    try {
+      const actualizada = await cambiarFormaPagoConsulta(detalle.id, formaPago)
+      setDetalle(actualizada)
+      const indices = consultas
+        .map((c, i) => (c.id === actualizada.id ? i : -1))
+        .filter((i) => i !== -1)
+      if (indices.length > 0) {
+        setConsultas((actuales) => {
+          const copia = [...actuales]
+          copia[indices[0]] = { ...copia[indices[0]], formaPago: actualizada.formaPago }
           return copia
         })
       }
@@ -549,6 +573,7 @@ function GestionPage() {
           onCerrar={() => setDetalleId(null)}
           onCambiarEstado={manejarCambioEstado}
           cambiandoEstado={cambiandoEstado}
+          onCambiarFormaPago={manejarCambioFormaPago}
           onArmarVenta={manejarArmarVenta}
           onVerVenta={manejarVerVenta}
           onModificada={manejarModificada}
