@@ -1,8 +1,8 @@
-# Mitã
+# AgrandaditosTienda
 
 > Sistema de gestión del ciclo **consulta → venta** para un grupo de tiendas de ropa para chicos en Corrientes Capital.
 
-Mitã conecta dos mundos:
+AgrandaditosTienda conecta dos mundos:
 
 1. **La cara pública** donde el cliente elige la tienda según la edad, recorre el catálogo y consulta prendas por WhatsApp.
 2. **El panel de gestión** (`/gestion`) donde el empleado sigue esas consultas, las convierte en **ventas reales** y descuenta stock de forma consistente.
@@ -76,7 +76,7 @@ Requisitos: JDK 21, Maven 3.8+, Node 18+, PostgreSQL 16.
 
 ```bash
 # 1. Crear la base de datos
-createdb mita   # o: psql -U postgres -c "CREATE DATABASE mita;"
+createdb agrandaditostienda   # o: psql -U postgres -c "CREATE DATABASE agrandaditostienda;"
 
 # 2. Backend (seed automático la primera vez)
 cd backend && mvn spring-boot:run
@@ -100,7 +100,7 @@ Una sola URL: **http://localhost:8080** · Panel de gestión: **http://localhost
 | Dueño | `admin` | `admin123` |
 | Encargada | `encargada-{slug}` (una por tienda) | `encargada123` |
 
-> En producción, definí `MITM_ADMIN_USERNAME` y `MITM_ADMIN_PASSWORD` (ver Configuración).
+> En producción, definí `ADTIENDA_ADMIN_USERNAME` y `ADTIENDA_ADMIN_PASSWORD` (ver Configuración).
 
 ## Configuración
 
@@ -110,13 +110,13 @@ Variables de entorno (con defaults locales):
 |----------|---------|-------------|
 | `DB_HOST` | `localhost` | Host de PostgreSQL |
 | `DB_PORT` | `5432` | Puerto |
-| `DB_NAME` | `mita` | Nombre de la base |
+| `DB_NAME` | `agrandaditostienda` | Nombre de la base |
 | `DB_USER` | `postgres` | Usuario |
 | `DB_PASSWORD` | `postgres` | Contraseña |
 | `PORT` | `8080` | Puerto HTTP |
 | `DATABASE_URL` | — | Cadena `postgresql://user:pass@host/db` para cloud (conversión automática, soporta endpoint pooled de Neon) |
-| `MITM_ADMIN_USERNAME` | `admin` | Usuario dueño del seed |
-| `MITM_ADMIN_PASSWORD` | `admin123` | Contraseña del dueño del seed |
+| `ADTIENDA_ADMIN_USERNAME` | `admin` | Usuario dueño del seed |
+| `ADTIENDA_ADMIN_PASSWORD` | `admin123` | Contraseña del dueño del seed |
 
 El número de WhatsApp del modal se configura por tienda en la base de datos, y el número de respaldo del frontend está en `frontend/src/services/api.js` (`WHATSAPP_NUMBER`).
 

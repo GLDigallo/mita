@@ -1,10 +1,10 @@
-# AGENTS.md — Mitã
+# AGENTS.md — AgrandaditosTienda
 
-# Mitã · Agente de Desarrollo
+# AgrandaditosTienda · Agente de Desarrollo
 
 ## En qué proyecto trabajás
 
-Mitã es un grupo de **4 tiendas de ropa para chicos**, cada una con su propia identidad visual (colores, nombre, slug) y su franja de edad:
+AgrandaditosTienda es un grupo de **4 tiendas de ropa para chicos**, cada una con su propia identidad visual (colores, nombre, slug) y su franja de edad:
 
 - **Mokositos** (`mokositos-bebes`) — Bebés (0-2 años)
 - **Mokositos** (`mokositos-ninos`) — Niños (2-8 años)
@@ -13,7 +13,7 @@ Mitã es un grupo de **4 tiendas de ropa para chicos**, cada una con su propia i
 
 La identidad de cada tienda es **dato, no código**: se cambia en la base de datos, no recompilando.
 
-Mitã tiene dos caras:
+AgrandaditosTienda tiene dos caras:
 
 1. **Pública** — el cliente elige su tienda por edad, filtra por categoría y género, ve el catálogo y consulta prendas por WhatsApp.
 2. **De gestión** (`/gestion`) — el empleado sigue las consultas y las convierte en **ventas reales** con control de stock.
@@ -46,17 +46,17 @@ Trabajás **para** el desarrollador: él es el arquitecto y el único que decide
 - Java / Spring Boot — `~/.config/opencode/agent-rules/java-spring-rules.md`
 - React — `~/.config/opencode/agent-rules/react-rules.md`
 
-### Reglas específicas de Mitã
+### Reglas específicas de AgrandaditosTienda
 - Este archivo
 - `docs/ia/rules.md` — identidad del proyecto, tecnologías, lecciones
-- `docs/product/requirements.md` — qué debe hacer Mitã
+- `docs/product/requirements.md` — qué debe hacer AgrandaditosTienda
 - `docs/architecture/architecture.md` — módulos, modelo de datos, API
 - `docs/backend/backend-guidelines.md` — convenciones de backend
 - `docs/frontend/ui-guidelines.md` — convenciones de frontend
 
-**Jerarquía:** lo específico de Mitã gana sobre lo global. Si hay conflicto, prevalece la regla del proyecto.
+**Jerarquía:** lo específico de AgrandaditosTienda gana sobre lo global. Si hay conflicto, prevalece la regla del proyecto.
 
-## Los invariantes de Mitã (no se negocian)
+## Los invariantes de AgrandaditosTienda (no se negocian)
 
 1. **Identidad data-driven.** Nombres, colores, edades y catálogo viven en la BD. Nunca hardcodear una tienda en el frontend.
 2. **Toda venta nace de una consulta.** No existe una venta sin su consulta asociada (trazabilidad completa).
@@ -99,7 +99,7 @@ Una tarea termina cuando:
 
 Al finalizar, informá: archivos creados/modificados, funcionalidades implementadas, decisiones técnicas importantes, problemas encontrados y recomendaciones.
 
-## Lecciones que ya pagó Mitã
+## Lecciones que ya pagó AgrandaditosTienda
 
 - **Hibernate 6** no permite `@GeneratedValue` sobre una columna que no es `@Id`. Para el número de consulta (`C-%06d`) y de venta (`V-%06d`) se crea la secuencia al arranque (`create sequence if not exists`) y se asigna con `select nextval(...)` antes del insert.
 - **Spring Security 6** no persiste el `SecurityContext` en la sesión HTTP por defecto: hay que configurar `securityContext.securityContextRepository(new HttpSessionSecurityContextRepository())` con `requireExplicitSave(false)`. Sin esto, el login no sobrevive entre requests.

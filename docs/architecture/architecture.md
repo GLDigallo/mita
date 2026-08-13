@@ -1,4 +1,4 @@
-# Arquitectura - Mitã
+# Arquitectura - AgrandaditosTienda
 
 ## Vista general
 
@@ -15,14 +15,14 @@ Controller → Service → Repository → Database
 ```
 
 ### Módulos
-- `com.mita.entity` — Tienda, Categoria, Producto, VarianteProducto, Cliente, Consulta, ProductoConsultado, Venta, VentaItem
-- `com.mita.repository` — Spring Data JPA
-- `com.mita.dto` — records de respuesta/solicitud
-- `com.mita.mapper` — Entity ↔ DTO
-- `com.mita.service` — lógica de negocio
-- `com.mita.controller` — API REST pública y de gestión
-- `com.mita.exception` — manejo global de errores
-- `com.mita.config` — seguridad, SPA, CORS, datos iniciales
+- `com.agrandaditostienda.entity` — Tienda, Categoria, Producto, VarianteProducto, Cliente, Consulta, ProductoConsultado, Venta, VentaItem
+- `com.agrandaditostienda.repository` — Spring Data JPA
+- `com.agrandaditostienda.dto` — records de respuesta/solicitud
+- `com.agrandaditostienda.mapper` — Entity ↔ DTO
+- `com.agrandaditostienda.service` — lógica de negocio
+- `com.agrandaditostienda.controller` — API REST pública y de gestión
+- `com.agrandaditostienda.exception` — manejo global de errores
+- `com.agrandaditostienda.config` — seguridad, SPA, CORS, datos iniciales
 
 ## Modelo de datos
 

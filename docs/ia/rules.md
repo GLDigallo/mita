@@ -1,4 +1,4 @@
-# Mitã · Conocimiento del proyecto
+# AgrandaditosTienda · Conocimiento del proyecto
 
 Mapa de hechos y decisiones del dominio. El `AGENTS.md` define cómo trabaja el agente; este archivo es la memoria del proyecto.
 
@@ -20,7 +20,7 @@ Ninguna tienda es exclusiva de un género: cada una vende para varones, mujeres 
 - **Backend**: Java 21, Spring Boot 3.4, Spring Data JPA, PostgreSQL 16 (`backend/`).
 - **Frontend**: React 18, Vite, React Router v6, CSS Modules (`frontend/`).
 - **Build**: el frontend compila a `backend/src/main/resources/static`; Spring Boot sirve el SPA (una sola URL).
-- **Local**: backend `http://localhost:8080`, dev frontend `http://localhost:5173`, BD `mita` (postgres/postgres).
+- **Local**: backend `http://localhost:8080`, dev frontend `http://localhost:5173`, BD `agrandaditostienda` (postgres/postgres).
 - **Producción**: `DATABASE_URL` convertida en dos niveles (shell + `main()`), puerto `PORT`, credenciales de empleado por env vars. Deploy Docker + Render.
 
 ## El dominio en una pasada
@@ -41,4 +41,4 @@ Ninguna tienda es exclusiva de un género: cada una vende para varones, mujeres 
 
 ## Lecciones del proyecto
 
-Ver `AGENTS.md` → "Lecciones que ya pagó Mitã" (secuencias con `nextval`, sesión Spring Security, stock atómico con guarda, cola de guardado en el frontend).
+Ver `AGENTS.md` → "Lecciones que ya pagó AgrandaditosTienda" (secuencias con `nextval`, sesión Spring Security, stock atómico con guarda, cola de guardado en el frontend).

@@ -11,10 +11,10 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.mita</groupId>
-    <artifactId>mita</artifactId>
+    <groupId>com.agrandaditostienda</groupId>
+    <artifactId>agrandaditos-tienda</artifactId>
     <version>1.0.0</version>
-    <name>Mitã</name>
+    <name>AgrandaditosTienda</name>
     <description>Grupo de tiendas de ropa para bebés, niños, niñas y adolescentes</description>
 
     <properties>

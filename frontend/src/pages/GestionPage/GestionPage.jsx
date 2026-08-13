@@ -295,7 +295,7 @@ function GestionPage() {
       <div className={styles.fondo}>
         <header className={styles.barra}>
           <Link to="/" className={styles.marca}>
-            Mitã
+            AgrandaditosTienda
           </Link>
           <span className={styles.marcaEtiqueta}>home</span>
         </header>
@@ -310,7 +310,7 @@ function GestionPage() {
     <div className={styles.fondo}>
       <header className={styles.barra}>
         <Link to="/" className={styles.marca}>
-          Mitã
+            AgrandaditosTienda
         </Link>
         <div className={styles.usuario}>
           <span className={styles.usuarioNombre}>

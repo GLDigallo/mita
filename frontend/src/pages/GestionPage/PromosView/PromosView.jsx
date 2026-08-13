@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import styles from './PromosView.module.css'
 
-const CLAVE_STORAGE = 'mita_promos_prototipo'
+const CLAVE_STORAGE = 'agrandaditostienda_promos_prototipo'
 
 const TIPOS_PROMO = [
   { valor: 'PORCENTAJE', etiqueta: 'Descuento %' },

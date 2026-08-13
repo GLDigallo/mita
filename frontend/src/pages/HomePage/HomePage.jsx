@@ -21,7 +21,7 @@ function HomePage() {
       <main>
         <section className={styles.seccion} id="tiendas">
           <div className={styles.contenido}>
-            <p className={styles.etiqueta}>Tiendas Mitã</p>
+            <p className={styles.etiqueta}>Tiendas AgrandaditosTienda</p>
             <h2 className={styles.titulo}>Elegí la tienda de tu pibe</h2>
             <p className={styles.subtitulo}>
               Cuatro tiendas, cada una con su nombre y su catálogo. Entrá a la que va con su edad.

@@ -1,4 +1,4 @@
-# Backend Guidelines - Mitã
+# Backend Guidelines - AgrandaditosTienda
 
 ## Arquitectura de capas
 
@@ -10,7 +10,7 @@ Queda prohibido: Controller → Repository, Controller → Database, Frontend �
 
 ## Base de datos
 
-- PostgreSQL 16. Base local: `mita`, usuario `postgres`, password `postgres`.
+- PostgreSQL 16. Base local: `agrandaditostienda`, usuario `postgres`, password `postgres`.
 - Configuración por variables de entorno: `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER`, `DB_PASSWORD`, con defaults para desarrollo local.
 - Conversión de `DATABASE_URL` en dos niveles (shell + `main()` de Java) para producción. Aplicar `.trim()` a toda variable de entorno.
 - Todas las tablas con `id bigserial` (Long), campos string con longitud máxima definida.

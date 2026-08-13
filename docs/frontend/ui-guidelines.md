@@ -1,4 +1,4 @@
-# UI Guidelines - Mitã
+# UI Guidelines - AgrandaditosTienda
 
 ## Tecnologías
 - React 18, Vite, React Router v6, CSS Modules.

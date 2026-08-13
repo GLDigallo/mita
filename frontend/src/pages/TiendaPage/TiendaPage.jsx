@@ -147,7 +147,7 @@ function TiendaPage() {
             )}
           </div>
 
-          <div ref={productosRef}>
+          <div ref={productosRef} className={styles.productos}>
             {productos.isLoading && (
               <div className={styles.grid}>
                 {Array.from({ length: 8 }).map((_, indice) => (

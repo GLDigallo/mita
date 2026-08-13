@@ -1,4 +1,4 @@
-# Requirements - Mitã
+# Requirements - AgrandaditosTienda
 
 ## Objetivo
 Sitio web de un grupo de tiendas de ropa en Corrientes Capital con locales independientes según la edad del cliente, desde bebés hasta adolescentes.

@@ -1,12 +1,12 @@
 # Changelog
 
-Todas las novedades notables del proyecto Mitã.
+Todas las novedades notables del proyecto AgrandaditosTienda.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.0.0/) y este proyecto respeta [Versionado Semántico](https://semver.org/lang/es/).
 
 ## [1.0.0] — 2026-08-10
 
-### Mitã: consulta → venta, en producción
+### AgrandaditosTienda: consulta → venta, en producción
 
 Primera versión estable del sistema del grupo de tiendas de ropa para chicos (Mokositos Bebés, Mokositos Niños, Agrandaditos y Mood Teens): la cara pública donde el cliente consulta prendas y el panel de gestión donde el empleado convierte esas consultas en ventas reales con control de stock.
 

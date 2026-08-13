@@ -1,0 +1,106 @@
+package com.agrandaditostienda.service;
+
+import com.agrandaditostienda.dto.CambiarEstadoUsuarioRequest;
+import com.agrandaditostienda.dto.CrearEncargadaRequest;
+import com.agrandaditostienda.dto.EncargadaDTO;
+import com.agrandaditostienda.entity.RolUsuario;
+import com.agrandaditostienda.entity.Tienda;
+import com.agrandaditostienda.entity.Usuario;
+import com.agrandaditostienda.exception.ConflictoException;
+import com.agrandaditostienda.exception.RecursoNoEncontradoException;
+import com.agrandaditostienda.exception.ReglaNegocioException;
+import com.agrandaditostienda.repository.TiendaRepository;
+import com.agrandaditostienda.repository.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+
+@Service
+public class UsuarioService {
+
+    private final UsuarioRepository usuarioRepository;
+    private final TiendaRepository tiendaRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          TiendaRepository tiendaRepository,
+                          PasswordEncoder passwordEncoder) {
+        this.usuarioRepository = usuarioRepository;
+        this.tiendaRepository = tiendaRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
+    @Transactional(readOnly = true)
+    public List<EncargadaDTO> listarEncargadas() {
+        return usuarioRepository.findAllConTienda().stream()
+                .filter(u -> u.getRol() == RolUsuario.ENCARGADA)
+                .map(this::toDTO)
+                .toList();
+    }
+
+    @Transactional
+    public EncargadaDTO crearEncargada(CrearEncargadaRequest request) {
+        Tienda tienda = tiendaActivaValida(request.tiendaSlug());
+        validarUsernameDisponible(request.username());
+        validarSinEncargadaEn(tienda);
+
+        Usuario encargada = new Usuario(
+                request.nombre().trim(),
+                request.username().trim(),
+                passwordEncoder.encode(request.password()),
+                RolUsuario.ENCARGADA,
+                tienda);
+        return toDTO(usuarioRepository.save(encargada));
+    }
+
+    @Transactional
+    public EncargadaDTO cambiarEstado(Long id, CambiarEstadoUsuarioRequest request) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Usuario no encontrado: " + id));
+        validarQueSeaEncargada(usuario);
+
+        usuario.setActivo(request.activo());
+        return toDTO(usuarioRepository.save(usuario));
+    }
+
+    private Tienda tiendaActivaValida(String slug) {
+        if (slug == null || slug.isBlank()) {
+            throw new ReglaNegocioException("La tienda es obligatoria");
+        }
+        return tiendaRepository.findBySlugAndActivaTrue(slug)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Tienda no encontrada: " + slug));
+    }
+
+    private void validarUsernameDisponible(String username) {
+        if (usuarioRepository.existsByUsername(username.trim())) {
+            throw new ConflictoException("El usuario '" + username + "' ya existe");
+        }
+    }
+
+    private void validarSinEncargadaEn(Tienda tienda) {
+        if (usuarioRepository.existsByRolAndTiendaId(RolUsuario.ENCARGADA, tienda.getId())) {
+            throw new ConflictoException(
+                    "La tienda " + tienda.getNombre() + " ya tiene una encargada asignada");
+        }
+    }
+
+    private void validarQueSeaEncargada(Usuario usuario) {
+        if (usuario.getRol() != RolUsuario.ENCARGADA) {
+            throw new RecursoNoEncontradoException("El usuario no es una encargada");
+        }
+    }
+
+    private EncargadaDTO toDTO(Usuario usuario) {
+        Tienda tienda = usuario.getTienda();
+        return new EncargadaDTO(
+                usuario.getId(),
+                usuario.getNombre(),
+                usuario.getUsername(),
+                usuario.getRol(),
+                tienda != null ? tienda.getSlug() : null,
+                tienda != null ? tienda.getNombre() : null,
+                usuario.isActivo());
+    }
+}

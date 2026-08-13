@@ -10,8 +10,8 @@ services:
       - key: DATABASE_URL
         sync: false
       # Credenciales de empleado (admin). Fijar en el dashboard de Render antes de usar en producción.
-      # - key: MITM_ADMIN_USERNAME
+      # - key: ADTIENDA_ADMIN_USERNAME
       #   value: ""
-      # - key: MITM_ADMIN_PASSWORD
+      # - key: ADTIENDA_ADMIN_PASSWORD
       #   value: ""
     healthCheckPath: /api/health

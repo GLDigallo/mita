@@ -8,7 +8,7 @@ function Footer({ tiendas = [] }) {
     <footer className={styles.footer}>
       <div className={styles.contenido}>
         <div className={styles.columna}>
-          <p className={styles.marca}>Mitã</p>
+          <p className={styles.marca}>AgrandaditosTienda</p>
           <p className={styles.texto}>
             Las tiendas de moda para bebés, niños, niñas y adolescentes de Corrientes Capital.
           </p>
@@ -33,7 +33,7 @@ function Footer({ tiendas = [] }) {
         </div>
       </div>
       <div className={styles.pie}>
-        <p>© {new Date().getFullYear()} Mitã · Todos los derechos reservados</p>
+        <p>© {new Date().getFullYear()} AgrandaditosTienda · Todos los derechos reservados</p>
       </div>
     </footer>
   )
