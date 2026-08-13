@@ -22,7 +22,8 @@ public class SpaFilter extends OncePerRequestFilter {
         String path = request.getRequestURI();
         if (!path.startsWith("/api")
                 && !path.contains(".")
-                && !path.startsWith("/uploads")) {
+                && !path.startsWith("/uploads")
+                && !path.startsWith("/tienda/")) {
             request.getRequestDispatcher("/index.html").forward(request, response);
             return;
         }

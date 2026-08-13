@@ -86,6 +86,40 @@ function HomePage() {
             )}
           </div>
         </section>
+
+        <section className={styles.seccion}>
+          <div className={styles.contenido}>
+            <div className={styles.acerca}>
+              <div>
+                <p className={styles.etiqueta}>Sobre nosotros</p>
+                <h2 className={styles.titulo}>AgrandaditosTienda en Corrientes</h2>
+              </div>
+              <div className={styles.acercaTexto}>
+                <p>
+                  AgrandaditosTienda es un grupo de tiendas de ropa para chicos en{' '}
+                  <strong>Corrientes Capital</strong>. Cuatro tiendas, cada una con su nombre y su
+                  propio catálogo según la edad: bebés de 0 a 2 años, niños de 2 a 8, preadolescentes
+                  de 8 a 12 y adolescentes de 12 a 16.
+                </p>
+                <p>
+                  En cada tienda vas a encontrar remeras, pantalones, buzos, vestidos y todo lo que
+                  tu pibe necesita, en talles para cada edad. Elegí la tienda, mirá el catálogo y
+                  consultá la prenda que te guste por WhatsApp.
+                </p>
+              </div>
+              <ul className={styles.acercaLista}>
+                {tiendas.data?.map((tienda) => (
+                  <li key={tienda.id}>
+                    <Link to={`/tienda/${tienda.slug}`}>
+                      <strong>{tienda.nombre}</strong>
+                      <span>{tienda.etiquetaEdad}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </section>
       </main>
       <Footer tiendas={tiendas.data ?? []} />
     </>

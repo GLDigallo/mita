@@ -1,0 +1,18 @@
+{
+  "name": "AgrandaditosTienda · Tiendas de moda para chicos",
+  "short_name": "Agrandaditos",
+  "description": "Tiendas de moda para bebés, niños, niñas y adolescentes en Corrientes Capital.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4F46E5",
+  "lang": "es",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
