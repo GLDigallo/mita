@@ -8,6 +8,7 @@ import com.agrandaditostienda.service.TiendaService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,11 +28,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Pre-renderiza la página de cada tienda con su contenido real (nombre, descripción,
- * catálogo) para que los buscadores lean el contenido sin ejecutar JavaScript.
+ * Pre-renderiza las páginas públicas (home y tiendas) con su contenido real (nombre,
+ * descripción, catálogo) para que los buscadores lean el contenido sin ejecutar JavaScript.
  */
 @RestController
-public class TiendaSeoController {
+public class PrerenderController {
 
     public static final String DOMINIO = "https://agrandaditostiendas.onrender.com";
     private static final String IMAGEN_HOME = "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=1200&h=800&fit=crop";
@@ -44,7 +45,7 @@ public class TiendaSeoController {
 
     private volatile String baseHtml;
 
-    public TiendaSeoController(TiendaService tiendaService, CatalogoService catalogoService) {
+    public PrerenderController(TiendaService tiendaService, CatalogoService catalogoService) {
         this.tiendaService = tiendaService;
         this.catalogoService = catalogoService;
     }
@@ -59,17 +60,69 @@ public class TiendaSeoController {
         }
     }
 
-    @GetMapping(value = {"/tienda/{slug}", "/tienda/{slug}/"}, produces = MediaType.TEXT_HTML_VALUE)
-    public String prenderTienda(@PathVariable String slug) {
+    @GetMapping(value = {"/", "/tienda/{slug}", "/tienda/{slug}/"}, produces = MediaType.TEXT_HTML_VALUE)
+    public String prerender(@PathVariable(required = false) String slug, HttpServletResponse response) {
+        if (slug == null) {
+            return prerenderHome();
+        }
         TiendaDTO tienda;
         List<ProductoDTO> productos;
         try {
             tienda = tiendaService.obtenerTiendaPorSlug(slug);
             productos = catalogoService.listarProductosDeTienda(slug, null, null);
         } catch (RecursoNoEncontradoException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return baseHtml;
         }
+        return prerenderTienda(tienda, productos);
+    }
 
+    private String prerenderHome() {
+        List<TiendaDTO> tiendas = tiendaService.listarTiendasActivas();
+        List<ProductoDTO> destacados = catalogoService.listarDestacados().stream()
+                .limit(8)
+                .toList();
+        return baseHtml.replace("<div id=\"root\"></div>",
+                "<div id=\"root\">" + contenidoHome(tiendas, destacados) + "</div>");
+    }
+
+    private String contenidoHome(List<TiendaDTO> tiendas, List<ProductoDTO> destacados) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("<h1>AgrandaditosTienda · Tiendas de ropa para chicos</h1>");
+        sb.append("<p>Tiendas de ropa para bebés, niños, niñas y adolescentes en Corrientes Capital, "
+                + "Argentina. Cuatro tiendas, cada una con su nombre y su propio catálogo según la edad.</p>");
+        sb.append("<h2>Las cuatro tiendas</h2>");
+        sb.append("<ul>");
+        for (TiendaDTO tienda : tiendas) {
+            sb.append("<li><a href=\"/tienda/").append(esc(tienda.slug())).append("\"><strong>")
+                    .append(esc(tienda.nombre())).append("</strong> — ").append(esc(tienda.etiquetaEdad()))
+                    .append("</a>");
+            if (tienda.descripcion() != null && !tienda.descripcion().isBlank()) {
+                sb.append("<p>").append(esc(tienda.descripcion())).append("</p>");
+            }
+            sb.append("</li>");
+        }
+        sb.append("</ul>");
+        sb.append("<h2>Sobre nosotros</h2>");
+        sb.append("<p>AgrandaditosTienda es un grupo de tiendas de ropa para chicos en <strong>Corrientes Capital</strong>. "
+                + "Cuatro tiendas, cada una con su nombre y su catálogo según la edad: bebés de 0 a 2 años, "
+                + "niños de 2 a 8, preadolescentes de 8 a 12 y adolescentes de 12 a 16.</p>");
+        sb.append("<p>En cada tienda vas a encontrar remeras, pantalones, buzos, vestidos y todo lo que tu pibe "
+                + "necesita, en talles para cada edad. Elegí la tienda, mirá el catálogo y consultá la prenda "
+                + "que te guste por WhatsApp.</p>");
+        if (!destacados.isEmpty()) {
+            sb.append("<h2>Prendas destacadas</h2>");
+            sb.append("<ul>");
+            for (ProductoDTO producto : destacados) {
+                sb.append("<li>").append(esc(producto.nombre())).append(" — $")
+                        .append(formatoPrecio.format(producto.precio())).append("</li>");
+            }
+            sb.append("</ul>");
+        }
+        return sb.toString();
+    }
+
+    private String prerenderTienda(TiendaDTO tienda, List<ProductoDTO> productos) {
         String titulo = tienda.nombre() + " · Tienda para " + tienda.etiquetaEdad() + " · AgrandaditosTienda";
         String descripcion = construirDescripcion(tienda);
         String canonical = DOMINIO + "/tienda/" + tienda.slug();

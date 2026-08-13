@@ -1,13 +1,26 @@
 package com.agrandaditostienda.controller;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 public class SeoController {
 
     private static final String DOMINIO = "https://agrandaditostiendas.onrender.com";
+
+    private static final String INDEXNOW_KEY = "dbd025be09994c2d4ee1e52d7a613c33";
+
+    @GetMapping(value = "/indexnow/{clave}.txt", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String indexNowKey(@PathVariable String clave) {
+        if (!INDEXNOW_KEY.equals(clave)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return INDEXNOW_KEY;
+    }
 
     @GetMapping(value = "/robots.txt", produces = MediaType.TEXT_PLAIN_VALUE)
     public String robots() {

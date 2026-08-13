@@ -23,7 +23,12 @@ public class SpaFilter extends OncePerRequestFilter {
         if (!path.startsWith("/api")
                 && !path.contains(".")
                 && !path.startsWith("/uploads")
-                && !path.startsWith("/tienda/")) {
+                && !path.startsWith("/tienda/")
+                && !path.equals("/")) {
+            boolean rutaConocida = path.startsWith("/tienda") || path.startsWith("/home");
+            if (!rutaConocida) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            }
             request.getRequestDispatcher("/index.html").forward(request, response);
             return;
         }

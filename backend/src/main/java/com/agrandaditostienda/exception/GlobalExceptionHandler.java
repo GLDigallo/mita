@@ -11,6 +11,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -86,6 +87,13 @@ public class GlobalExceptionHandler {
         log.warn("Conflicto de integridad en base de datos", ex);
         return ResponseEntity.status(HttpStatus.CONFLICT)
                 .body(new ApiError(HttpStatus.CONFLICT.value(), "La operación no se pudo completar por un conflicto de datos"));
+    }
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ApiError> handleResponseStatus(ResponseStatusException ex) {
+        String mensaje = ex.getReason() != null ? ex.getReason() : "Recurso no encontrado";
+        return ResponseEntity.status(ex.getStatusCode())
+                .body(new ApiError(ex.getStatusCode().value(), mensaje));
     }
 
     @ExceptionHandler(Exception.class)
