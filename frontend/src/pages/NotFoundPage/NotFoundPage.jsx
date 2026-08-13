@@ -3,11 +3,17 @@ import Header from '../../components/Header/Header'
 import Footer from '../../components/Footer/Footer'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import { useFetch } from '../../hooks/useFetch'
+import useSeo from '../../hooks/useSeo'
 import { fetchTiendas } from '../../services/api'
 import styles from './NotFoundPage.module.css'
 
 function NotFoundPage() {
   const tiendas = useFetch(fetchTiendas, [])
+
+  useSeo({
+    titulo: 'Página no encontrada · AgrandaditosTienda',
+    descripcion: 'La página que buscás no existe o fue movida. Volvé al inicio y elegí una tienda.',
+  })
 
   return (
     <>

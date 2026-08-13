@@ -93,13 +93,6 @@
   flex: 1;
 }
 
-.contador {
-  font-size: 13.5px;
-  font-weight: 600;
-  color: var(--color-texto-suave);
-  white-space: nowrap;
-}
-
 .grid {
   display: grid;
   gap: 16px;

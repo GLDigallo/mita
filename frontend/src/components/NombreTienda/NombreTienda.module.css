@@ -1,7 +1,8 @@
 .disney {
-  font-family: 'Pacifico', 'Comic Sans MS', cursive;
+  font-family: 'Anton', 'Arial Narrow', sans-serif;
   font-weight: 400;
-  letter-spacing: normal;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   background: linear-gradient(90deg, #ff2d78, #ff8a1e, #f9d423, #2fb45f, #2f8cff, #a13dff, #ff2d78);
   background-size: 300% 100%;
   -webkit-background-clip: text;

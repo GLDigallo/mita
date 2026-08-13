@@ -7,12 +7,20 @@ import ProductCard from '../../components/ProductCard/ProductCard'
 import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import { useFetch } from '../../hooks/useFetch'
+import useSeo from '../../hooks/useSeo'
 import { fetchDestacados, fetchTiendas } from '../../services/api'
 import styles from './HomePage.module.css'
 
 function HomePage() {
   const tiendas = useFetch(fetchTiendas, [])
   const destacados = useFetch(fetchDestacados, [])
+
+  useSeo({
+    titulo: 'AgrandaditosTienda · Tiendas de moda para chicos',
+    descripcion:
+      'Las tiendas de moda para bebés, niños, niñas y adolescentes en Corrientes Capital. Entrá a la tienda de la edad de tu pibe: Mokositos, Agrandaditos y Mood Teens.',
+    canonical: 'https://agrandaditostiendas.onrender.com/',
+  })
 
   return (
     <>

@@ -10,6 +10,7 @@ import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import NombreTienda from '../../components/NombreTienda/NombreTienda'
 import { useFetch } from '../../hooks/useFetch'
+import useSeo from '../../hooks/useSeo'
 import {
   fetchCategorias,
   fetchGeneros,
@@ -42,6 +43,14 @@ function TiendaPage() {
     return fetchProductos(slug, categoriaBackend, genero)
   }, [slug, categoria, genero])
   const tiendas = useFetch(fetchTiendas, [])
+
+  useSeo({
+    titulo: tienda.data
+      ? `${tienda.data.nombre} · Tienda para ${tienda.data.etiquetaEdad} · AgrandaditosTienda`
+      : 'AgrandaditosTienda · Tiendas de moda para chicos',
+    descripcion: tienda.data?.descripcion,
+    canonical: `https://agrandaditostiendas.onrender.com/tienda/${slug}`,
+  })
 
   useEffect(() => {
     setCategoria('destacados')
@@ -138,13 +147,6 @@ function TiendaPage() {
                 )
               )}
             </div>
-            {!categorias.isLoading && !categorias.error && categorias.data && (
-              <p className={styles.contador}>
-                {productos.isLoading
-                  ? 'Cargando…'
-                  : `${productosVisibles.length} prenda${productosVisibles.length === 1 ? '' : 's'}`}
-              </p>
-            )}
           </div>
 
           <div ref={productosRef} className={styles.productos}>
