@@ -33,6 +33,7 @@ public class SecurityConfig {
                                 "/manifest.json"
                         ).permitAll()
                         .requestMatchers("/api/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/clima").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/tiendas", "/api/tiendas/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/destacados").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/consultas").permitAll()
