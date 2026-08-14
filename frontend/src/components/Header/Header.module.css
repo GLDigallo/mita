@@ -21,7 +21,7 @@
   font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.5px;
-  color: var(--color-marca);
+  color: var(--marca, var(--color-marca));
   transition: opacity 0.25s ease;
 }
 

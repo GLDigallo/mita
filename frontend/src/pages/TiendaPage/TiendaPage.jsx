@@ -66,7 +66,7 @@ function TiendaPage() {
   if (tienda.isLoading) {
     return (
       <>
-        <Header />
+        <Header colorPrimario={tienda.data?.colorPrimario} />
         <div className={styles.skeletonHero} />
       </>
     )
@@ -75,11 +75,11 @@ function TiendaPage() {
   if (tienda.error || !tienda.data) {
     return (
       <>
-        <Header />
+        <Header colorPrimario={tienda.data?.colorPrimario} />
         <main className={styles.contenido}>
           <ErrorMessage message={tienda.error ?? 'Tienda no encontrada'} />
         </main>
-        <Footer tiendas={tiendas.data ?? []} />
+        <Footer tiendas={tiendas.data ?? []} colorPrimario={tienda.data?.colorPrimario} />
       </>
     )
   }
@@ -88,7 +88,7 @@ function TiendaPage() {
 
   return (
     <>
-      <Header />
+      <Header colorPrimario={tiendaActual.colorPrimario} />
       <main>
         <section
           className={styles.hero}
@@ -172,7 +172,7 @@ function TiendaPage() {
           </div>
         </section>
       </main>
-      <Footer tiendas={tiendas.data ?? []} />
+      <Footer tiendas={tiendas.data ?? []} colorPrimario={tiendaActual.colorPrimario} />
 
       {productoSeleccionado && (
         <ProductModal

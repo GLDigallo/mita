@@ -1,11 +1,12 @@
 import { Link, useLocation } from 'react-router-dom'
 import styles from './Footer.module.css'
 
-function Footer({ tiendas = [] }) {
+function Footer({ tiendas = [], colorPrimario }) {
   const ubicacion = useLocation()
   const enTienda = ubicacion.pathname.startsWith('/tienda/')
+  const estilo = colorPrimario ? { '--marca-accent': colorPrimario } : undefined
   return (
-    <footer className={styles.footer}>
+    <footer className={styles.footer} style={estilo}>
       <div className={styles.contenido}>
         <div className={styles.columna}>
           <p className={styles.marca}>AgrandaditosTienda</p>

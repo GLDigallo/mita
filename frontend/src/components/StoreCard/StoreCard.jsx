@@ -19,7 +19,6 @@ function StoreCard({ tienda }) {
         <span className={styles.badge}>{tienda.etiquetaEdad}</span>
         <div className={styles.overlay}>
           <NombreTienda tienda={tienda} className={styles.nombre} />
-          <span className={styles.flecha} aria-hidden="true">→</span>
         </div>
       </div>
     </Link>
