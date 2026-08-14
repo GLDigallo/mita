@@ -1,25 +1,24 @@
 .disney {
-  font-family: 'Anton', 'Arial Narrow', sans-serif;
+  font-family: 'Boogaloo', 'Anton', 'Arial Narrow', sans-serif;
   font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  background: linear-gradient(90deg, #ff2d78, #ff8a1e, #f9d423, #2fb45f, #2f8cff, #a13dff, #ff2d78);
-  background-size: 300% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent !important;
-  -webkit-text-fill-color: transparent !important;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.28));
-  animation: brilloDisney 9s linear infinite;
+  letter-spacing: 0.02em;
+  line-height: 1.15;
+  display: inline-block;
 }
 
-@keyframes brilloDisney {
-  from {
-    background-position: 0% 0;
-  }
-  to {
-    background-position: 300% 0;
-  }
+.letra {
+  display: inline-block;
+  transform: rotate(var(--rot, 0deg)) translateY(var(--desplazamiento, 0px));
+  -webkit-text-stroke: 2px #23263a;
+  text-shadow:
+    3px 0 0 #23263a, -3px 0 0 #23263a,
+    0 3px 0 #23263a, 0 -3px 0 #23263a,
+    2px 2px 0 #23263a, -2px 2px 0 #23263a,
+    2px -2px 0 #23263a, -2px -2px 0 #23263a,
+    0 4px 0 #2a2e45,
+    0 6px 0 #1e2233,
+    0 8px 14px rgba(0, 0, 0, 0.35);
 }
 
 .moodTeens {
