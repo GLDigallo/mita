@@ -6,6 +6,7 @@ import CategoryFilter from '../../components/CategoryFilter/CategoryFilter'
 import GeneroFilter from '../../components/GeneroFilter/GeneroFilter'
 import ProductGrid from '../../components/ProductGrid/ProductGrid'
 import ProductModal from '../../components/ProductModal/ProductModal'
+import CartModal from '../../components/CartModal/CartModal'
 import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import NombreTienda from '../../components/NombreTienda/NombreTienda'
@@ -25,6 +26,8 @@ function TiendaPage() {
   const [categoria, setCategoria] = useState('destacados')
   const [genero, setGenero] = useState('')
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
+  const [carrito, setCarrito] = useState([])
+  const [carritoAbierto, setCarritoAbierto] = useState(false)
   const productosRef = useRef(null)
 
   const todoActivo = categoria === '' && genero === ''
@@ -56,8 +59,35 @@ function TiendaPage() {
     setCategoria('destacados')
     setGenero('')
     setProductoSeleccionado(null)
+    setCarrito([])
+    setCarritoAbierto(false)
     window.scrollTo(0, 0)
   }, [slug])
+
+  const cantidadCarrito = carrito.reduce((suma, item) => suma + item.cantidad, 0)
+
+  const agregarAlCarrito = (item) => {
+    setCarrito((prev) => {
+      const existente = prev.findIndex(
+        (i) => i.productoId === item.productoId && i.color === item.color && i.talle === item.talle,
+      )
+      if (existente >= 0) {
+        const copia = [...prev]
+        copia[existente] = { ...copia[existente], cantidad: copia[existente].cantidad + item.cantidad }
+        return copia
+      }
+      return [...prev, item]
+    })
+    setProductoSeleccionado(null)
+    setCarritoAbierto(true)
+  }
+
+  const quitarDelCarrito = (indice) => {
+    setCarrito((prev) => prev.filter((_, i) => i !== indice))
+    if (carrito.length - 1 === 0) setCarritoAbierto(false)
+  }
+
+  const limpiarCarrito = () => setCarrito([])
 
   const productosVisibles = categoria === 'destacados'
     ? (productos.data ?? []).filter((p) => p.destacado)
@@ -179,6 +209,40 @@ function TiendaPage() {
           producto={productoSeleccionado}
           tienda={tiendaActual}
           onCerrar={() => setProductoSeleccionado(null)}
+          onAgregar={agregarAlCarrito}
+        />
+      )}
+
+      {carrito.length > 0 && (
+        <button
+          type="button"
+          className={styles.carritoFlotante}
+          style={{ '--primario': tiendaActual.colorPrimario }}
+          onClick={() => setCarritoAbierto(true)}
+          aria-label={`Abrir carrito, ${cantidadCarrito} productos`}
+        >
+          <span className={styles.carritoIcono} aria-hidden="true">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path
+                d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path d="M3 6h18" strokeLinecap="round" />
+              <path d="M16 10a4 4 0 0 1-8 0" strokeLinecap="round" />
+            </svg>
+          </span>
+          {cantidadCarrito > 0 && <span className={styles.carritoContador}>{cantidadCarrito}</span>}
+        </button>
+      )}
+
+      {carritoAbierto && (
+        <CartModal
+          items={carrito}
+          tienda={tiendaActual}
+          onCerrar={() => setCarritoAbierto(false)}
+          onQuitar={quitarDelCarrito}
+          onLimpiar={limpiarCarrito}
         />
       )}
     </>
