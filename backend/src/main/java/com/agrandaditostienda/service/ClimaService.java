@@ -2,6 +2,8 @@ package com.agrandaditostienda.service;
 
 import com.agrandaditostienda.dto.ClimaDTO;
 import com.fasterxml.jackson.databind.JsonNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
@@ -12,6 +14,8 @@ import java.time.ZoneId;
 
 @Service
 public class ClimaService {
+
+    private static final Logger log = LoggerFactory.getLogger(ClimaService.class);
 
     private static final String API_URL = "https://api.open-meteo.com/v1/forecast"
             + "?latitude=-27.4698&longitude=-58.8306"
@@ -55,6 +59,7 @@ public class ClimaService {
             return new ClimaDTO(fase(hora, amanecer, anochecer), hora, amanecer, anochecer,
                     temperatura, descripcion(codigo), esLluvia(codigo));
         } catch (RuntimeException e) {
+            log.warn("No se pudo consultar el clima a Open-Meteo, se usa el valor por defecto: {}", e.toString());
             return porDefecto();
         }
     }
