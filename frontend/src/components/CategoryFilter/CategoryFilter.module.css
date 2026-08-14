@@ -3,7 +3,7 @@
   gap: 10px;
   flex-wrap: nowrap;
   overflow-x: auto;
-  padding-bottom: 6px;
+  padding: 8px 0 6px;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
 }
@@ -37,10 +37,12 @@
   color: #fff;
 }
 
-.chip:hover {
-  border-color: var(--color-texto);
-  color: var(--color-texto);
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .chip:hover {
+    border-color: var(--color-texto);
+    color: var(--color-texto);
+    transform: translateY(-1px);
+  }
 }
 
 .activo {

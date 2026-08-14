@@ -86,50 +86,17 @@
 
 .acercaTexto {
   display: grid;
-  gap: 12px;
-  max-width: 640px;
-  color: var(--color-texto-suave);
-  font-size: 15.5px;
-  line-height: 1.7;
-}
-
-.acercaLista {
-  display: grid;
-  gap: 10px;
-  list-style: none;
-  padding: 0;
-}
-
-.acercaLista a {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: var(--radio-md);
-  background: var(--color-superficie);
+  gap: 14px;
+  max-width: 680px;
   color: var(--color-texto);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.acercaLista a:hover {
-  transform: translateY(-1px);
-  box-shadow: var(--sombra-md);
-}
-
-.acercaLista span {
-  color: var(--color-texto-suave);
-  font-size: 13.5px;
+  font-size: 15.5px;
+  line-height: 1.75;
 }
 
 @media (min-width: 900px) {
-  .acerca {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr) minmax(0, 0.9fr);
-    align-items: start;
-  }
-
   .acercaTexto {
-    font-size: 16px;
+    font-size: 16.5px;
+    line-height: 1.8;
   }
 }
 

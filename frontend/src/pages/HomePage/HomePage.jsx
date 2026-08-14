@@ -107,16 +107,6 @@ function HomePage() {
                   consultá la prenda que te guste por WhatsApp.
                 </p>
               </div>
-              <ul className={styles.acercaLista}>
-                {tiendas.data?.map((tienda) => (
-                  <li key={tienda.id}>
-                    <Link to={`/tienda/${tienda.slug}`}>
-                      <strong>{tienda.nombre}</strong>
-                      <span>{tienda.etiquetaEdad}</span>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </section>

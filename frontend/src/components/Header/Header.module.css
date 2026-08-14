@@ -18,11 +18,15 @@
 
 .marca {
   font-family: var(--fuente-display);
-  font-size: 26px;
+  font-size: 32px;
   font-weight: 700;
   letter-spacing: -0.5px;
   color: var(--color-marca);
   transition: opacity 0.25s ease;
+}
+
+.marcaInicio {
+  cursor: default;
 }
 
 .marcaTilde {
@@ -36,5 +40,9 @@
 @media (min-width: 768px) {
   .contenido {
     padding: 16px 24px;
+  }
+
+  .marca {
+    font-size: 34px;
   }
 }
