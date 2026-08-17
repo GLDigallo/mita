@@ -13,6 +13,7 @@ function NotFoundPage() {
   useSeo({
     titulo: 'Página no encontrada · AgrandaditosTienda',
     descripcion: 'La página que buscás no existe o fue movida. Volvé al inicio y elegí una tienda.',
+    noIndex: true,
   })
 
   return (

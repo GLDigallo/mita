@@ -47,12 +47,28 @@ function TiendaPage() {
   }, [slug, categoria, genero])
   const tiendas = useFetch(fetchTiendas, [])
 
+  const jsonLdTienda = tienda.data ? {
+    '@context': 'https://schema.org',
+    '@type': 'ClothingStore',
+    name: tienda.data.nombre,
+    description: tienda.data.descripcion || `Tienda de ropa para ${tienda.data.etiquetaEdad} en Corrientes Capital.`,
+    url: `https://agrandaditostiendas.onrender.com/tienda/${slug}`,
+    image: tienda.data.imagenHero,
+    priceRange: '$$',
+    openingHours: 'Mo-Sa 09:00-20:00',
+    telephone: tienda.data.whatsapp ? `+${tienda.data.whatsapp.replace(/\s/g, '')}` : undefined,
+    areaServed: 'Corrientes Capital, Argentina',
+    address: { '@type': 'PostalAddress', addressLocality: 'Corrientes', addressRegion: 'Corrientes', addressCountry: 'AR' },
+    geo: { '@type': 'GeoCoordinates', latitude: -27.4678, longitude: -58.8167 },
+  } : undefined
+
   useSeo({
     titulo: tienda.data
       ? `${tienda.data.nombre} · Tienda para ${tienda.data.etiquetaEdad} · AgrandaditosTienda`
       : 'AgrandaditosTienda · Tiendas de moda para chicos',
     descripcion: tienda.data?.descripcion,
     canonical: `https://agrandaditostiendas.onrender.com/tienda/${slug}`,
+    jsonLd: jsonLdTienda,
   })
 
   useEffect(() => {

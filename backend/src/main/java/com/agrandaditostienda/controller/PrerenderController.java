@@ -72,7 +72,12 @@ public class PrerenderController {
             productos = catalogoService.listarProductosDeTienda(slug, null, null);
         } catch (RecursoNoEncontradoException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            return baseHtml;
+            String html = reemplazar(baseHtml,
+                    "(?s)<title>.*?</title>",
+                    "<title>Página no encontrada · AgrandaditosTienda</title>");
+            html = reemplazar(html, "(?s)<meta name=\"robots\" content=\"[^\"]*\" />",
+                    "<meta name=\"robots\" content=\"noindex, nofollow\" />");
+            return html;
         }
         return prerenderTienda(tienda, productos);
     }
@@ -88,9 +93,10 @@ public class PrerenderController {
 
     private String contenidoHome(List<TiendaDTO> tiendas, List<ProductoDTO> destacados) {
         StringBuilder sb = new StringBuilder();
-        sb.append("<h1>AgrandaditosTienda · Tiendas de ropa para chicos</h1>");
-        sb.append("<p>Tiendas de ropa para bebés, niños, niñas y adolescentes en Corrientes Capital, "
-                + "Argentina. Cuatro tiendas, cada una con su nombre y su propio catálogo según la edad.</p>");
+        sb.append("<h1>AgrandaditosTienda · Tiendas de ropa para chicos en Corrientes</h1>");
+        sb.append("<p>Grupo de tiendas de ropa para bebés, niños, niñas y adolescentes en "
+                + "<strong>Corrientes Capital, Argentina</strong>. Cuatro tiendas, cada una con su nombre "
+                + "y su propio catálogo según la edad.</p>");
         sb.append("<h2>Las cuatro tiendas</h2>");
         sb.append("<ul>");
         for (TiendaDTO tienda : tiendas) {
@@ -104,18 +110,23 @@ public class PrerenderController {
         }
         sb.append("</ul>");
         sb.append("<h2>Sobre nosotros</h2>");
-        sb.append("<p>AgrandaditosTienda es un grupo de tiendas de ropa para chicos en <strong>Corrientes Capital</strong>. "
-                + "Cuatro tiendas, cada una con su nombre y su catálogo según la edad: bebés de 0 a 2 años, "
-                + "niños de 2 a 8, preadolescentes de 8 a 12 y adolescentes de 12 a 16.</p>");
+        sb.append("<p>AgrandaditosTienda es un grupo de tiendas de ropa para chicos en "
+                + "<strong>Corrientes Capital</strong>. Cuatro tiendas, cada una con su nombre y su catálogo "
+                + "según la edad: bebés de 0 a 2 años, niños de 2 a 8, preadolescentes de 8 a 12 y "
+                + "adolescentes de 12 a 16.</p>");
         sb.append("<p>En cada tienda vas a encontrar remeras, pantalones, buzos, vestidos y todo lo que tu pibe "
                 + "necesita, en talles para cada edad. Elegí la tienda, mirá el catálogo y consultá la prenda "
                 + "que te guste por WhatsApp.</p>");
+        sb.append("<p>Todas las prendas se pueden consultar por WhatsApp. "
+                + "Hacé tu consulta desde la tienda y te respondemos en el horario del local.</p>");
         if (!destacados.isEmpty()) {
-            sb.append("<h2>Prendas destacadas</h2>");
+            sb.append("<h2>Prendas destacadas del grupo</h2>");
             sb.append("<ul>");
             for (ProductoDTO producto : destacados) {
-                sb.append("<li>").append(esc(producto.nombre())).append(" — $")
-                        .append(formatoPrecio.format(producto.precio())).append("</li>");
+                sb.append("<li><article>");
+                sb.append("<strong>").append(esc(producto.nombre())).append("</strong> — $")
+                        .append(formatoPrecio.format(producto.precio()));
+                sb.append("</article></li>");
             }
             sb.append("</ul>");
         }
@@ -157,40 +168,47 @@ public class PrerenderController {
     }
 
     private String construirDescripcion(TiendaDTO tienda) {
-        String descripcion = tienda.descripcion() != null && !tienda.descripcion().isBlank()
+        String base = tienda.descripcion() != null && !tienda.descripcion().isBlank()
                 ? tienda.descripcion()
-                : "Ropa para " + tienda.etiquetaEdad().toLowerCase() + ".";
-        if (!descripcion.contains("Corrientes")) {
-            descripcion = descripcion + " · Corrientes Capital";
+                : "Tienda de ropa para " + tienda.etiquetaEdad().toLowerCase() + " en Corrientes Capital.";
+        if (!base.contains("Corrientes")) {
+            base = base + " · Corrientes Capital";
         }
-        return descripcion;
+        if (!base.contains("tienda") && !base.contains("Tienda")) {
+            base = "Tienda de ropa · " + base;
+        }
+        return base.length() > 160 ? base.substring(0, 157) + "…" : base;
     }
 
     private String contenidoEstatico(TiendaDTO tienda, List<ProductoDTO> productos) {
         StringBuilder sb = new StringBuilder();
         sb.append("<h1>").append(esc(tienda.nombre())).append("</h1>");
-        sb.append("<p>Ropa para ").append(esc(tienda.etiquetaEdad())).append(".</p>");
+        sb.append("<p>Ropa para ").append(esc(tienda.etiquetaEdad().toLowerCase()))
+                .append(" en Corrientes Capital.</p>");
         if (tienda.descripcion() != null && !tienda.descripcion().isBlank()) {
             sb.append("<p>").append(esc(tienda.descripcion())).append("</p>");
         }
         if (tienda.imagenHero() != null && !tienda.imagenHero().isBlank()) {
             sb.append("<img src=\"").append(esc(tienda.imagenHero())).append("\" alt=\"")
-                    .append(esc(tienda.nombre())).append("\" />");
+                    .append(esc(tienda.nombre() + " — tienda de ropa para " + tienda.etiquetaEdad().toLowerCase()))
+                    .append("\" loading=\"lazy\" />");
         }
         if (!productos.isEmpty()) {
             sb.append("<h2>Catálogo de ").append(esc(tienda.nombre())).append("</h2>");
-            sb.append("<ul>");
             for (ProductoDTO producto : productos) {
-                sb.append("<li><h3>").append(esc(producto.nombre())).append("</h3>");
+                sb.append("<article>");
+                sb.append("<h3>").append(esc(producto.nombre())).append("</h3>");
                 if (producto.imagen() != null && !producto.imagen().isBlank()) {
                     sb.append("<img src=\"").append(esc(producto.imagen())).append("\" alt=\"")
-                            .append(esc(producto.nombre())).append("\" />");
+                            .append(esc(producto.nombre() + " — " + tienda.nombre())).append("\" loading=\"lazy\" />");
+                }
+                if (producto.descripcion() != null && !producto.descripcion().isBlank()) {
+                    sb.append("<p>").append(esc(producto.descripcion())).append("</p>");
                 }
                 sb.append("<p>Talles: ").append(esc(producto.talles())).append("</p>");
                 sb.append("<p>Precio: $").append(formatoPrecio.format(producto.precio())).append("</p>");
-                sb.append("</li>");
+                sb.append("</article>");
             }
-            sb.append("</ul>");
         }
         return sb.toString();
     }
@@ -205,30 +223,48 @@ public class PrerenderController {
             tiendaLd.put("url", DOMINIO + "/tienda/" + tienda.slug());
             tiendaLd.put("image", tienda.imagenHero());
             tiendaLd.put("priceRange", "$$");
+            tiendaLd.put("openingHours", "Mo-Sa 09:00-20:00");
+            if (tienda.whatsapp() != null && !tienda.whatsapp().isBlank()) {
+                tiendaLd.put("telephone", "+" + tienda.whatsapp().replaceAll("\\s+", ""));
+            }
+            tiendaLd.put("areaServed", "Corrientes Capital, Argentina");
             Map<String, Object> direccion = new LinkedHashMap<>();
             direccion.put("@type", "PostalAddress");
             direccion.put("addressLocality", "Corrientes");
+            direccion.put("addressRegion", "Corrientes");
             direccion.put("addressCountry", "AR");
             tiendaLd.put("address", direccion);
+            Map<String, Object> geo = new LinkedHashMap<>();
+            geo.put("@type", "GeoCoordinates");
+            geo.put("latitude", -27.4678);
+            geo.put("longitude", -58.8167);
+            tiendaLd.put("geo", geo);
 
             StringBuilder jsonLd = new StringBuilder();
-            if (!productos.isEmpty()) {
+            List<ProductoDTO> destacados = productos.stream()
+                    .filter(p -> p.destacado())
+                    .limit(20)
+                    .toList();
+            if (!destacados.isEmpty()) {
                 Map<String, Object> itemList = new LinkedHashMap<>();
                 itemList.put("@context", "https://schema.org");
                 itemList.put("@type", "ItemList");
-                itemList.put("name", tienda.nombre() + " — catálogo");
+                itemList.put("name", tienda.nombre() + " — prendas destacadas");
                 List<Map<String, Object>> elementos = new ArrayList<>();
                 int posicion = 1;
-                for (ProductoDTO producto : productos) {
+                for (ProductoDTO producto : destacados) {
                     Map<String, Object> elemento = new LinkedHashMap<>();
                     elemento.put("@type", "ListItem");
                     elemento.put("position", posicion++);
                     elemento.put("name", producto.nombre());
+                    elemento.put("url", DOMINIO + "/tienda/" + tienda.slug());
                     elemento.put("image", producto.imagen());
                     Map<String, Object> oferta = new LinkedHashMap<>();
                     oferta.put("@type", "Offer");
                     oferta.put("price", producto.precio());
                     oferta.put("priceCurrency", "ARS");
+                    oferta.put("availability", "https://schema.org/InStock");
+                    oferta.put("itemCondition", "https://schema.org/NewCondition");
                     elemento.put("offers", oferta);
                     elementos.add(elemento);
                 }
