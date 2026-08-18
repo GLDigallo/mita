@@ -1,6 +1,5 @@
 import { Suspense, lazy } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import useTiempo from './hooks/useTiempo'
 import HomePage from './pages/HomePage/HomePage'
 import TiendaPage from './pages/TiendaPage/TiendaPage'
 import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
@@ -8,7 +7,6 @@ import NotFoundPage from './pages/NotFoundPage/NotFoundPage'
 const GestionPage = lazy(() => import('./pages/GestionPage/GestionPage'))
 
 function App() {
-  useTiempo()
   return (
     <Suspense fallback={null}>
       <Routes>

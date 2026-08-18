@@ -20,7 +20,9 @@ public record ConsultaDTO(
         String clienteNombre,
         String clienteTelefono,
         String observaciones,
+        String notaInterna,
         int totalItems,
-        List<ProductoConsultadoDTO> productos
+        List<ProductoConsultadoDTO> productos,
+        String ventaAsociada
 ) {
 }

@@ -52,7 +52,7 @@ public class Producto {
     private Tienda tienda;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "categoria_id", nullable = false)
+    @JoinColumn(name = "categoria_id", nullable = true)
     private Categoria categoria;
 
     @Column(nullable = false, updatable = false)

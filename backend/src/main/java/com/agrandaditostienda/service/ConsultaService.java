@@ -98,7 +98,7 @@ public class ConsultaService {
         Consulta guardada = consultaRepository.save(consulta);
         guardarVersion(guardada, null, null, List.of());
 
-        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
         String mensaje = construirMensaje(guardada);
         String enlace = "https://wa.me/" + tienda.getWhatsapp() + "?text="
                 + URLEncoder.encode(mensaje, StandardCharsets.UTF_8);
@@ -128,7 +128,7 @@ public class ConsultaService {
         List<ConsultaVersionCambio> cambios = calcularCambios(anteriores, nuevos);
         guardarVersion(guardada, request.motivo(), Seguridad.principalRequerido().nombre(), cambios);
 
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
     }
 
     @Transactional(readOnly = true)
@@ -169,7 +169,7 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
-        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()), esEditable(consulta));
+        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()), esEditable(consulta), ventaAsociadaEstado(consulta));
     }
 
     @Transactional
@@ -183,7 +183,7 @@ public class ConsultaService {
         }
         consulta.setEstado(estado);
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
     }
 
     @Transactional
@@ -193,7 +193,17 @@ public class ConsultaService {
         verificarAcceso(consulta);
         consulta.setFormaPago(formaPago);
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada));
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+    }
+
+    @Transactional
+    public ConsultaDTO actualizarNotaInterna(Long id, String notaInterna) {
+        Consulta consulta = consultaRepository.findDetalle(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
+        consulta.setNotaInterna((notaInterna == null || notaInterna.isBlank()) ? null : notaInterna.trim());
+        Consulta guardada = consultaRepository.save(consulta);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
     }
 
     @Scheduled(fixedDelay = 60_000)
@@ -234,13 +244,29 @@ public class ConsultaService {
             throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
         }
         if (ventaRepository.existsByConsultaId(consulta.getId())) {
-            throw new ConsultaInvalidaException("No se puede modificar una consulta que ya tiene una venta asociada");
+            var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
+            if (venta != null && venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.EN_PREPARACION) {
+                throw new ConsultaInvalidaException("No se puede modificar una consulta mientras se arma la venta");
+            }
         }
     }
 
     private boolean esEditable(Consulta consulta) {
-        return !esEstadoCerrado(consulta.getEstado())
-                && !ventaRepository.existsByConsultaId(consulta.getId());
+        if (esEstadoCerrado(consulta.getEstado())) {
+            return false;
+        }
+        var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
+        if (venta == null) {
+            return true;
+        }
+        return venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CONFIRMADA
+            || venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CANCELADA;
+    }
+
+    private String ventaAsociadaEstado(Consulta consulta) {
+        return ventaRepository.findByConsultaId(consulta.getId())
+                .map(v -> v.getEstado().name())
+                .orElse(null);
     }
 
     private boolean esEstadoCerrado(EstadoConsulta estado) {

@@ -8,6 +8,7 @@ import com.agrandaditostienda.dto.ConsultaResumenDTO;
 import com.agrandaditostienda.dto.ConsultaVersionDTO;
 import com.agrandaditostienda.dto.CrearConsultaRequest;
 import com.agrandaditostienda.dto.ModificarConsultaRequest;
+import com.agrandaditostienda.dto.NotaInternaRequest;
 import com.agrandaditostienda.entity.EstadoConsulta;
 import com.agrandaditostienda.service.ConsultaService;
 import jakarta.validation.Valid;
@@ -60,6 +61,12 @@ public class ConsultaController {
     public ConsultaDTO modificar(@PathVariable Long id,
                                  @Valid @RequestBody ModificarConsultaRequest request) {
         return consultaService.modificar(id, request);
+    }
+
+    @PatchMapping("/{id}/nota-interna")
+    public ConsultaDTO actualizarNotaInterna(@PathVariable Long id,
+                                             @RequestBody NotaInternaRequest request) {
+        return consultaService.actualizarNotaInterna(id, request.notaInterna());
     }
 
     @GetMapping("/{id}/versiones")

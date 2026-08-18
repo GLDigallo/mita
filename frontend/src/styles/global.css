@@ -88,33 +88,3 @@ p {
     transition-duration: 0.01ms !important;
   }
 }
-
-/* Tema según la hora del día (mañana / tarde / noche) y el clima en Corrientes */
-body::before,
-body::after {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  pointer-events: none;
-  transition: opacity 1.5s ease;
-  opacity: 0;
-}
-
-html[data-tiempo='manana'] body::after {
-  opacity: 1;
-  background: radial-gradient(90% 70% at 15% 0%, rgba(255, 210, 130, 0.28), transparent 60%),
-    linear-gradient(180deg, rgba(255, 220, 150, 0.12), rgba(255, 205, 130, 0.04));
-}
-
-html[data-tiempo='noche'] body::after {
-  opacity: 1;
-  background: radial-gradient(120% 90% at 50% -20%, rgba(40, 55, 120, 0.3), transparent 55%),
-    linear-gradient(180deg, rgba(12, 15, 40, 0.42), rgba(6, 8, 25, 0.55));
-}
-
-html[data-clima='lluvia'] body::before {
-  opacity: 1;
-  mix-blend-mode: multiply;
-  background: rgba(96, 116, 148, 0.22);
-}

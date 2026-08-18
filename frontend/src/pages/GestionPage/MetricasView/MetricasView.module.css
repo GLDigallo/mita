@@ -50,7 +50,7 @@
 }
 
 .rangoActivo {
-  background: var(--color-marca);
+  background: var(--gestion-color, var(--color-marca));
   color: #fff;
 }
 
@@ -76,6 +76,7 @@
   gap: 4px;
   padding: 16px;
   border: 1px solid var(--color-borde);
+  border-top: 3px solid var(--gestion-color, var(--color-marca));
   border-radius: var(--radio-md);
   background: var(--color-superficie);
 }
@@ -84,7 +85,7 @@
   font-family: var(--fuente-display);
   font-size: 24px;
   font-weight: 700;
-  color: var(--color-marca);
+  color: var(--gestion-color, var(--color-marca));
 }
 
 .tarjetaNumeroEtiqueta {

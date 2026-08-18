@@ -50,12 +50,14 @@ function cargarIniciales() {
   return PROMOS_INICIALES
 }
 
-function PromosView({ tiendas }) {
+function PromosView({ tiendas, usuario }) {
+  const esEncargada = usuario?.rol === 'ENCARGADA'
+  const miTiendaSlug = usuario?.tiendaSlug ?? ''
   const [promos, setPromos] = useState(cargarIniciales)
   const [titulo, setTitulo] = useState('')
   const [tipo, setTipo] = useState('PORCENTAJE')
   const [valor, setValor] = useState('')
-  const [tiendaSlug, setTiendaSlug] = useState('')
+  const [tiendaSlug, setTiendaSlug] = useState(esEncargada ? miTiendaSlug : '')
   const [vigencia, setVigencia] = useState('')
   const [aviso, setAviso] = useState('')
 
@@ -154,13 +156,16 @@ function PromosView({ tiendas }) {
             value={tiendaSlug}
             onChange={(evento) => setTiendaSlug(evento.target.value)}
             aria-label="Tienda de la promo"
+            disabled={esEncargada}
           >
-            <option value="">Todas las tiendas</option>
-            {tiendas.map((t) => (
-              <option key={t.id} value={t.slug}>
-                {t.nombre}
-              </option>
-            ))}
+            {!esEncargada && <option value="">Todas las tiendas</option>}
+            {tiendas
+              .filter((t) => !esEncargada || t.slug === miTiendaSlug)
+              .map((t) => (
+                <option key={t.id} value={t.slug}>
+                  {t.nombre}
+                </option>
+              ))}
           </select>
         </div>
         <div className={styles.fila}>
@@ -184,7 +189,9 @@ function PromosView({ tiendas }) {
         <p className={styles.vacio}>Todavía no hay promos. Creá la primera arriba.</p>
       ) : (
         <div className={styles.lista}>
-          {promos.map((promo) => (
+          {promos
+            .filter((p) => !esEncargada || p.tiendaSlug === miTiendaSlug)
+            .map((promo) => (
             <article key={promo.id} className={`${styles.promo} ${promo.activa ? '' : styles.promoInactiva}`}>
               <div className={styles.promoInfo}>
                 <h3 className={styles.promoNombre}>{promo.titulo}</h3>

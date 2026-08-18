@@ -29,9 +29,6 @@ public class UsuarioDataInitializer implements CommandLineRunner {
     @Value("${agrandaditostienda.admin.password}")
     private String adminPassword;
 
-    @Value("${agrandaditostienda.encargada.password:encargada123}")
-    private String encargadaPassword;
-
     public UsuarioDataInitializer(UsuarioRepository usuarioRepository,
                                   TiendaRepository tiendaRepository,
                                   PasswordEncoder passwordEncoder) {
@@ -62,7 +59,7 @@ public class UsuarioDataInitializer implements CommandLineRunner {
     private void crearEncargadasDeEjemplo() {
         List<Tienda> tiendas = tiendaRepository.findAll();
         for (Tienda tienda : tiendas) {
-            String username = "encargada-" + tienda.getSlug();
+            String username = generarUsernameEncargada(tienda, tiendas);
             if (usuarioRepository.existsByUsername(username)) {
                 continue;
             }
@@ -72,10 +69,25 @@ public class UsuarioDataInitializer implements CommandLineRunner {
             usuarioRepository.save(new Usuario(
                     "Encargada " + tienda.getNombre(),
                     username,
-                    passwordEncoder.encode(encargadaPassword),
+                    passwordEncoder.encode(username),
                     RolUsuario.ENCARGADA,
                     tienda));
             log.info("Encargada de ejemplo '{}' creada para {}", username, tienda.getNombre());
         }
+    }
+
+    private String generarUsernameEncargada(Tienda tienda, List<Tienda> todas) {
+        long mokositosCount = todas.stream()
+                .filter(t -> t.getNombre().equals(tienda.getNombre()))
+                .count();
+        if (mokositosCount > 1) {
+            List<Tienda> mismas = todas.stream()
+                    .filter(t -> t.getNombre().equals(tienda.getNombre()))
+                    .sorted((a, b) -> Integer.compare(a.getOrden(), b.getOrden()))
+                    .toList();
+            int idx = mismas.indexOf(tienda) + 1;
+            return tienda.getNombre().toLowerCase().replace(" ", "") + idx;
+        }
+        return tienda.getNombre().toLowerCase().replace(" ", "");
     }
 }

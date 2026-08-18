@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
-  fetchHistorialConsulta,
+  actualizarNotaInterna,
   fetchProductos,
   formatearPrecio,
   MOTIVOS_MODIFICACION,
@@ -9,20 +9,6 @@ import {
 import EstadoBadge from '../EstadoBadge/EstadoBadge'
 import styles from './ConsultaDetalle.module.css'
 
-const TIPO_CAMBIO_ETIQUETA = {
-  PRODUCTO_AGREGADO: 'Producto agregado',
-  PRODUCTO_QUITADO: 'Producto quitado',
-  CAMBIO_TALLE: 'Cambio de talle',
-  CAMBIO_COLOR: 'Cambio de color',
-  CAMBIO_CANTIDAD: 'Cambio de cantidad',
-  CAMBIO_OBSERVACIONES: 'Cambio de nota',
-}
-
-const TIPO_CAMBIO_TONO = {
-  PRODUCTO_AGREGADO: 'agregado',
-  PRODUCTO_QUITADO: 'quitado',
-}
-
 function ConsultaDetalle({
   consulta,
   onCerrar,
@@ -30,13 +16,9 @@ function ConsultaDetalle({
   cambiandoEstado,
   onCambiarFormaPago,
   onArmarVenta,
-  onVerVenta,
   onModificada,
 }) {
   const [vista, setVista] = useState('actual')
-  const [versionAbierta, setVersionAbierta] = useState(null)
-  const [historial, setHistorial] = useState(null)
-  const [cargandoHistorial, setCargandoHistorial] = useState(false)
 
   const [edicion, setEdicion] = useState([])
   const [productos, setProductos] = useState([])
@@ -48,18 +30,16 @@ function ConsultaDetalle({
   const [agregarAbierto, setAgregarAbierto] = useState(false)
   const [busquedaNuevo, setBusquedaNuevo] = useState('')
   const [nuevoProductoId, setNuevoProductoId] = useState('')
-  const [nuevoVarianteId, setNuevoVarianteId] = useState('')
   const [nuevoCantidad, setNuevoCantidad] = useState(1)
-
-  const puedeArmarVenta = ['PENDIENTE', 'EN_REVISION', 'ESPERANDO_CLIENTE'].includes(consulta.estado)
-  const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta.estado)
-  const tieneVentaConfirmada = consulta.estado === 'CONFIRMADA'
-  const cantidadVersiones = consulta.version + 1
+  const [nuevoColor, setNuevoColor] = useState('')
+  const [nuevoTalle, setNuevoTalle] = useState('')
+  const [notaInterna, setNotaInterna] = useState(consulta?.notaInterna ?? '')
+  const [guardandoNota, setGuardandoNota] = useState(false)
 
   useEffect(() => {
     if (vista !== 'editar') return
     setEdicion(
-      consulta.productos.map((item) => ({
+      consulta.productos?.map((item) => ({
         clave: String(item.id),
         productoId: item.productoId,
         varianteId: varianteActual(item),
@@ -86,29 +66,6 @@ function ConsultaDetalle({
       activo = false
     }
   }, [vista, consulta])
-
-  async function cargarHistorial() {
-    if (historial) {
-      setVista('historial')
-      return
-    }
-    setCargandoHistorial(true)
-    setError('')
-    try {
-      const datos = await fetchHistorialConsulta(consulta.id)
-      setHistorial(datos)
-      setVista('historial')
-    } catch (err) {
-      setError(err.message)
-    } finally {
-      setCargandoHistorial(false)
-    }
-  }
-
-  function abrirVersion(version) {
-    setVersionAbierta(version)
-    setVista('version')
-  }
 
   function cambiarVariante(linea, varianteId) {
     const variante = linea.variantes.find((v) => v.id === varianteId)
@@ -138,14 +95,20 @@ function ConsultaDetalle({
   }
 
   function agregarProducto() {
-    if (!nuevoProductoId || !nuevoVarianteId) {
-      setError('Seleccioná producto y variante para agregar')
+    if (!nuevoProductoId) {
+      setError('Seleccioná un producto para agregar')
       return
     }
     const producto = productos.find((p) => p.id === Number(nuevoProductoId))
-    const variante = producto?.variantes.find((v) => v.id === Number(nuevoVarianteId))
-    if (!producto || !variante) {
-      setError('Producto o variante inválidos')
+    if (!producto) {
+      setError('Producto inválido')
+      return
+    }
+    const variante = producto.variantes.find(
+      (v) => v.color === nuevoColor && v.talle === nuevoTalle && v.stock > 0,
+    )
+    if (!variante) {
+      setError('Elegí color y talle con stock disponible')
       return
     }
     const cantidad = Math.min(Math.max(1, Number(nuevoCantidad) || 1), variante.stock || 1)
@@ -163,10 +126,8 @@ function ConsultaDetalle({
       variantes: producto.variantes,
     }
     setEdicion((actuales) => [...actuales, linea])
-    setAgregarAbierto(false)
-    setBusquedaNuevo('')
-    setNuevoProductoId('')
-    setNuevoVarianteId('')
+    setNuevoColor('')
+    setNuevoTalle('')
     setNuevoCantidad(1)
     setError('')
   }
@@ -195,7 +156,6 @@ function ConsultaDetalle({
         })),
       })
       setMotivo('')
-      setHistorial(null)
       setVista('actual')
       onModificada(actualizada)
     } catch (err) {
@@ -205,11 +165,27 @@ function ConsultaDetalle({
     }
   }
 
+  async function guardarNotaInterna() {
+    setGuardandoNota(true)
+    try {
+      const actualizada = await actualizarNotaInterna(consulta.id, notaInterna.trim() || null)
+      onModificada(actualizada)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setGuardandoNota(false)
+    }
+  }
+
   const productosFiltrados = productos.filter((p) =>
     p.nombre.toLowerCase().includes(busquedaNuevo.trim().toLowerCase()),
   )
   const productoSeleccionado = productos.find((p) => p.id === Number(nuevoProductoId))
   const variantesDisponibles = (productoSeleccionado?.variantes ?? []).filter((v) => v.stock > 0)
+  const coloresDisponibles = [...new Set(variantesDisponibles.map((v) => v.color))]
+  const tallesDisponibles = nuevoColor
+    ? [...new Set(variantesDisponibles.filter((v) => v.color === nuevoColor).map((v) => v.talle))]
+    : [...new Set(variantesDisponibles.map((v) => v.talle))]
 
   return (
     <div className={styles.overlay} onClick={onCerrar} role="presentation">
@@ -246,20 +222,18 @@ function ConsultaDetalle({
           <>
             <VistaActual
               consulta={consulta}
-              puedeArmarVenta={puedeArmarVenta}
-              tieneVentaConfirmada={tieneVentaConfirmada}
-              esCerrada={esCerrada}
               cambiandoEstado={cambiandoEstado}
-              cantidadVersiones={cantidadVersiones}
               onCambiarEstado={onCambiarEstado}
               onCambiarFormaPago={onCambiarFormaPago}
               onArmarVenta={onArmarVenta}
-              onVerVenta={onVerVenta}
               onEditar={() => {
                 setError('')
                 setVista('editar')
               }}
-              onVerHistorial={cargarHistorial}
+              notaInterna={notaInterna}
+              onNotaInternaChange={setNotaInterna}
+              onGuardarNota={guardarNotaInterna}
+              guardandoNota={guardandoNota}
             />
           </>
         )}
@@ -274,14 +248,18 @@ function ConsultaDetalle({
             productosFiltrados={productosFiltrados}
             productoSeleccionado={productoSeleccionado}
             variantesDisponibles={variantesDisponibles}
+            coloresDisponibles={coloresDisponibles}
+            tallesDisponibles={tallesDisponibles}
             agregarAbierto={agregarAbierto}
             setAgregarAbierto={setAgregarAbierto}
             busquedaNuevo={busquedaNuevo}
             setBusquedaNuevo={setBusquedaNuevo}
             nuevoProductoId={nuevoProductoId}
             setNuevoProductoId={setNuevoProductoId}
-            nuevoVarianteId={nuevoVarianteId}
-            setNuevoVarianteId={setNuevoVarianteId}
+            nuevoColor={nuevoColor}
+            setNuevoColor={setNuevoColor}
+            nuevoTalle={nuevoTalle}
+            setNuevoTalle={setNuevoTalle}
             nuevoCantidad={nuevoCantidad}
             setNuevoCantidad={setNuevoCantidad}
             guardando={guardando}
@@ -298,17 +276,6 @@ function ConsultaDetalle({
             }}
           />
         )}
-
-        {vista === 'historial' && (
-          <VistaHistorial
-            cargando={cargandoHistorial}
-            historial={historial}
-            error={error}
-            onAbrirVersion={abrirVersion}
-          />
-        )}
-
-        {vista === 'version' && versionAbierta && <VistaVersion version={versionAbierta} />}
       </div>
     </div>
   )
@@ -321,18 +288,17 @@ function varianteActual(item) {
 
 function VistaActual({
   consulta,
-  puedeArmarVenta,
-  tieneVentaConfirmada,
-  esCerrada,
   cambiandoEstado,
-  cantidadVersiones,
   onCambiarEstado,
   onCambiarFormaPago,
   onArmarVenta,
-  onVerVenta,
   onEditar,
-  onVerHistorial,
+  notaInterna,
+  onNotaInternaChange,
+  onGuardarNota,
+  guardandoNota,
 }) {
+  const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta?.estado)
   return (
     <>
       <header className={styles.encabezado}>
@@ -349,9 +315,19 @@ function VistaActual({
       <section className={styles.seccion}>
         <p className={styles.tituloSeccion}>Cliente</p>
         <p className={styles.clienteNombre}>{consulta.clienteNombre ?? 'Sin nombre'}</p>
-        <a className={styles.clienteTelefono} href={`tel:${consulta.clienteTelefono}`}>
-          {consulta.clienteTelefono}
-        </a>
+        <div className={styles.contactoFila}>
+          <a className={styles.clienteTelefono} href={`tel:${consulta.clienteTelefono}`}>
+            {consulta.clienteTelefono}
+          </a>
+          <a
+            className={styles.whatsappBtn}
+            href={`https://wa.me/${(consulta.clienteTelefono ?? '').replace(/\D/g, '')}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            WhatsApp
+          </a>
+        </div>
         <p className={styles.tienda}>
           Tienda: <strong>{consulta.tiendaNombre}</strong>
         </p>
@@ -359,17 +335,39 @@ function VistaActual({
 
       {consulta.observaciones && (
         <section className={styles.seccion}>
-          <p className={styles.tituloSeccion}>Observaciones de la consulta</p>
+          <p className={styles.tituloSeccion}>Observaciones</p>
           <p className={styles.texto}>{consulta.observaciones}</p>
         </section>
       )}
+
+      <section className={styles.seccion}>
+        <p className={styles.tituloSeccion}>Nota interna</p>
+        <p className={styles.notaInternaSub}>Solo la ves vos. No se envía al cliente por WhatsApp.</p>
+        <textarea
+          className={styles.notaInternaInput}
+          value={notaInterna}
+          onChange={(e) => onNotaInternaChange(e.target.value)}
+          placeholder="Ej: Cliente pidió que lo llamen después de las 18hs..."
+          rows={3}
+        />
+        {(notaInterna ?? '') !== (consulta.notaInterna ?? '') && (
+          <button
+            type="button"
+            className={styles.notaInternaBtn}
+            onClick={onGuardarNota}
+            disabled={guardandoNota}
+          >
+            {guardandoNota ? 'Guardando…' : 'Guardar nota'}
+          </button>
+        )}
+      </section>
 
       <section className={styles.seccion}>
         <p className={styles.tituloSeccion}>
           Productos ({consulta.totalItems} unidad{consulta.totalItems === 1 ? '' : 'es'})
         </p>
         <div className={styles.items}>
-          {consulta.productos.map((item) => (
+          {(consulta.productos ?? []).map((item) => (
             <article key={item.id} className={styles.item}>
               <img className={styles.itemImagen} src={item.productoImagen} alt={item.productoNombre} />
               <div className={styles.itemCuerpo}>
@@ -381,7 +379,7 @@ function VistaActual({
                 <p className={styles.itemPrecio}>{formatearPrecio(item.precioUnitario)}</p>
                 {item.observaciones && <p className={styles.itemNota}>{item.observaciones}</p>}
 
-                {item.variantes.length > 0 && (
+                {(item.variantes ?? []).length > 0 && (
                   <div className={styles.stock}>
                     <p className={styles.stockTitulo}>Stock disponible</p>
                     <div className={styles.stockTabla} role="table" aria-label="Stock de variantes">
@@ -390,7 +388,7 @@ function VistaActual({
                         <span role="columnheader">Talle</span>
                         <span role="columnheader">Stock</span>
                       </div>
-                      {item.variantes.map((variante) => (
+                      {(item.variantes ?? []).map((variante) => (
                         <div className={styles.stockFila} role="row" key={variante.id}>
                           <span role="cell">{variante.color}</span>
                           <span role="cell">{variante.talle}</span>
@@ -408,84 +406,103 @@ function VistaActual({
         </div>
       </section>
 
-      <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>Venta</p>
-        {puedeArmarVenta ? (
-          <button type="button" className={styles.armarVenta} onClick={() => onArmarVenta(consulta)}>
-            Armar venta
-          </button>
-        ) : tieneVentaConfirmada ? (
-          <button type="button" className={styles.armarVenta} onClick={() => onVerVenta(consulta)}>
-            Ver venta
-          </button>
-        ) : (
-          <p className={styles.texto}>Esta consulta no admite generar una venta.</p>
-        )}
-      </section>
-
-      <section className={styles.seccion}>
-        <div className={styles.accionesTitulo}>
-          <p className={styles.tituloSeccion}>Versiones e historial</p>
-          <span className={styles.badgeCuenta}>{cantidadVersiones}</span>
+      <footer className={styles.pie}>
+        <div className={styles.pieFila}>
+          <div className={styles.piePago}>
+            <span className={styles.piePagoEtiqueta}>Pago</span>
+            <div className={styles.pagoOpciones}>
+              <button
+                type="button"
+                className={`${styles.pagoOpcion} ${consulta.formaPago === 'EFECTIVO' ? styles.pagoOpcionActivo : ''}`}
+                onClick={() => onCambiarFormaPago('EFECTIVO')}
+                disabled={cambiandoEstado}
+              >
+                Efectivo
+              </button>
+              <button
+                type="button"
+                className={`${styles.pagoOpcion} ${consulta.formaPago === 'TARJETA' ? styles.pagoOpcionActivo : ''}`}
+                onClick={() => onCambiarFormaPago('TARJETA')}
+                disabled={cambiandoEstado}
+              >
+                Tarjeta
+              </button>
+              <button
+                type="button"
+                className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
+                onClick={() => onCambiarFormaPago('DIGITAL')}
+                disabled={cambiandoEstado}
+              >
+                Digital
+              </button>
+            </div>
+          </div>
         </div>
-        <div className={styles.acciones}>
-          <button type="button" className={styles.botonSecundario} onClick={onVerHistorial}>
-            Ver historial de versiones
-          </button>
-          {consulta.editable && (
-            <button type="button" className={styles.armarVenta} onClick={onEditar}>
+
+        <div className={styles.pieFila}>
+          {!esCerrada && !consulta?.ventaAsociada && consulta?.editable && (
+            <button
+              type="button"
+              className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
+              onClick={() => onArmarVenta(consulta)}
+            >
+              Armar venta
+            </button>
+          )}
+
+          {consulta?.ventaAsociada === 'EN_PREPARACION' && (
+            <>
+              <button
+                type="button"
+                className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
+                onClick={() => onCambiarEstado('CONFIRMADA')}
+                disabled={cambiandoEstado}
+              >
+                Confirmar venta
+              </button>
+              <button
+                type="button"
+                className={`${styles.pieBoton} ${styles.pieBotonCancelar}`}
+                onClick={() => onCambiarEstado('CANCELADA')}
+                disabled={cambiandoEstado}
+              >
+                Cancelar
+              </button>
+            </>
+          )}
+
+          {consulta?.ventaAsociada === 'CONFIRMADA' && (
+            <>
+              <button
+                type="button"
+                className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
+                onClick={() => onCambiarEstado('FINALIZADA')}
+                disabled={cambiandoEstado}
+              >
+                Entregado
+              </button>
+              <button
+                type="button"
+                className={`${styles.pieBoton} ${styles.pieBotonCancelar}`}
+                onClick={() => onCambiarEstado('CANCELADA')}
+                disabled={cambiandoEstado}
+              >
+                Cancelar
+              </button>
+              {consulta?.editable && (
+                <button type="button" className={styles.pieBoton} onClick={onEditar}>
+                  Editar consulta
+                </button>
+              )}
+            </>
+          )}
+
+          {consulta?.ventaAsociada === 'CANCELADA' && consulta?.editable && (
+            <button type="button" className={styles.pieBoton} onClick={onEditar}>
               Editar consulta
             </button>
           )}
         </div>
-      </section>
-
-      <footer className={styles.pie}>
-        <button
-          type="button"
-          className={`${styles.pieBoton} ${consulta.estado === 'PENDIENTE' ? styles.pieBotonActivo : ''}`}
-          onClick={() => onCambiarEstado('PENDIENTE')}
-          disabled={cambiandoEstado || esCerrada}
-        >
-          Pendiente
-        </button>
-        <div className={styles.piePago}>
-          <span className={styles.piePagoEtiqueta}>Pago</span>
-          <div className={styles.pagoOpciones}>
-            <button
-              type="button"
-              className={`${styles.pagoOpcion} ${consulta.formaPago !== 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
-              onClick={() => onCambiarFormaPago('EFECTIVO')}
-              disabled={cambiandoEstado || esCerrada}
-            >
-              Efectivo
-            </button>
-            <button
-              type="button"
-              className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
-              onClick={() => onCambiarFormaPago('DIGITAL')}
-              disabled={cambiandoEstado || esCerrada}
-            >
-              Digital
-            </button>
-          </div>
-        </div>
-        <button
-          type="button"
-          className={`${styles.pieBoton} ${styles.pieBotonCancelar} ${consulta.estado === 'CANCELADA' ? styles.pieBotonActivo : ''}`}
-          onClick={() => onCambiarEstado('CANCELADA')}
-          disabled={cambiandoEstado || esCerrada}
-        >
-          Cancelar
-        </button>
-        <button
-          type="button"
-          className={`${styles.pieBoton} ${styles.pieBotonExitoso} ${consulta.estado === 'FINALIZADA' ? styles.pieBotonActivo : ''}`}
-          onClick={() => onCambiarEstado('FINALIZADA')}
-          disabled={cambiandoEstado || esCerrada}
-        >
-          Exitoso
-        </button>
       </footer>
     </>
   )
@@ -500,14 +517,18 @@ function VistaEditar({
   productosFiltrados,
   productoSeleccionado,
   variantesDisponibles,
+  coloresDisponibles,
+  tallesDisponibles,
   agregarAbierto,
   setAgregarAbierto,
   busquedaNuevo,
   setBusquedaNuevo,
   nuevoProductoId,
   setNuevoProductoId,
-  nuevoVarianteId,
-  setNuevoVarianteId,
+  nuevoColor,
+  setNuevoColor,
+  nuevoTalle,
+  setNuevoTalle,
   nuevoCantidad,
   setNuevoCantidad,
   guardando,
@@ -553,61 +574,130 @@ function VistaEditar({
               className={styles.input}
               type="search"
               value={busquedaNuevo}
-              onChange={(evento) => setBusquedaNuevo(evento.target.value)}
+              onChange={(evento) => {
+                setBusquedaNuevo(evento.target.value)
+                setNuevoProductoId('')
+                setNuevoColor('')
+                setNuevoTalle('')
+              }}
               placeholder="Buscar producto de la tienda…"
               aria-label="Buscar producto para agregar"
             />
-            <div className={styles.agregadorFila}>
-              <select
-                className={styles.select}
-                value={nuevoProductoId}
-                onChange={(evento) => {
-                  setNuevoProductoId(evento.target.value)
-                  setNuevoVarianteId('')
-                }}
-                aria-label="Producto"
-              >
-                <option value="">Producto…</option>
+
+            {!nuevoProductoId && productosFiltrados.length > 0 && (
+              <div className={styles.productoGrilla}>
                 {productosFiltrados.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.nombre}
-                  </option>
+                  <button
+                    key={p.id}
+                    type="button"
+                    className={styles.productoCard}
+                    onClick={() => {
+                      setNuevoProductoId(String(p.id))
+                      setNuevoColor('')
+                      setNuevoTalle('')
+                    }}
+                  >
+                    <img className={styles.productoCardImg} src={p.imagen} alt={p.nombre} />
+                    <span className={styles.productoCardNombre}>{p.nombre}</span>
+                    <span className={styles.productoCardPrecio}>{formatearPrecio(p.precio)}</span>
+                  </button>
                 ))}
-              </select>
-              <select
-                className={styles.select}
-                value={nuevoVarianteId}
-                onChange={(evento) => setNuevoVarianteId(evento.target.value)}
-                disabled={!productoSeleccionado || variantesDisponibles.length === 0}
-                aria-label="Variante"
-              >
-                <option value="">
-                  {variantesDisponibles.length === 0 ? 'Sin stock' : 'Color · Talle…'}
-                </option>
-                {variantesDisponibles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.color} · {v.talle} ({v.stock})
-                  </option>
-                ))}
-              </select>
-              <input
-                className={styles.inputCantidad}
-                type="number"
-                min="1"
-                max={productoSeleccionado ? variantesDisponibles.find((v) => v.id === Number(nuevoVarianteId))?.stock ?? 1 : 1}
-                value={nuevoCantidad}
-                onChange={(evento) => setNuevoCantidad(evento.target.value)}
-                aria-label="Cantidad"
-              />
-              <button
-                type="button"
-                className={styles.botonPrimario}
-                onClick={onAgregarProducto}
-                disabled={!nuevoProductoId || !nuevoVarianteId}
-              >
-                Agregar
-              </button>
-            </div>
+              </div>
+            )}
+
+            {!nuevoProductoId && productosFiltrados.length === 0 && busquedaNuevo && (
+              <p className={styles.texto}>No se encontraron productos.</p>
+            )}
+
+            {productoSeleccionado && (
+              <>
+                <div className={styles.agregadorPreview}>
+                  <img className={styles.agregadorPreviewImg} src={productoSeleccionado.imagen} alt={productoSeleccionado.nombre} />
+                  <div>
+                    <p className={styles.agregadorPreviewNombre}>{productoSeleccionado.nombre}</p>
+                    <p className={styles.agregadorPreviewPrecio}>{formatearPrecio(productoSeleccionado.precio)}</p>
+                  </div>
+                  <button type="button" className={styles.agregadorPreviewLimpiar} onClick={() => { setNuevoProductoId(''); setNuevoColor(''); setNuevoTalle('') }}>
+                    ✕
+                  </button>
+                </div>
+
+                {coloresDisponibles.length > 0 && (
+                  <div className={styles.agregadorGrupo}>
+                    <p className={styles.agregadorGrupoTitulo}>Color</p>
+                    <div className={styles.agregadorBotones}>
+                      {coloresDisponibles.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          className={`${styles.agregadorBtn} ${nuevoColor === c ? styles.agregadorBtnActivo : ''}`}
+                          onClick={() => { setNuevoColor(c); setNuevoTalle('') }}
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {nuevoColor && tallesDisponibles.length > 0 && (
+                  <div className={styles.agregadorGrupo}>
+                    <p className={styles.agregadorGrupoTitulo}>Talle</p>
+                    <div className={styles.agregadorBotones}>
+                      {tallesDisponibles.map((t) => {
+                        const variante = variantesDisponibles.find((v) => v.color === nuevoColor && v.talle === t)
+                        return (
+                          <button
+                            key={t}
+                            type="button"
+                            className={`${styles.agregadorBtn} ${nuevoTalle === t ? styles.agregadorBtnActivo : ''} ${variante && variante.stock <= 3 ? styles.agregadorBtnPoco : ''}`}
+                            onClick={() => setNuevoTalle(t)}
+                            disabled={!variante || variante.stock <= 0}
+                          >
+                            {t}
+                            {variante && variante.stock <= 3 && variante.stock > 0 && (
+                              <span className={styles.agregadorBtnStock}>{variante.stock}</span>
+                            )}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {nuevoColor && nuevoTalle && (
+                  <div className={styles.agregadorGrupo}>
+                    <div className={styles.agregadorCantidad}>
+                      <button
+                        type="button"
+                        className={styles.agregadorCantidadBtn}
+                        onClick={() => setNuevoCantidad((c) => Math.max(1, c - 1))}
+                      >
+                        −
+                      </button>
+                      <span className={styles.agregadorCantidadValor}>{nuevoCantidad}</span>
+                      <button
+                        type="button"
+                        className={styles.agregadorCantidadBtn}
+                        onClick={() => {
+                          const max = variantesDisponibles.find((v) => v.color === nuevoColor && v.talle === nuevoTalle)?.stock ?? 10
+                          setNuevoCantidad((c) => Math.min(max, c + 1))
+                        }}
+                      >
+                        +
+                      </button>
+                      <button
+                        type="button"
+                        className={styles.botonPrimario}
+                        onClick={onAgregarProducto}
+                      >
+                        Agregar
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
 
@@ -705,106 +795,6 @@ function VistaEditar({
           </button>
         </div>
         {error && <p className={styles.error}>{error}</p>}
-      </section>
-    </>
-  )
-}
-
-function VistaHistorial({ cargando, historial, error, onAbrirVersion }) {
-  return (
-    <>
-      <section className={styles.seccion}>
-        {cargando ? (
-          <p className={styles.texto}>Cargando historial…</p>
-        ) : error ? (
-          <p className={styles.error}>{error}</p>
-        ) : (
-          <div className={styles.versionLista}>
-            {historial.map((version) => (
-              <button
-                key={version.id}
-                type="button"
-                className={styles.versionFila}
-                onClick={() => onAbrirVersion(version)}
-              >
-                <div className={styles.versionFilaPrincipal}>
-                  <span className={styles.versionEtiqueta}>Versión {version.version + 1}</span>
-                  <EstadoBadge estado={version.estado} />
-                </div>
-                <p className={styles.versionDetalle}>
-                  {formatearFecha(version.fecha)}
-                  {version.motivoEtiqueta ? ` · ${version.motivoEtiqueta}` : ' · Creación inicial'}
-                  {version.empleado ? ` · ${version.empleado}` : ''}
-                </p>
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
-    </>
-  )
-}
-
-function VistaVersion({ version }) {
-  return (
-    <>
-      <section className={styles.seccion}>
-        <div className={styles.versionInfo}>
-          <EstadoBadge estado={version.estado} />
-          <p className={styles.versionDetalle}>
-            {formatearFecha(version.fecha)}
-            {version.motivoEtiqueta ? ` · ${version.motivoEtiqueta}` : ' · Creación inicial'}
-            {version.empleado ? ` · ${version.empleado}` : ''}
-          </p>
-        </div>
-      </section>
-
-      {version.observaciones && (
-        <section className={styles.seccion}>
-          <p className={styles.tituloSeccion}>Observaciones de la consulta</p>
-          <p className={styles.texto}>{version.observaciones}</p>
-        </section>
-      )}
-
-      <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>Cambios de esta versión</p>
-        {version.cambios.length === 0 ? (
-          <p className={styles.texto}>Sin cambios registrados (versión inicial).</p>
-        ) : (
-          <div className={styles.cambios}>
-            {version.cambios.map((cambio, indice) => (
-              <div key={indice} className={`${styles.cambio} ${styles[`cambio${TIPO_CAMBIO_TONO[cambio.tipo]}`] ?? ''}`}>
-                <span className={styles.cambioEtiqueta}>
-                  {TIPO_CAMBIO_ETIQUETA[cambio.tipo] ?? cambio.tipo}
-                </span>
-                <span className={styles.cambioDescripcion}>{cambio.descripcion}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>
-          Productos ({version.items.reduce((acc, i) => acc + i.cantidad, 0)} unidad
-          {version.items.reduce((acc, i) => acc + i.cantidad, 0) === 1 ? '' : 'es'})
-        </p>
-        <div className={styles.items}>
-          {version.items.map((item) => (
-            <article key={item.productoId + item.talle + (item.color ?? '')} className={styles.item}>
-              <img className={styles.itemImagen} src={item.productoImagen} alt={item.productoNombre} />
-              <div className={styles.itemCuerpo}>
-                <p className={styles.itemNombre}>{item.productoNombre}</p>
-                <p className={styles.itemDetalle}>
-                  Talle {item.talle}
-                  {item.color ? ` · ${item.color}` : ''} · Cant. {item.cantidad}
-                </p>
-                <p className={styles.itemPrecio}>{formatearPrecio(item.precioUnitario)}</p>
-                {item.observaciones && <p className={styles.itemNota}>{item.observaciones}</p>}
-              </div>
-            </article>
-          ))}
-        </div>
       </section>
     </>
   )

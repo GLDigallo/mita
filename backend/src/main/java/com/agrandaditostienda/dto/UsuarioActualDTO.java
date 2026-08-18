@@ -7,6 +7,7 @@ public record UsuarioActualDTO(
         String usuario,
         String nombre,
         RolUsuario rol,
+        Long tiendaId,
         String tiendaSlug,
         String tiendaNombre
 ) {

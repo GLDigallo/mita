@@ -17,6 +17,8 @@ import com.agrandaditostienda.entity.RolUsuario;
 import com.agrandaditostienda.entity.Tienda;
 import com.agrandaditostienda.entity.TipoCambio;
 import com.agrandaditostienda.entity.VarianteProducto;
+import com.agrandaditostienda.entity.Venta;
+import com.agrandaditostienda.entity.EstadoVenta;
 import com.agrandaditostienda.exception.ConsultaInvalidaException;
 import com.agrandaditostienda.mapper.ConsultaMapper;
 import com.agrandaditostienda.repository.ClienteRepository;
@@ -118,7 +120,8 @@ class ConsultaServiceTest {
         when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
                 .thenReturn(List.of());
-        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean())).thenReturn(null);
+        when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
     }
 
     private void prepararModificacion(Tienda tienda, Producto producto, Consulta consulta) {
@@ -129,7 +132,8 @@ class ConsultaServiceTest {
                 .thenReturn(Optional.of(new VarianteProducto(producto, "Azul", "T1", 5)));
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
                 .thenReturn(List.of());
-        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean())).thenReturn(null);
+        when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
     }
 
     private Consulta consultaModificable(Tienda tienda) {
@@ -341,12 +345,15 @@ class ConsultaServiceTest {
     }
 
     @Test
-    void noModificaConsultaConVentaAsociada() {
+    void noModificaConsultaConVentaEnPreparacion() {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
         Consulta consulta = consultaModificable(tienda);
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
         when(ventaRepository.existsByConsultaId(1L)).thenReturn(true);
+        Venta ventaEnPreparacion = new Venta();
+        ventaEnPreparacion.setEstado(EstadoVenta.EN_PREPARACION);
+        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.of(ventaEnPreparacion));
 
         assertThatThrownBy(() -> consultaService.modificar(1L, new ModificarConsultaRequest(
                 MotivoModificacion.OTRO, null, List.of())))

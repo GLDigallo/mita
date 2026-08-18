@@ -40,6 +40,58 @@ export async function fetchDestacados() {
   return response.json()
 }
 
+export async function fetchProductosGlobales() {
+  const response = await fetch(`${API_BASE}/productos`)
+  if (!response.ok) throw new Error('No se pudieron cargar los productos')
+  return response.json()
+}
+
+export async function crearProducto(slug, payload) {
+  return enviarJson(`${API_BASE}/tiendas/${slug}/productos`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function actualizarProducto(id, payload) {
+  return enviarJson(`${API_BASE}/productos/${id}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export async function eliminarProducto(id) {
+  return enviarJson(`${API_BASE}/productos/${id}`, { method: 'DELETE' })
+}
+
+export async function crearCategoria(slug, nombre) {
+  return enviarJson(`${API_BASE}/tiendas/${slug}/categorias`, {
+    method: 'POST',
+    body: JSON.stringify({ nombre }),
+  })
+}
+
+export async function actualizarCategoria(id, nombre) {
+  return enviarJson(`${API_BASE}/categorias/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify({ nombre }),
+  })
+}
+
+export async function eliminarCategoria(id) {
+  return enviarJson(`${API_BASE}/categorias/${id}`, { method: 'DELETE' })
+}
+
+export async function subirImagen(archivo) {
+  const formData = new FormData()
+  formData.append('archivo', archivo)
+  const response = await fetch(`${API_BASE}/upload/imagen`, {
+    credentials: 'same-origin',
+    method: 'POST',
+    body: formData,
+  })
+  if (!response.ok) {
+    let mensaje = 'Error al subir imagen'
+    try { const c = await response.json(); if (c.message) mensaje = c.message } catch {}
+    throw new Error(mensaje)
+  }
+  return response.json()
+}
+
 export function formatearPrecio(precio) {
   return new Intl.NumberFormat('es-AR', {
     style: 'currency',
@@ -120,6 +172,13 @@ export async function modificarConsulta(id, payload) {
   return enviarJson(`${API_BASE}/consultas/${id}`, {
     method: 'PUT',
     body: JSON.stringify(payload),
+  })
+}
+
+export async function actualizarNotaInterna(id, notaInterna) {
+  return enviarJson(`${API_BASE}/consultas/${id}/nota-interna`, {
+    method: 'PATCH',
+    body: JSON.stringify({ notaInterna }),
   })
 }
 

@@ -77,6 +77,15 @@
   margin-bottom: 6px;
 }
 
+.tienda {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-primario, #6b5ce7);
+  margin-bottom: 4px;
+}
+
 .nombre {
   font-size: 16.5px;
   line-height: 1.3;

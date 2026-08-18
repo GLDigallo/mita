@@ -1,7 +1,9 @@
 package com.agrandaditostienda.service;
 
 import com.agrandaditostienda.dto.CategoriaDTO;
+import com.agrandaditostienda.dto.CategoriaRequest;
 import com.agrandaditostienda.dto.ProductoDTO;
+import com.agrandaditostienda.dto.ProductoRequest;
 import com.agrandaditostienda.entity.Categoria;
 import com.agrandaditostienda.entity.Genero;
 import com.agrandaditostienda.entity.Producto;
@@ -13,6 +15,8 @@ import com.agrandaditostienda.mapper.ProductoMapper;
 import com.agrandaditostienda.repository.CategoriaRepository;
 import com.agrandaditostienda.repository.ProductoRepository;
 import com.agrandaditostienda.repository.VarianteProductoRepository;
+import com.agrandaditostienda.security.Seguridad;
+import com.agrandaditostienda.security.UsuarioPrincipal;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -85,6 +89,204 @@ public class CatalogoService {
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarDestacados() {
         return toDTOs(productoRepository.findByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoDTO> listarProductosGlobales() {
+        return toDTOs(productoRepository.findTop10ByActivoTrueOrderByCreadoEnDesc());
+    }
+
+    @Transactional
+    public ProductoDTO crearProducto(String tiendaSlug, ProductoRequest request) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Tienda tienda = tiendaService.obtenerEntidadPorSlug(tiendaSlug);
+        verificarAcceso(usuario, tienda);
+
+        Categoria categoria = categoriaRepository.findByTiendaIdAndSlug(tienda.getId(), request.categoriaSlug())
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Categoría no encontrada: " + request.categoriaSlug()));
+
+        Genero genero = parseGenero(request.genero());
+
+        Producto producto = new Producto(
+                request.nombre(),
+                request.descripcion(),
+                request.precio(),
+                request.imagen(),
+                request.talles(),
+                genero,
+                request.destacado(),
+                tienda,
+                categoria
+        );
+        producto = productoRepository.save(producto);
+
+        for (ProductoRequest.VarianteRequest v : request.variantes()) {
+            varianteProductoRepository.save(new VarianteProducto(producto, v.color(), v.talle(), v.stock()));
+        }
+
+        List<VarianteProducto> variantes = varianteProductoRepository
+                .findByProductoIdOrderByColorAscTalleAsc(producto.getId());
+        return productoMapper.toDTO(producto, variantes);
+    }
+
+    @Transactional
+    public ProductoDTO actualizarProducto(Long productoId, ProductoRequest request) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + productoId));
+        verificarAcceso(usuario, producto.getTienda());
+
+        Categoria categoria = categoriaRepository.findByTiendaIdAndSlug(producto.getTienda().getId(), request.categoriaSlug())
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Categoría no encontrada: " + request.categoriaSlug()));
+
+        producto.setNombre(request.nombre());
+        producto.setDescripcion(request.descripcion());
+        producto.setPrecio(request.precio());
+        producto.setImagen(request.imagen());
+        producto.setTalles(request.talles());
+        producto.setGenero(parseGenero(request.genero()));
+        producto.setDestacado(request.destacado());
+        producto.setCategoria(categoria);
+        productoRepository.save(producto);
+
+        List<VarianteProducto> todas = varianteProductoRepository
+                .findByProductoIdOrderByColorAscTalleAsc(productoId);
+
+        for (VarianteProducto existente : todas) {
+            boolean estaEnRequest = request.variantes().stream()
+                    .anyMatch(v -> v.color().equals(existente.getColor()) && v.talle().equals(existente.getTalle()));
+            if (estaEnRequest && !existente.isActivo()) {
+                existente.setActivo(true);
+            } else if (!estaEnRequest) {
+                existente.setActivo(false);
+            }
+            if (estaEnRequest) {
+                request.variantes().stream()
+                        .filter(v -> v.color().equals(existente.getColor()) && v.talle().equals(existente.getTalle()))
+                        .findFirst()
+                        .ifPresent(v -> existente.setStock(v.stock()));
+            }
+            varianteProductoRepository.save(existente);
+        }
+
+        for (ProductoRequest.VarianteRequest v : request.variantes()) {
+            boolean existe = todas.stream()
+                    .anyMatch(e -> e.getColor().equals(v.color()) && e.getTalle().equals(v.talle()));
+            if (!existe) {
+                varianteProductoRepository.save(new VarianteProducto(producto, v.color(), v.talle(), v.stock()));
+            }
+        }
+
+        List<VarianteProducto> finales = varianteProductoRepository
+                .findByProductoIdOrderByColorAscTalleAsc(productoId);
+        return productoMapper.toDTO(producto, finales);
+    }
+
+    @Transactional
+    public void eliminarProducto(Long productoId) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Producto producto = productoRepository.findById(productoId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + productoId));
+        verificarAcceso(usuario, producto.getTienda());
+
+        producto.setActivo(false);
+        productoRepository.save(producto);
+
+        List<VarianteProducto> variantes = varianteProductoRepository
+                .findByProductoIdOrderByColorAscTalleAsc(productoId);
+        for (VarianteProducto v : variantes) {
+            v.setActivo(false);
+            varianteProductoRepository.save(v);
+        }
+    }
+
+    @Transactional
+    public CategoriaDTO crearCategoria(String tiendaSlug, CategoriaRequest request) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Tienda tienda = tiendaService.obtenerEntidadPorSlug(tiendaSlug);
+        verificarAcceso(usuario, tienda);
+
+        String nombre = request.nombre().trim();
+        String slug = normalizarSlug(nombre);
+
+        if (categoriaRepository.findByTiendaIdAndSlug(tienda.getId(), slug).isPresent()) {
+            throw new com.agrandaditostienda.exception.ConsultaInvalidaException(
+                    "Ya existe una categoría con ese nombre en la tienda");
+        }
+
+        int maxOrden = categoriaRepository.findByTiendaIdOrderByOrdenAsc(tienda.getId()).stream()
+                .mapToInt(Categoria::getOrden).max().orElse(0);
+
+        Categoria categoria = new Categoria(nombre, slug, maxOrden + 1, tienda);
+        categoriaRepository.save(categoria);
+        return categoriaMapper.toDTO(categoria);
+    }
+
+    @Transactional
+    public CategoriaDTO actualizarCategoria(Long categoriaId, CategoriaRequest request) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + categoriaId));
+        verificarAcceso(usuario, categoria.getTienda());
+
+        String nombre = request.nombre().trim();
+        String slug = normalizarSlug(nombre);
+
+        categoriaRepository.findByTiendaIdAndSlug(categoria.getTienda().getId(), slug)
+                .filter(c -> !c.getId().equals(categoriaId))
+                .ifPresent(c -> {
+                    throw new com.agrandaditostienda.exception.ConsultaInvalidaException(
+                            "Ya existe una categoría con ese nombre en la tienda");
+                });
+
+        categoria.setNombre(nombre);
+        categoria.setSlug(slug);
+        categoriaRepository.save(categoria);
+        return categoriaMapper.toDTO(categoria);
+    }
+
+    @Transactional
+    public void eliminarCategoria(Long categoriaId) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        Categoria categoria = categoriaRepository.findById(categoriaId)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + categoriaId));
+        verificarAcceso(usuario, categoria.getTienda());
+
+        long productosActivos = productoRepository.countByCategoriaIdAndActivoTrue(categoriaId);
+        if (productosActivos > 0) {
+            throw new com.agrandaditostienda.exception.ConsultaInvalidaException(
+                    "No se puede eliminar: hay " + productosActivos + " producto(s) activo(s) usando esta categoría.");
+        }
+
+        productoRepository.desasociarInactivosDeCategoria(categoriaId);
+        categoriaRepository.delete(categoria);
+    }
+
+    private String normalizarSlug(String nombre) {
+        return nombre.toLowerCase()
+                .replaceAll("[áà]", "a")
+                .replaceAll("[éè]", "e")
+                .replaceAll("[íì]", "i")
+                .replaceAll("[óò]", "o")
+                .replaceAll("[úù]", "u")
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-|-$", "");
+    }
+
+    private void verificarAcceso(UsuarioPrincipal usuario, Tienda tienda) {
+        if (usuario.esEncargada() && !tienda.getId().equals(usuario.tiendaId())) {
+            throw new RecursoNoEncontradoException("No tenés acceso a esta tienda");
+        }
+    }
+
+    private Genero parseGenero(String genero) {
+        try {
+            return Genero.valueOf(genero.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RecursoNoEncontradoException("Género inválido: " + genero);
+        }
     }
 
     private List<Genero> resolverGeneros(String genero) {

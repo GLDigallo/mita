@@ -29,6 +29,13 @@ public class ConsultaMapper {
     public ConsultaDTO toDTO(Consulta consulta,
                              Map<Long, List<VarianteProducto>> variantesPorProducto,
                              boolean editable) {
+        return toDTO(consulta, variantesPorProducto, editable, null);
+    }
+
+    public ConsultaDTO toDTO(Consulta consulta,
+                             Map<Long, List<VarianteProducto>> variantesPorProducto,
+                             boolean editable,
+                             String ventaAsociada) {
         List<ProductoConsultadoDTO> productos = consulta.getProductosConsultados().stream()
                 .map(pc -> toProductoDTO(pc, variantesPorProducto))
                 .toList();
@@ -49,8 +56,10 @@ public class ConsultaMapper {
                 consulta.getCliente().getNombre(),
                 consulta.getCliente().getTelefono(),
                 consulta.getObservaciones(),
+                consulta.getNotaInterna(),
                 totalItems,
-                productos
+                productos,
+                ventaAsociada
         );
     }
 

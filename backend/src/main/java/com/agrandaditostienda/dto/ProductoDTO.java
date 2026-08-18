@@ -15,6 +15,7 @@ public record ProductoDTO(
         Genero genero,
         boolean destacado,
         String tiendaSlug,
+        String tiendaNombre,
         String categoriaSlug,
         String categoriaNombre,
         List<VarianteDTO> variantes

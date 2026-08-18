@@ -2,6 +2,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background: color-mix(in srgb, var(--gestion-color, #f5f5f0) 6%, #f5f5f0);
 }
 
 .barra {
@@ -9,7 +10,8 @@
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  background: var(--color-superficie);
+  background: var(--gestion-color, var(--color-superficie));
+  color: #fff;
   border-bottom: 1px solid var(--color-borde);
 }
 
@@ -18,11 +20,12 @@
   font-size: 20px;
   font-weight: 700;
   letter-spacing: -0.02em;
+  color: #fff;
 }
 
 .marcaEtiqueta {
   font-size: 13px;
-  color: var(--color-texto-suave);
+  color: rgba(255, 255, 255, 0.7);
   margin-left: 8px;
 }
 
@@ -39,23 +42,25 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #fff;
 }
 
 .salir {
   min-height: 40px;
   padding: 0 16px;
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: transparent;
   border-radius: var(--radio-pill);
   font-size: 14px;
   font-weight: 600;
-  color: var(--color-texto);
-  transition: border-color 0.2s ease, color 0.2s ease;
+  color: #fff;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
 }
 
 .salir:hover {
-  border-color: #c0392b;
-  color: #c0392b;
+  border-color: #fff;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .centrado {
@@ -86,7 +91,7 @@
 }
 
 .volver:hover {
-  color: var(--color-marca);
+  color: var(--gestion-color, var(--color-marca));
 }
 
 .inicio {
@@ -98,11 +103,66 @@
 .saludoTitulo {
   font-size: 22px;
   letter-spacing: -0.02em;
+  color: var(--gestion-color, inherit);
 }
 
 .saludoTexto {
   font-size: 15px;
   color: var(--color-texto-suave);
+  margin-top: 4px;
+}
+
+.resumen {
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-top: 3px solid var(--gestion-color, var(--color-marca));
+  border-radius: var(--radio-md);
+  padding: 16px;
+}
+
+.resumenTitulo {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--color-texto-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 12px;
+}
+
+.resumenItems {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.resumenItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 8px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, transform 0.2s;
+}
+
+.resumenItem:hover {
+  border-color: var(--gestion-color, var(--color-marca));
+  transform: translateY(-1px);
+}
+
+.resumenNumero {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--gestion-color, var(--color-marca));
+  line-height: 1;
+}
+
+.resumenEtiqueta {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+  text-align: center;
   margin-top: 4px;
 }
 
@@ -121,6 +181,7 @@
   gap: 10px;
   padding: 16px;
   border: 1px solid var(--color-borde);
+  border-top: 3px solid var(--gestion-color, var(--color-marca));
   border-radius: var(--radio-md);
   background: var(--color-superficie);
   font-family: inherit;
@@ -133,13 +194,13 @@
 .tarjeta:hover {
   transform: translateY(-2px);
   box-shadow: var(--sombra-md);
-  border-color: var(--color-marca);
+  border-color: var(--gestion-color, var(--color-marca));
 }
 
 .tarjetaIcono {
   width: 32px;
   height: 32px;
-  color: var(--color-marca);
+  color: var(--gestion-color, var(--color-marca));
 }
 
 .tarjetaTitulo {
@@ -183,8 +244,8 @@
 .busqueda:focus,
 .select:focus {
   outline: none;
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--gestion-color, var(--color-marca));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gestion-color, var(--color-marca)) 15%, transparent);
 }
 
 .lista {
@@ -198,6 +259,7 @@
   text-align: left;
   padding: 16px;
   border: 1px solid var(--color-borde);
+  border-left: 3px solid var(--gestion-color, var(--color-marca));
   background: var(--color-superficie);
   border-radius: var(--radio-md);
   font-family: inherit;
@@ -207,7 +269,7 @@
 .fila:hover {
   transform: translateY(-2px);
   box-shadow: var(--sombra-md);
-  border-color: var(--color-marca);
+  border-color: var(--gestion-color, var(--color-marca));
 }
 
 .filaSkeleton {
@@ -261,6 +323,26 @@
   justify-content: center;
   color: var(--color-texto-suave);
   font-size: 15px;
+}
+
+.notificacion {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 10px 16px;
+  background: var(--gestion-color, #059669);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  border-radius: var(--radio-sm);
+  margin-bottom: 16px;
+  animation: notifSlide 0.3s ease;
+}
+
+@keyframes notifSlide {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 @media (min-width: 480px) {

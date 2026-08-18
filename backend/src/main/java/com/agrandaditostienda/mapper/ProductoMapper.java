@@ -31,6 +31,7 @@ public class ProductoMapper {
                 producto.getGenero(),
                 producto.isDestacado(),
                 producto.getTienda().getSlug(),
+                producto.getTienda().getNombre(),
                 producto.getCategoria().getSlug(),
                 producto.getCategoria().getNombre(),
                 variantesDTO

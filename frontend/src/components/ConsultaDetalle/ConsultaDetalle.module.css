@@ -79,7 +79,7 @@
   z-index: 1;
   background: var(--color-superficie);
   padding: 16px 64px 16px 20px;
-  border-bottom: 1px solid var(--color-borde);
+  border-bottom: 2px solid var(--gestion-color, var(--color-marca));
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -95,13 +95,14 @@
 .numero {
   font-size: 26px;
   letter-spacing: -0.02em;
+  color: var(--gestion-color, inherit);
 }
 
 .versionMini {
   padding: 2px 10px;
   border-radius: var(--radio-pill);
-  background: rgba(79, 70, 229, 0.12);
-  color: var(--color-marca);
+  background: color-mix(in srgb, var(--gestion-color, var(--color-marca)) 12%, transparent);
+  color: var(--gestion-color, var(--color-marca));
   font-family: var(--fuente-cuerpo);
   font-size: 12px;
   font-weight: 700;
@@ -136,6 +137,79 @@
 .clienteTelefono {
   color: var(--color-marca);
   font-weight: 600;
+}
+
+.contactoFila {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.whatsappBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 0 12px;
+  background: #25d366;
+  color: #fff;
+  border-radius: var(--radio-sm);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.whatsappBtn:hover {
+  opacity: 0.85;
+}
+
+.notaInternaSub {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+  font-style: italic;
+  margin-bottom: 8px;
+}
+
+.notaInternaInput {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: #fef9ec;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--color-texto);
+  resize: vertical;
+  min-height: 60px;
+  transition: border-color 0.2s;
+}
+
+.notaInternaInput:focus {
+  outline: none;
+  border-color: #f59e0b;
+}
+
+.notaInternaBtn {
+  margin-top: 8px;
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #f59e0b;
+  background: #f59e0b;
+  color: #fff;
+  border-radius: var(--radio-sm);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.notaInternaBtn:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.notaInternaBtn:disabled {
+  opacity: 0.5;
 }
 
 .tienda {
@@ -361,10 +435,208 @@
   margin-bottom: 14px;
 }
 
-.agregadorFila {
+.productoGrilla {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.productoCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-md);
+  background: var(--color-superficie);
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.15s ease;
+  text-align: center;
+}
+
+.productoCard:hover {
+  border-color: var(--color-marca);
+  transform: translateY(-1px);
+}
+
+.productoCardImg {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: var(--radio-sm);
+}
+
+.productoCardNombre {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-texto);
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.productoCardPrecio {
+  font-size: 11px;
+  color: var(--color-texto-suave);
+}
+
+.agregadorPreview {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--color-marca);
+  border-radius: var(--radio-md);
+  background: var(--color-fondo);
+}
+
+.agregadorPreviewImg {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: var(--radio-sm);
+}
+
+.agregadorPreviewNombre {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto);
+}
+
+.agregadorPreviewPrecio {
+  font-size: 13px;
+  color: var(--color-texto-suave);
+}
+
+.agregadorPreviewLimpiar {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--color-texto-suave);
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agregadorPreviewLimpiar:hover {
+  background: var(--color-borde);
+  color: var(--color-texto);
+}
+
+.agregadorGrupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.agregadorGrupoTitulo {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-texto-suave);
+}
+
+.agregadorBotones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agregadorBtn {
+  min-height: 34px;
+  padding: 6px 14px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+  position: relative;
+}
+
+.agregadorBtn:hover:not(:disabled) {
+  border-color: var(--color-marca);
+}
+
+.agregadorBtnActivo {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.agregadorBtnActivo:hover:not(:disabled) {
+  color: #fff;
+}
+
+.agregadorBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.agregadorBtnPoco {
+  border-color: #f59e0b;
+}
+
+.agregadorBtnStock {
+  font-size: 10px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-left: 4px;
+}
+
+.agregadorBtnActivo .agregadorBtnStock {
+  color: #fde68a;
+}
+
+.agregadorCantidad {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agregadorCantidadBtn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: 50%;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.agregadorCantidadBtn:hover {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.agregadorCantidadValor {
+  min-width: 32px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-texto);
 }
 
 .input,
@@ -385,8 +657,8 @@
 .select:focus,
 .inputCantidad:focus {
   outline: none;
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--gestion-color, var(--color-marca));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gestion-color, var(--color-marca)) 15%, transparent);
 }
 
 .inputCantidad {
@@ -410,8 +682,8 @@
 
 .textarea:focus {
   outline: none;
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--gestion-color, var(--color-marca));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gestion-color, var(--color-marca)) 15%, transparent);
 }
 
 .sinItems {
@@ -450,8 +722,8 @@
 
 .inputNota:focus {
   outline: none;
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--gestion-color, var(--color-marca));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gestion-color, var(--color-marca)) 15%, transparent);
 }
 
 .quitar {
@@ -604,6 +876,14 @@
   backdrop-filter: blur(8px);
   border-top: 1px solid var(--color-borde);
   box-shadow: 0 -6px 20px rgba(15, 15, 25, 0.06);
+}
+
+.pieFila {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
 
 .pieBoton {

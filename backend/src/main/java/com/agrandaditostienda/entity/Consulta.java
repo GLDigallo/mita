@@ -49,6 +49,9 @@ public class Consulta {
     @Column(length = 1000)
     private String observaciones;
 
+    @Column(length = 2000)
+    private String notaInterna;
+
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private FormaPago formaPago;

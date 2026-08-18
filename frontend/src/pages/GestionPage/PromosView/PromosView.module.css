@@ -26,6 +26,7 @@
   gap: 10px;
   padding: 16px;
   border: 1px solid var(--color-borde);
+  border-top: 3px solid var(--gestion-color, var(--color-marca));
   border-radius: var(--radio-md);
   background: var(--color-superficie);
 }
@@ -57,8 +58,8 @@
 
 .input:focus {
   outline: none;
-  border-color: var(--color-marca);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+  border-color: var(--gestion-color, var(--color-marca));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gestion-color, var(--color-marca)) 15%, transparent);
 }
 
 .input:disabled {
@@ -70,7 +71,7 @@
   padding: 10px 20px;
   border: 0;
   border-radius: var(--radio-sm);
-  background: var(--color-marca);
+  background: var(--gestion-color, var(--color-marca));
   color: #fff;
   font-family: inherit;
   font-size: 15px;
@@ -111,6 +112,7 @@
   gap: 10px;
   padding: 16px;
   border: 1px solid var(--color-borde);
+  border-left: 3px solid var(--gestion-color, var(--color-marca));
   border-radius: var(--radio-md);
   background: var(--color-superficie);
 }
@@ -138,8 +140,8 @@
   align-self: flex-start;
   padding: 4px 12px;
   border-radius: var(--radio-pill);
-  background: rgba(79, 70, 229, 0.1);
-  color: var(--color-marca);
+  background: color-mix(in srgb, var(--gestion-color, var(--color-marca)) 12%, transparent);
+  color: var(--gestion-color, var(--color-marca));
   font-size: 12px;
   font-weight: 700;
 }

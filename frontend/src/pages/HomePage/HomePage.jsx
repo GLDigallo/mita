@@ -8,12 +8,13 @@ import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import { useFetch } from '../../hooks/useFetch'
 import useSeo from '../../hooks/useSeo'
-import { fetchDestacados, fetchTiendas } from '../../services/api'
+import { fetchDestacados, fetchProductosGlobales, fetchTiendas } from '../../services/api'
 import styles from './HomePage.module.css'
 
 function HomePage() {
   const tiendas = useFetch(fetchTiendas, [])
   const destacados = useFetch(fetchDestacados, [])
+  const productosGlobales = useFetch(fetchProductosGlobales, [])
 
   useSeo({
     titulo: 'AgrandaditosTienda · Tiendas de moda para chicos',
@@ -56,36 +57,70 @@ function HomePage() {
           <div className={styles.contenido}>
             <div className={styles.cabeceraDestacados}>
               <div>
-                <p className={styles.etiqueta}>Los favoritos</p>
-                <h2 className={styles.titulo}>Destacados del grupo</h2>
+                <p className={styles.etiqueta}>Últimos productos</p>
+                <h2 className={styles.titulo}>Lo último que cargamos</h2>
               </div>
               <a href="#tiendas" className={styles.verTodos}>
                 Ver las tiendas →
               </a>
             </div>
-            {destacados.isLoading && (
+            {productosGlobales.isLoading && (
               <div className={styles.destacadosGrid}>
                 {Array.from({ length: 8 }).map((_, indice) => (
                   <SkeletonCard key={indice} />
                 ))}
               </div>
             )}
-            {destacados.error && <ErrorMessage message={destacados.error} />}
-            {destacados.data && (
+            {productosGlobales.error && <ErrorMessage message={productosGlobales.error} />}
+            {productosGlobales.data && (
               <div className={styles.destacadosGrid}>
-                {destacados.data.slice(0, 8).map((producto) => (
+                {productosGlobales.data.map((producto) => (
                   <Link
                     key={producto.id}
                     to={`/tienda/${producto.tiendaSlug}`}
                     className={styles.tarjetaEnlace}
                   >
-                    <ProductCard producto={producto} onSeleccionar={() => {}} />
+                    <ProductCard producto={producto} onSeleccionar={() => {}} mostrarTienda />
                   </Link>
                 ))}
               </div>
             )}
           </div>
         </section>
+
+        {destacados.data && destacados.data.length > 0 && (
+          <section className={styles.seccion}>
+            <div className={styles.contenido}>
+              <div className={styles.cabeceraDestacados}>
+                <div>
+                  <p className={styles.etiqueta}>Los favoritos</p>
+                  <h2 className={styles.titulo}>Destacados del grupo</h2>
+                </div>
+              </div>
+              {destacados.isLoading && (
+                <div className={styles.destacadosGrid}>
+                  {Array.from({ length: 8 }).map((_, indice) => (
+                    <SkeletonCard key={indice} />
+                  ))}
+                </div>
+              )}
+              {destacados.error && <ErrorMessage message={destacados.error} />}
+              {destacados.data && (
+                <div className={styles.destacadosGrid}>
+                  {destacados.data.map((producto) => (
+                    <Link
+                      key={producto.id}
+                      to={`/tienda/${producto.tiendaSlug}`}
+                      className={styles.tarjetaEnlace}
+                    >
+                      <ProductCard producto={producto} onSeleccionar={() => {}} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
+        )}
 
         <section className={styles.seccion}>
           <div className={styles.contenido}>

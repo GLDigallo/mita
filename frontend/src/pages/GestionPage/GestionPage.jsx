@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import LoginForm from '../../components/LoginForm/LoginForm'
 import EstadoBadge from '../../components/EstadoBadge/EstadoBadge'
 import ConsultaDetalle from '../../components/ConsultaDetalle/ConsultaDetalle'
+import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary'
 import VentaArmado from '../../components/VentaArmado/VentaArmado'
 import VentaDetalle from '../../components/VentaDetalle/VentaDetalle'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import PromosView from './PromosView/PromosView'
 import MetricasView from './MetricasView/MetricasView'
+import ProductosView from './ProductosView/ProductosView'
 import {
   cambiarEstadoConsulta,
   cambiarFormaPagoConsulta,
@@ -16,7 +18,6 @@ import {
   fetchConsultas,
   fetchMe,
   fetchTiendas,
-  fetchVentaDeConsulta,
   fetchVentas,
   login,
   logout,
@@ -54,12 +55,32 @@ function GestionPage() {
   const [detalleId, setDetalleId] = useState(null)
   const [detalle, setDetalle] = useState(null)
   const [cargandoDetalle, setCargandoDetalle] = useState(false)
+  const [errorDetalle, setErrorDetalle] = useState('')
   const [cambiandoEstado, setCambiandoEstado] = useState(false)
 
   const [armando, setArmando] = useState(null)
   const [ventaDetalleId, setVentaDetalleId] = useState(null)
+  const [notificacion, setNotificacion] = useState(null)
+  const consultasSnapshot = useRef(0)
 
   const esDueño = usuario?.rol === 'DUENO'
+  const esEncargada = usuario?.rol === 'ENCARGADA'
+  const miTiendaId = usuario?.tiendaId ?? ''
+  const tiendaUsuario = tiendas.find((t) => t.slug === usuario?.tiendaSlug) ?? tiendas[0] ?? null
+  const colorTienda = tiendaUsuario?.colorPrimario ?? null
+  const colorTiendaSec = tiendaUsuario?.colorSecundario ?? null
+
+  const estiloTienda = colorTienda
+    ? { '--gestion-color': colorTienda, '--gestion-color-sec': colorTiendaSec }
+    : undefined
+
+  useEffect(() => {
+    if (sesion !== 'autenticado') return
+    if (esEncargada && miTiendaId) {
+      setTiendaIdFiltro(String(miTiendaId))
+      setVentaTiendaIdFiltro(String(miTiendaId))
+    }
+  }, [sesion, esEncargada, miTiendaId])
 
   useEffect(() => {
     let activo = true
@@ -94,6 +115,9 @@ function GestionPage() {
         busqueda: busquedaAplicada,
       })
       setConsultas(datos)
+      if (consultasSnapshot.current === 0) {
+        consultasSnapshot.current = datos.filter((c) => c.estado === 'PENDIENTE').length
+      }
     } catch (err) {
       setError(err.message)
       setConsultas([])
@@ -121,11 +145,31 @@ function GestionPage() {
   }, [ventaEstadoFiltro, ventaTiendaIdFiltro, ventaBusquedaAplicada])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && seccion === 'consultas') cargarConsultas()
+    if (sesion === 'autenticado' && (seccion === 'consultas' || seccion === 'inicio')) cargarConsultas()
   }, [sesion, seccion, cargarConsultas])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && seccion === 'ventas') cargarVentas()
+    if (sesion !== 'autenticado') return
+    const intervalo = setInterval(() => {
+      fetchConsultas({ estado: '', tiendaId: esDueño ? '' : (usuario?.tiendaId ?? ''), busqueda: '' })
+        .then((datos) => {
+          const pendientes = datos.filter((c) => c.estado === 'PENDIENTE').length
+          const snapshot = consultasSnapshot.current
+          if (snapshot > 0 && pendientes > snapshot) {
+            const nuevas = pendientes - snapshot
+            setNotificacion(`${nuevas} nueva${nuevas > 1 ? 's' : ''} consulta${nuevas > 1 ? 's' : ''} pendiente${nuevas > 1 ? 's' : ''}`)
+            try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
+            setTimeout(() => setNotificacion(null), 6000)
+          }
+          consultasSnapshot.current = pendientes
+        })
+        .catch(() => {})
+    }, 30000)
+    return () => clearInterval(intervalo)
+  }, [sesion, esDueño, usuario])
+
+  useEffect(() => {
+    if (sesion === 'autenticado' && (seccion === 'ventas' || seccion === 'inicio')) cargarVentas()
   }, [sesion, seccion, cargarVentas])
 
   useEffect(() => {
@@ -137,16 +181,20 @@ function GestionPage() {
   useEffect(() => {
     if (!detalleId) {
       setDetalle(null)
+      setErrorDetalle('')
       return
     }
     let activo = true
     setCargandoDetalle(true)
     setDetalle(null)
+    setErrorDetalle('')
     fetchConsulta(detalleId)
       .then((datos) => {
         if (activo) setDetalle(datos)
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (activo) setErrorDetalle(err.message || 'No se pudo cargar el detalle')
+      })
       .finally(() => {
         if (activo) setCargandoDetalle(false)
       })
@@ -271,16 +319,6 @@ function GestionPage() {
     })
   }
 
-  async function manejarVerVenta(consulta) {
-    setDetalleId(null)
-    try {
-      const venta = await fetchVentaDeConsulta(consulta.id)
-      setVentaDetalleId(venta.id)
-    } catch {
-      setError('La consulta no tiene una venta asociada')
-    }
-  }
-
   function refrescar() {
     if (seccion === 'consultas') cargarConsultas()
     cargarVentas()
@@ -307,7 +345,7 @@ function GestionPage() {
   }
 
   return (
-    <div className={styles.fondo}>
+    <div className={styles.fondo} style={estiloTienda}>
       <header className={styles.barra}>
         <Link to="/" className={styles.marca}>
             AgrandaditosTienda
@@ -324,6 +362,12 @@ function GestionPage() {
       </header>
 
       <main className={styles.contenedor}>
+        {notificacion && (
+          <div className={styles.notificacion}>
+            <span>{notificacion}</span>
+          </div>
+        )}
+
         {seccion !== 'inicio' && (
           <Link to="/home" className={styles.volver}>
             ← Volver al inicio
@@ -334,6 +378,39 @@ function GestionPage() {
           <section className={styles.inicio}>
             <h2 className={styles.saludoTitulo}>Hola, {usuario?.nombre ?? usuario?.usuario}</h2>
             <p className={styles.saludoTexto}>¿Qué necesitás hacer hoy?</p>
+
+            {(consultas.filter((c) => c.estado === 'PENDIENTE').length > 0 || ventas.filter((v) => v.estado === 'EN_PREPARACION').length > 0) && (
+              <div className={styles.resumen}>
+                <h3 className={styles.resumenTitulo}>Lo que tengo que hacer hoy</h3>
+                <div className={styles.resumenItems}>
+                  {consultas.filter((c) => c.estado === 'PENDIENTE').length > 0 && (
+                    <Link to="/home/consultas" className={styles.resumenItem}>
+                      <span className={styles.resumenNumero}>{consultas.filter((c) => c.estado === 'PENDIENTE').length}</span>
+                      <span className={styles.resumenEtiqueta}>consultas pendientes</span>
+                    </Link>
+                  )}
+                  {consultas.filter((c) => c.estado === 'EN_REVISION').length > 0 && (
+                    <Link to="/home/consultas" className={styles.resumenItem}>
+                      <span className={styles.resumenNumero}>{consultas.filter((c) => c.estado === 'EN_REVISION').length}</span>
+                      <span className={styles.resumenEtiqueta}>en revisión</span>
+                    </Link>
+                  )}
+                  {ventas.filter((v) => v.estado === 'EN_PREPARACION').length > 0 && (
+                    <Link to="/home/ventas" className={styles.resumenItem}>
+                      <span className={styles.resumenNumero}>{ventas.filter((v) => v.estado === 'EN_PREPARACION').length}</span>
+                      <span className={styles.resumenEtiqueta}>ventas a preparar</span>
+                    </Link>
+                  )}
+                  {ventas.filter((v) => v.estado === 'CONFIRMADA').length > 0 && (
+                    <Link to="/home/ventas" className={styles.resumenItem}>
+                      <span className={styles.resumenNumero}>{ventas.filter((v) => v.estado === 'CONFIRMADA').length}</span>
+                      <span className={styles.resumenEtiqueta}>listas para entregar</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+
             <div className={styles.mosaico}>
               <Link to="/home/consultas" className={styles.tarjeta}>
                 <svg
@@ -350,10 +427,33 @@ function GestionPage() {
                 </svg>
                 <span className={styles.tarjetaTitulo}>Consultas</span>
                 <span className={styles.tarjetaDetalle}>
-                  {consultas.length} en total · {consultas.filter((c) => c.estado === 'PENDIENTE').length} pendientes
+                  {esEncargada && tiendaUsuario ? `${tiendaUsuario.nombre}: ` : ''}
+                  {consultas.filter((c) => c.estado === 'PENDIENTE').length} pendientes
                 </span>
               </Link>
-              <Link to="/home/ventas" className={styles.tarjeta}>
+
+              {esDueño && (
+                <Link to="/home/ventas" className={styles.tarjeta}>
+                  <svg
+                    className={styles.tarjetaIcono}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                    <path d="M3 6h18" />
+                    <path d="M16 10a4 4 0 0 1-8 0" />
+                  </svg>
+                  <span className={styles.tarjetaTitulo}>Ventas</span>
+                  <span className={styles.tarjetaDetalle}>{ventas.length} registradas</span>
+                </Link>
+              )}
+
+              <Link to="/home/productos" className={styles.tarjeta}>
                 <svg
                   className={styles.tarjetaIcono}
                   viewBox="0 0 24 24"
@@ -364,48 +464,56 @@ function GestionPage() {
                   strokeLinejoin="round"
                   aria-hidden="true"
                 >
-                  <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <path d="M3 6h18" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
                 </svg>
-                <span className={styles.tarjetaTitulo}>Ventas</span>
-                <span className={styles.tarjetaDetalle}>{ventas.length} registradas</span>
+                <span className={styles.tarjetaTitulo}>Productos</span>
+                <span className={styles.tarjetaDetalle}>
+                  {esEncargada ? 'Mi catálogo' : 'Catálogo y stock'}
+                </span>
               </Link>
-              <Link to="/home/promos" className={styles.tarjeta}>
-                <svg
-                  className={styles.tarjetaIcono}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M20.59 13.41 12 22 2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                  <circle cx="7.5" cy="7.5" r="0.5" fill="currentColor" />
-                </svg>
-                <span className={styles.tarjetaTitulo}>Promos</span>
-                <span className={styles.tarjetaDetalle}>Organizá promociones</span>
-              </Link>
-              <Link to="/home/metricas" className={styles.tarjeta}>
-                <svg
-                  className={styles.tarjetaIcono}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 20v-6" />
-                  <path d="M6 20V10" />
-                  <path d="M18 20V4" />
-                </svg>
-                <span className={styles.tarjetaTitulo}>Métricas</span>
-                <span className={styles.tarjetaDetalle}>Resultados por tienda</span>
-              </Link>
+
+              {esDueño && (
+                <Link to="/home/promos" className={styles.tarjeta}>
+                  <svg
+                    className={styles.tarjetaIcono}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M20.59 13.41 12 22 2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+                    <circle cx="7.5" cy="7.5" r="0.5" fill="currentColor" />
+                  </svg>
+                  <span className={styles.tarjetaTitulo}>Promos</span>
+                  <span className={styles.tarjetaDetalle}>Organizá promociones</span>
+                </Link>
+              )}
+
+              {esDueño && (
+                <Link to="/home/metricas" className={styles.tarjeta}>
+                  <svg
+                    className={styles.tarjetaIcono}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 20v-6" />
+                    <path d="M6 20V10" />
+                    <path d="M18 20V4" />
+                  </svg>
+                  <span className={styles.tarjetaTitulo}>Métricas</span>
+                  <span className={styles.tarjetaDetalle}>Resultados por tienda</span>
+                </Link>
+              )}
             </div>
           </section>
         ) : seccion === 'consultas' ? (
@@ -484,7 +592,7 @@ function GestionPage() {
               </div>
             )}
           </>
-        ) : seccion === 'ventas' ? (
+        ) : esDueño && seccion === 'ventas' ? (
           <>
             <form className={styles.filtros} onSubmit={manejarBusquedaVentas}>
               <input
@@ -562,8 +670,10 @@ function GestionPage() {
               </div>
             )}
           </>
-        ) : seccion === 'promos' ? (
-          <PromosView tiendas={tiendas} />
+        ) : esDueño && seccion === 'promos' ? (
+          <PromosView tiendas={tiendas} usuario={usuario} />
+        ) : seccion === 'productos' ? (
+          <ProductosView tienda={tiendaUsuario} esDueno={esDueño} tiendas={tiendas} />
         ) : seccion === 'metricas' ? (
           <MetricasView tiendas={tiendas} consultas={consultas} ventas={ventas} />
         ) : (
@@ -572,17 +682,32 @@ function GestionPage() {
       </main>
 
       {detalleId && cargandoDetalle && !detalle && <div className={styles.cargandoDetalle}>Cargando detalle…</div>}
+      {detalleId && errorDetalle && !cargandoDetalle && (
+        <div className={styles.cargandoDetalle}>
+          <div style={{ textAlign: 'center' }}>
+            <p style={{ marginBottom: 12 }}>{errorDetalle}</p>
+            <button
+              type="button"
+              onClick={() => { setDetalleId(null); setErrorDetalle('') }}
+              style={{ background: 'var(--color-marca)', color: '#fff', border: 'none', padding: '8px 20px', borderRadius: 8, cursor: 'pointer', fontWeight: 600 }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
       {detalleId && detalle && (
-        <ConsultaDetalle
-          consulta={detalle}
-          onCerrar={() => setDetalleId(null)}
-          onCambiarEstado={manejarCambioEstado}
-          cambiandoEstado={cambiandoEstado}
-          onCambiarFormaPago={manejarCambioFormaPago}
-          onArmarVenta={manejarArmarVenta}
-          onVerVenta={manejarVerVenta}
-          onModificada={manejarModificada}
-        />
+        <ErrorBoundary onCerrar={() => { setDetalleId(null); setErrorDetalle('') }}>
+          <ConsultaDetalle
+            consulta={detalle}
+            onCerrar={() => { setDetalleId(null); setErrorDetalle('') }}
+            onCambiarEstado={manejarCambioEstado}
+            cambiandoEstado={cambiandoEstado}
+            onCambiarFormaPago={manejarCambioFormaPago}
+            onArmarVenta={manejarArmarVenta}
+            onModificada={manejarModificada}
+          />
+        </ErrorBoundary>
       )}
 
       {armando && (

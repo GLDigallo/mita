@@ -58,12 +58,14 @@ public class AuthService {
                     principal.getUsername(),
                     principal.nombre(),
                     principal.rol(),
+                    principal.tiendaId(),
                     principal.tiendaSlug(),
                     principal.tiendaNombre());
         }
         return new UsuarioActualDTO(
                 null,
                 authentication.getName(),
+                null,
                 null,
                 null,
                 null,
