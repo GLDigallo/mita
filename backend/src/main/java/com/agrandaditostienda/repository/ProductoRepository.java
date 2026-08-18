@@ -29,8 +29,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     long countByCategoriaIdAndActivoTrue(Long categoriaId);
 
-    long countByCategoriaId(Long categoriaId);
-
     @Modifying
     @Query("update Producto p set p.categoria = null where p.categoria.id = :categoriaId and p.activo = false")
     int desasociarInactivosDeCategoria(@Param("categoriaId") Long categoriaId);

@@ -107,13 +107,6 @@
   margin-bottom: 16px;
 }
 
-.descripcion {
-  color: var(--color-texto-suave);
-  font-size: 15px;
-  line-height: 1.6;
-  margin-bottom: 24px;
-}
-
 .titulo {
   font-weight: 600;
   font-size: 14px;

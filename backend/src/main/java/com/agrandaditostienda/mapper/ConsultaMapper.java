@@ -28,12 +28,6 @@ public class ConsultaMapper {
 
     public ConsultaDTO toDTO(Consulta consulta,
                              Map<Long, List<VarianteProducto>> variantesPorProducto,
-                             boolean editable) {
-        return toDTO(consulta, variantesPorProducto, editable, null);
-    }
-
-    public ConsultaDTO toDTO(Consulta consulta,
-                             Map<Long, List<VarianteProducto>> variantesPorProducto,
                              boolean editable,
                              String ventaAsociada) {
         List<ProductoConsultadoDTO> productos = consulta.getProductosConsultados().stream()
@@ -44,7 +38,7 @@ public class ConsultaMapper {
                 .sum();
         return new ConsultaDTO(
                 consulta.getId(),
-                formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion()),
+                formatearNumero(consulta.getNumero()),
                 consulta.getVersion(),
                 editable,
                 consulta.getEstado(),
@@ -120,9 +114,5 @@ public class ConsultaMapper {
 
     public String formatearNumero(Long numero) {
         return "O-" + numero;
-    }
-
-    public String formatearNumeroConVersion(Long numero, int version) {
-        return formatearNumero(numero);
     }
 }

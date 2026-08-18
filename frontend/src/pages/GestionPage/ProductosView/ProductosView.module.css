@@ -194,23 +194,6 @@
   font-weight: 700;
 }
 
-.volverBtn {
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid var(--color-borde);
-  background: var(--color-superficie);
-  border-radius: var(--radio-sm);
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--color-texto-suave);
-  cursor: pointer;
-}
-
-.volverBtn:hover {
-  color: var(--color-marca);
-  border-color: var(--color-marca);
-}
-
 .formCampos {
   display: flex;
   flex-direction: column;

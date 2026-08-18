@@ -113,9 +113,9 @@ class ConsultaServiceTest {
 
     private void prepararDependencias(Tienda tienda, Producto producto) {
         when(tiendaService.obtenerEntidadPorSlug("mokositos-bebes")).thenReturn(tienda);
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
-        when(varianteProductoRepository.findByProductoIdAndColorAndTalle(10L, "Azul", "T1"))
-                .thenReturn(Optional.of(new VarianteProducto(producto, "Azul", "T1", 5)));
+        when(productoRepository.findAllById(anyList())).thenReturn(List.of(producto));
+        when(varianteProductoRepository.findByProductoIdIn(anyList()))
+                .thenReturn(List.of(new VarianteProducto(producto, "Azul", "T1", 5)));
         when(consultaRepository.siguienteNumero()).thenReturn(7L);
         when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
@@ -127,9 +127,9 @@ class ConsultaServiceTest {
     private void prepararModificacion(Tienda tienda, Producto producto, Consulta consulta) {
         when(consultaRepository.findDetalle(consulta.getId())).thenReturn(Optional.of(consulta));
         when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
-        when(varianteProductoRepository.findByProductoIdAndColorAndTalle(10L, "Azul", "T1"))
-                .thenReturn(Optional.of(new VarianteProducto(producto, "Azul", "T1", 5)));
+        when(productoRepository.findAllById(anyList())).thenReturn(List.of(producto));
+        when(varianteProductoRepository.findByProductoIdIn(anyList()))
+                .thenReturn(List.of(new VarianteProducto(producto, "Azul", "T1", 5)));
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
                 .thenReturn(List.of());
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
@@ -215,7 +215,7 @@ class ConsultaServiceTest {
         Tienda tienda = tienda(1L);
         Producto productoDeOtraTienda = producto(10L, tienda(2L));
         when(tiendaService.obtenerEntidadPorSlug("mokositos-bebes")).thenReturn(tienda);
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(productoDeOtraTienda));
+        when(productoRepository.findAllById(anyList())).thenReturn(List.of(productoDeOtraTienda));
         when(clienteRepository.findByTelefono("1122334455")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> consultaService.crear(request("Juan", "1122334455")))
@@ -229,10 +229,10 @@ class ConsultaServiceTest {
         Tienda tienda = tienda(1L);
         Producto producto = producto(10L, tienda);
         when(tiendaService.obtenerEntidadPorSlug("mokositos-bebes")).thenReturn(tienda);
-        when(productoRepository.findById(10L)).thenReturn(Optional.of(producto));
+        when(productoRepository.findAllById(anyList())).thenReturn(List.of(producto));
         when(clienteRepository.findByTelefono("1122334455")).thenReturn(Optional.empty());
-        when(varianteProductoRepository.findByProductoIdAndColorAndTalle(10L, "Azul", "T1"))
-                .thenReturn(Optional.empty());
+        when(varianteProductoRepository.findByProductoIdIn(anyList()))
+                .thenReturn(List.of());
 
         assertThatThrownBy(() -> consultaService.crear(request("Juan", "1122334455")))
                 .isInstanceOf(ConsultaInvalidaException.class)
@@ -350,7 +350,6 @@ class ConsultaServiceTest {
         Tienda tienda = tienda(1L);
         Consulta consulta = consultaModificable(tienda);
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-        when(ventaRepository.existsByConsultaId(1L)).thenReturn(true);
         Venta ventaEnPreparacion = new Venta();
         ventaEnPreparacion.setEstado(EstadoVenta.EN_PREPARACION);
         when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.of(ventaEnPreparacion));
@@ -386,5 +385,60 @@ class ConsultaServiceTest {
         verify(consultaMapper, times(2)).toVersionDTO(any(Consulta.class), captor.capture());
         assertThat(captor.getAllValues()).extracting(ConsultaVersion::getVersion)
                 .containsExactly(0, 1);
+    }
+
+    @Test
+    void cambiarEstadoRechazaTransicionInvalida() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = new Consulta();
+        consulta.setId(1L);
+        consulta.setNumero(7L);
+        consulta.setTienda(tienda);
+        consulta.setEstado(EstadoConsulta.PENDIENTE);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> consultaService.cambiarEstado(1L, EstadoConsulta.FINALIZADA))
+                .isInstanceOf(ConsultaInvalidaException.class)
+                .hasMessageContaining("No se puede pasar");
+        verify(consultaRepository, never()).save(any());
+    }
+
+    @Test
+    void cambiarEstadoAceptaTransicionValida() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = new Consulta();
+        consulta.setId(1L);
+        consulta.setNumero(7L);
+        consulta.setTienda(tienda);
+        consulta.setEstado(EstadoConsulta.PENDIENTE);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+        when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
+
+        consultaService.cambiarEstado(1L, EstadoConsulta.EN_REVISION);
+
+        ArgumentCaptor<Consulta> captor = ArgumentCaptor.forClass(Consulta.class);
+        verify(consultaRepository).save(captor.capture());
+        assertThat(captor.getValue().getEstado()).isEqualTo(EstadoConsulta.EN_REVISION);
+    }
+
+    @Test
+    void cambiarEstadoBloqueaEstadoCerrado() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = new Consulta();
+        consulta.setId(1L);
+        consulta.setNumero(7L);
+        consulta.setTienda(tienda);
+        consulta.setEstado(EstadoConsulta.CONFIRMADA);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> consultaService.cambiarEstado(1L, EstadoConsulta.PENDIENTE))
+                .isInstanceOf(ConsultaInvalidaException.class)
+                .hasMessageContaining("no admite cambios");
+        verify(consultaRepository, never()).save(any());
     }
 }

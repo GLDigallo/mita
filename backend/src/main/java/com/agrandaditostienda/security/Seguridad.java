@@ -4,25 +4,20 @@ import com.agrandaditostienda.exception.NoAutenticadoException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.Optional;
-
 public final class Seguridad {
 
     private Seguridad() {
     }
 
-    public static Optional<UsuarioPrincipal> principal() {
+    public static UsuarioPrincipal principalRequerido() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            return Optional.empty();
+            throw new NoAutenticadoException();
         }
         Object principal = authentication.getPrincipal();
-        return principal instanceof UsuarioPrincipal usuarioPrincipal
-                ? Optional.of(usuarioPrincipal)
-                : Optional.empty();
-    }
-
-    public static UsuarioPrincipal principalRequerido() {
-        return principal().orElseThrow(NoAutenticadoException::new);
+        if (principal instanceof UsuarioPrincipal usuarioPrincipal) {
+            return usuarioPrincipal;
+        }
+        throw new NoAutenticadoException();
     }
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import {
   actualizarNotaInterna,
   fetchProductos,
+  formatearFecha,
   formatearPrecio,
   MOTIVOS_MODIFICACION,
   modificarConsulta,
@@ -208,11 +209,7 @@ function ConsultaDetalle({
               <button type="button" className={styles.volver} onClick={() => setVista('actual')}>
                 ← Volver
               </button>
-              <h2 className={styles.numero}>
-                {vista === 'version'
-                  ? `Versión ${versionAbierta ? versionAbierta.version + 1 : ''}`
-                  : 'Historial de versiones'}
-              </h2>
+              <h2 className={styles.numero}>Editar consulta</h2>
               <p className={styles.fecha}>{consulta.numero}</p>
             </div>
           </header>
@@ -798,16 +795,6 @@ function VistaEditar({
       </section>
     </>
   )
-}
-
-function formatearFecha(fechaIso) {
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(fechaIso))
 }
 
 export default ConsultaDetalle

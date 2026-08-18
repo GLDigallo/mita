@@ -44,16 +44,26 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 @Service
 public class ConsultaService {
 
     private static final Logger log = LoggerFactory.getLogger(ConsultaService.class);
     private static final Duration TIEMPO_CANCELACION_PENDIENTE = Duration.ofHours(48);
+
+    private static final Map<EstadoConsulta, Set<EstadoConsulta>> TRANSICIONES_VALIDAS = new EnumMap<>(EstadoConsulta.class);
+    static {
+        TRANSICIONES_VALIDAS.put(EstadoConsulta.PENDIENTE, EnumSet.of(EstadoConsulta.EN_REVISION, EstadoConsulta.CANCELADA));
+        TRANSICIONES_VALIDAS.put(EstadoConsulta.EN_REVISION, EnumSet.of(EstadoConsulta.ESPERANDO_CLIENTE, EstadoConsulta.CONFIRMADA, EstadoConsulta.CANCELADA));
+        TRANSICIONES_VALIDAS.put(EstadoConsulta.ESPERANDO_CLIENTE, EnumSet.of(EstadoConsulta.EN_REVISION, EstadoConsulta.CONFIRMADA, EstadoConsulta.CANCELADA));
+    }
 
     private final ConsultaRepository consultaRepository;
     private final ClienteRepository clienteRepository;
@@ -98,7 +108,8 @@ public class ConsultaService {
         Consulta guardada = consultaRepository.save(consulta);
         guardarVersion(guardada, null, null, List.of());
 
-        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+        var info = resolveEditableInfo(guardada);
+        ConsultaDTO dto = consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), info.editable(), info.ventaEstado());
         String mensaje = construirMensaje(guardada);
         String enlace = "https://wa.me/" + tienda.getWhatsapp() + "?text="
                 + URLEncoder.encode(mensaje, StandardCharsets.UTF_8);
@@ -128,7 +139,8 @@ public class ConsultaService {
         List<ConsultaVersionCambio> cambios = calcularCambios(anteriores, nuevos);
         guardarVersion(guardada, request.motivo(), Seguridad.principalRequerido().nombre(), cambios);
 
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+        var infoMod = resolveEditableInfo(guardada);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoMod.editable(), infoMod.ventaEstado());
     }
 
     @Transactional(readOnly = true)
@@ -152,7 +164,7 @@ public class ConsultaService {
         return consultas.stream()
                 .map(c -> new ConsultaResumenDTO(
                         c.getId(),
-                        consultaMapper.formatearNumeroConVersion(c.getNumero(), c.getVersion()),
+                        consultaMapper.formatearNumero(c.getNumero()),
                         c.getEstado(),
                         c.getFormaPago(),
                         c.getFechaConsulta(),
@@ -169,7 +181,8 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
-        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()), esEditable(consulta), ventaAsociadaEstado(consulta));
+        var infoObt = resolveEditableInfo(consulta);
+        return consultaMapper.toDTO(consulta, variantesDe(consulta.getProductosConsultados()), infoObt.editable(), infoObt.ventaEstado());
     }
 
     @Transactional
@@ -177,13 +190,20 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
-        if (esEstadoCerrado(consulta.getEstado())) {
+        EstadoConsulta actual = consulta.getEstado();
+        if (esEstadoCerrado(actual)) {
             throw new ConsultaInvalidaException(
-                    "La consulta está " + etiquetaEstado(consulta.getEstado()) + " y no admite cambios de estado");
+                    "La consulta está " + etiquetaEstado(actual) + " y no admite cambios de estado");
+        }
+        Set<EstadoConsulta> destinosPermitidos = TRANSICIONES_VALIDAS.get(actual);
+        if (destinosPermitidos == null || !destinosPermitidos.contains(estado)) {
+            throw new ConsultaInvalidaException(
+                    "No se puede pasar de " + etiquetaEstado(actual) + " a " + etiquetaEstado(estado));
         }
         consulta.setEstado(estado);
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+        var infoEstado = resolveEditableInfo(guardada);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoEstado.editable(), infoEstado.ventaEstado());
     }
 
     @Transactional
@@ -193,7 +213,8 @@ public class ConsultaService {
         verificarAcceso(consulta);
         consulta.setFormaPago(formaPago);
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+        var infoFP = resolveEditableInfo(guardada);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoFP.editable(), infoFP.ventaEstado());
     }
 
     @Transactional
@@ -203,7 +224,8 @@ public class ConsultaService {
         verificarAcceso(consulta);
         consulta.setNotaInterna((notaInterna == null || notaInterna.isBlank()) ? null : notaInterna.trim());
         Consulta guardada = consultaRepository.save(consulta);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), esEditable(guardada), ventaAsociadaEstado(guardada));
+        var infoNota = resolveEditableInfo(guardada);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoNota.editable(), infoNota.ventaEstado());
     }
 
     @Scheduled(fixedDelay = 60_000)
@@ -243,30 +265,25 @@ public class ConsultaService {
         if (esEstadoCerrado(consulta.getEstado())) {
             throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
         }
-        if (ventaRepository.existsByConsultaId(consulta.getId())) {
-            var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
-            if (venta != null && venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.EN_PREPARACION) {
-                throw new ConsultaInvalidaException("No se puede modificar una consulta mientras se arma la venta");
-            }
+        var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
+        if (venta != null && venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.EN_PREPARACION) {
+            throw new ConsultaInvalidaException("No se puede modificar una consulta mientras se arma la venta");
         }
     }
 
-    private boolean esEditable(Consulta consulta) {
+    private record EditableInfo(boolean editable, String ventaEstado) {}
+
+    private EditableInfo resolveEditableInfo(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
-            return false;
+            return new EditableInfo(false, null);
         }
         var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
         if (venta == null) {
-            return true;
+            return new EditableInfo(true, null);
         }
-        return venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CONFIRMADA
-            || venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CANCELADA;
-    }
-
-    private String ventaAsociadaEstado(Consulta consulta) {
-        return ventaRepository.findByConsultaId(consulta.getId())
-                .map(v -> v.getEstado().name())
-                .orElse(null);
+        boolean editable = venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CONFIRMADA
+                || venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CANCELADA;
+        return new EditableInfo(editable, venta.getEstado().name());
     }
 
     private boolean esEstadoCerrado(EstadoConsulta estado) {
@@ -303,22 +320,36 @@ public class ConsultaService {
     }
 
     private void agregarProductos(Consulta consulta, List<CrearConsultaRequest.ItemConsultaRequest> items) {
+        List<Long> productoIds = items.stream()
+                .map(CrearConsultaRequest.ItemConsultaRequest::productoId)
+                .toList();
+        Map<Long, Producto> productosPorId = productoRepository.findAllById(productoIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Producto::getId, p -> p));
+
+        Map<Long, List<VarianteProducto>> variantesPorProducto = varianteProductoRepository.findByProductoIdIn(productoIds).stream()
+                .collect(java.util.stream.Collectors.groupingBy(v -> v.getProducto().getId()));
+
         for (CrearConsultaRequest.ItemConsultaRequest item : items) {
-            Producto producto = productoRepository.findById(item.productoId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId()));
+            Producto producto = productosPorId.get(item.productoId());
+            if (producto == null) {
+                throw new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId());
+            }
             if (!producto.getTienda().getId().equals(consulta.getTienda().getId())) {
                 throw new ConsultaInvalidaException(
                         "El producto '" + producto.getNombre() + "' no pertenece a la sucursal " + consulta.getTienda().getNombre());
             }
             String color = colorLimpio(item.color());
-            varianteProductoRepository.findByProductoIdAndColorAndTalle(producto.getId(), color, item.talle().trim())
+            String talle = item.talle().trim();
+            VarianteProducto variante = variantesPorProducto.getOrDefault(producto.getId(), List.of()).stream()
+                    .filter(v -> Objects.equals(v.getColor(), color) && v.getTalle().equals(talle))
+                    .findFirst()
                     .orElseThrow(() -> new ConsultaInvalidaException(
                             "Variante no disponible: " + producto.getNombre()
-                                    + " (" + (color == null ? "sin color" : color) + ", " + item.talle() + ")"));
+                                    + " (" + (color == null ? "sin color" : color) + ", " + talle + ")"));
 
             consulta.agregarProductoConsultado(new ProductoConsultado(
                     producto,
-                    item.talle().trim(),
+                    talle,
                     color,
                     item.cantidad(),
                     observacionLimpia(item.observaciones()),
@@ -475,7 +506,7 @@ public class ConsultaService {
         sb.append("\nSoy ")
                 .append(consulta.getCliente().getNombre() == null ? "un cliente" : consulta.getCliente().getNombre())
                 .append(" (tel. ").append(consulta.getCliente().getTelefono()).append(").");
-        sb.append("\nMi consulta es la N° ").append(consultaMapper.formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion()))
+                sb.append("\nMi consulta es la N° ").append(consultaMapper.formatearNumero(consulta.getNumero()))
                 .append(" (").append(etiquetaEstado(consulta.getEstado())).append(").\n\n");
         int indice = 1;
         for (ProductoConsultado pc : consulta.getProductosConsultados()) {

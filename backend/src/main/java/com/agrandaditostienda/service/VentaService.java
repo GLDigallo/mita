@@ -32,6 +32,8 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class VentaService {
@@ -85,12 +87,20 @@ public class VentaService {
         venta.setCliente(consulta.getCliente());
         venta.setEmpleado(empleado);
 
+        List<Long> productoIds = consulta.getProductosConsultados().stream()
+                .map(pc -> pc.getProducto().getId()).toList();
+        Map<Long, List<VarianteProducto>> variantesPorProducto = varianteProductoRepository.findByProductoIdIn(productoIds).stream()
+                .collect(java.util.stream.Collectors.groupingBy(v -> v.getProducto().getId()));
+
         for (ProductoConsultado pc : consulta.getProductosConsultados()) {
-            VarianteProducto variante = varianteProductoRepository
-                    .findByProductoIdAndColorAndTalle(pc.getProducto().getId(), pc.getColor(), pc.getTalle())
+            String color = pc.getColor();
+            String talle = pc.getTalle();
+            VarianteProducto variante = variantesPorProducto.getOrDefault(pc.getProducto().getId(), List.of()).stream()
+                    .filter(v -> Objects.equals(v.getColor(), color) && v.getTalle().equals(talle))
+                    .findFirst()
                     .orElseThrow(() -> new VentaInvalidaException(
                             "Variante no disponible para: " + pc.getProducto().getNombre()
-                                    + " (" + (pc.getColor() == null ? "sin color" : pc.getColor()) + ", talle " + pc.getTalle() + ")"));
+                                    + " (" + (color == null ? "sin color" : color) + ", talle " + talle + ")"));
             venta.agregarItem(new VentaItem(
                     pc.getProducto(),
                     variante,
@@ -123,11 +133,23 @@ public class VentaService {
         }
 
         venta.getItems().clear();
+
+        List<Long> productoIds = request.items().stream().map(ActualizarItemsVentaRequest.ItemVentaRequest::productoId).toList();
+        List<Long> varianteIds = request.items().stream().map(ActualizarItemsVentaRequest.ItemVentaRequest::varianteId).toList();
+        Map<Long, Producto> productosPorId = productoRepository.findAllById(productoIds).stream()
+                .collect(java.util.stream.Collectors.toMap(Producto::getId, p -> p));
+        Map<Long, VarianteProducto> variantesPorId = varianteProductoRepository.findAllById(varianteIds).stream()
+                .collect(java.util.stream.Collectors.toMap(VarianteProducto::getId, v -> v));
+
         for (ActualizarItemsVentaRequest.ItemVentaRequest item : request.items()) {
-            Producto producto = productoRepository.findById(item.productoId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId()));
-            VarianteProducto variante = varianteProductoRepository.findById(item.varianteId())
-                    .orElseThrow(() -> new RecursoNoEncontradoException("Variante no encontrada: " + item.varianteId()));
+            Producto producto = productosPorId.get(item.productoId());
+            if (producto == null) {
+                throw new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId());
+            }
+            VarianteProducto variante = variantesPorId.get(item.varianteId());
+            if (variante == null) {
+                throw new RecursoNoEncontradoException("Variante no encontrada: " + item.varianteId());
+            }
             if (!variante.getProducto().getId().equals(producto.getId())) {
                 throw new VentaInvalidaException(
                         "La variante seleccionada no corresponde al producto '" + producto.getNombre() + "'");
@@ -329,7 +351,7 @@ public class VentaService {
 
     private String consultaNumero(Consulta consulta) {
         return consulta == null ? null
-                : consultaMapper.formatearNumeroConVersion(consulta.getNumero(), consulta.getVersion());
+                : consultaMapper.formatearNumero(consulta.getNumero());
     }
 
     private String etiquetaEstado(EstadoConsulta estado) {

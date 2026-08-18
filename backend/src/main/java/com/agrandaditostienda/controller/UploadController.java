@@ -59,7 +59,11 @@ public class UploadController {
 
     @GetMapping("/imagen/{nombre}")
     public ResponseEntity<byte[]> verImagen(@PathVariable String nombre) throws IOException {
-        Path archivo = Paths.get(uploadDir).toAbsolutePath().normalize().resolve(nombre);
+        Path directorio = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path archivo = directorio.resolve(nombre).normalize();
+        if (!archivo.startsWith(directorio)) {
+            return ResponseEntity.badRequest().build();
+        }
         if (!Files.exists(archivo)) {
             return ResponseEntity.notFound().build();
         }

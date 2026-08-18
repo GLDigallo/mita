@@ -4,6 +4,7 @@ import {
   entregarVenta,
   etiquetaMetodoPago,
   fetchVenta,
+  formatearFecha,
   formatearPrecio,
 } from '../../services/api'
 import EstadoBadge from '../EstadoBadge/EstadoBadge'
@@ -175,16 +176,6 @@ function VentaDetalle({ ventaId, onCerrar, onActualizada, onEditar }) {
       </div>
     </div>
   )
-}
-
-function formatearFecha(fechaIso) {
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(fechaIso))
 }
 
 export default VentaDetalle

@@ -53,7 +53,7 @@ public class ConsultaController {
 
     @PatchMapping("/{id}/forma-pago")
     public ConsultaDTO cambiarFormaPago(@PathVariable Long id,
-                                        @RequestBody CambiarFormaPagoRequest request) {
+                                        @Valid @RequestBody CambiarFormaPagoRequest request) {
         return consultaService.cambiarFormaPago(id, request.formaPago());
     }
 

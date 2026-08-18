@@ -21,6 +21,7 @@ import {
   fetchVentas,
   login,
   logout,
+  formatearFecha,
   formatearPrecio,
   ESTADOS_CONSULTA,
   ESTADOS_VENTA,
@@ -100,9 +101,11 @@ function GestionPage() {
 
   useEffect(() => {
     if (sesion !== 'autenticado') return
+    let activo = true
     fetchTiendas()
-      .then(setTiendas)
+      .then((datos) => { if (activo) setTiendas(datos) })
       .catch(() => {})
+    return () => { activo = false }
   }, [sesion])
 
   const cargarConsultas = useCallback(async () => {
@@ -145,11 +148,17 @@ function GestionPage() {
   }, [ventaEstadoFiltro, ventaTiendaIdFiltro, ventaBusquedaAplicada])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && (seccion === 'consultas' || seccion === 'inicio')) cargarConsultas()
+    if (sesion === 'autenticado' && (seccion === 'consultas' || seccion === 'inicio')) {
+      let activo = true
+      cargarConsultas().catch(() => {})
+      return () => { activo = false }
+    }
   }, [sesion, seccion, cargarConsultas])
 
   useEffect(() => {
     if (sesion !== 'autenticado') return
+    let timeoutId
+    const audio = new Audio('/notification.mp3')
     const intervalo = setInterval(() => {
       fetchConsultas({ estado: '', tiendaId: esDueño ? '' : (usuario?.tiendaId ?? ''), busqueda: '' })
         .then((datos) => {
@@ -158,24 +167,35 @@ function GestionPage() {
           if (snapshot > 0 && pendientes > snapshot) {
             const nuevas = pendientes - snapshot
             setNotificacion(`${nuevas} nueva${nuevas > 1 ? 's' : ''} consulta${nuevas > 1 ? 's' : ''} pendiente${nuevas > 1 ? 's' : ''}`)
-            try { new Audio('/notification.mp3').play().catch(() => {}) } catch {}
-            setTimeout(() => setNotificacion(null), 6000)
+            try { audio.currentTime = 0; audio.play().catch(() => {}) } catch {}
+            clearTimeout(timeoutId)
+            timeoutId = setTimeout(() => setNotificacion(null), 6000)
           }
           consultasSnapshot.current = pendientes
         })
         .catch(() => {})
     }, 30000)
-    return () => clearInterval(intervalo)
+    return () => {
+      clearInterval(intervalo)
+      clearTimeout(timeoutId)
+      audio.pause()
+      audio.src = ''
+    }
   }, [sesion, esDueño, usuario])
 
   useEffect(() => {
-    if (sesion === 'autenticado' && (seccion === 'ventas' || seccion === 'inicio')) cargarVentas()
+    if (sesion === 'autenticado' && (seccion === 'ventas' || seccion === 'inicio')) {
+      let activo = true
+      cargarVentas().catch(() => {})
+      return () => { activo = false }
+    }
   }, [sesion, seccion, cargarVentas])
 
   useEffect(() => {
     if (sesion !== 'autenticado' || seccion !== 'metricas') return
-    cargarConsultas()
-    cargarVentas()
+    let activo = true
+    Promise.all([cargarConsultas(), cargarVentas()]).catch(() => {})
+    return () => { activo = false }
   }, [sesion, seccion, cargarConsultas, cargarVentas])
 
   useEffect(() => {
@@ -736,16 +756,6 @@ function GestionPage() {
       )}
     </div>
   )
-}
-
-function formatearFecha(fechaIso) {
-  return new Intl.DateTimeFormat('es-AR', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(fechaIso))
 }
 
 export default GestionPage

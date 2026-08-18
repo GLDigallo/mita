@@ -100,6 +100,16 @@ export function formatearPrecio(precio) {
   }).format(precio)
 }
 
+export function formatearFecha(fecha) {
+  return new Intl.DateTimeFormat('es-AR', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(new Date(fecha))
+}
+
 async function enviarJson(url, opciones = {}) {
   const response = await fetch(url, {
     credentials: 'same-origin',
@@ -180,10 +190,6 @@ export async function actualizarNotaInterna(id, notaInterna) {
     method: 'PATCH',
     body: JSON.stringify({ notaInterna }),
   })
-}
-
-export async function fetchHistorialConsulta(id) {
-  return enviarJson(`${API_BASE}/consultas/${id}/versiones`)
 }
 
 export const MOTIVOS_MODIFICACION = [

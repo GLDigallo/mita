@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import ConfirmDialog from '../../../components/ConfirmDialog/ConfirmDialog'
 import EmptyState from '../../../components/EmptyState/EmptyState'
 import ErrorMessage from '../../../components/ErrorMessage/ErrorMessage'

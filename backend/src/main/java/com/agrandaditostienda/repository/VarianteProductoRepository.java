@@ -17,6 +17,8 @@ public interface VarianteProductoRepository extends JpaRepository<VarianteProduc
 
     List<VarianteProducto> findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(Collection<Long> productoIds);
 
+    List<VarianteProducto> findByProductoIdIn(Collection<Long> productoIds);
+
     Optional<VarianteProducto> findByProductoIdAndColorAndTalle(Long productoId, String color, String talle);
 
     @Modifying(flushAutomatically = true)

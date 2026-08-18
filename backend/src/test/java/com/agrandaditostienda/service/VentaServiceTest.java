@@ -126,14 +126,15 @@ class VentaServiceTest {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
         Producto producto = producto(tienda);
+        producto.setId(10L);
         Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.PENDIENTE);
         VarianteProducto variante = new VarianteProducto(producto, "Azul", "T1", 10);
 
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
         when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.empty());
         when(ventaRepository.siguienteNumero()).thenReturn(42L);
-        when(varianteProductoRepository.findByProductoIdAndColorAndTalle(producto.getId(), "Azul", "T1"))
-                .thenReturn(Optional.of(variante));
+        when(varianteProductoRepository.findByProductoIdIn(any()))
+                .thenReturn(List.of(variante));
         when(ventaRepository.saveAndFlush(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(ventaRepository.findDetalle(any())).thenReturn(Optional.of(new Venta()));
         when(ventaMapper.toDTO(any())).thenReturn(null);
@@ -336,5 +337,37 @@ class VentaServiceTest {
         verify(varianteProductoRepository).reponerStock(any(), eq(2), any(Instant.class));
         assertThat(venta.getEstado()).isEqualTo(EstadoVenta.CANCELADA);
         assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.CANCELADA);
+    }
+
+    @Test
+    void entregaVentaConfirmada() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.CONFIRMADA);
+        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.CONFIRMADA);
+
+        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
+        when(ventaRepository.save(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ventaMapper.toDTO(any())).thenReturn(null);
+
+        ventaService.entregar(5L, "Encargada");
+
+        assertThat(venta.getEstado()).isEqualTo(EstadoVenta.ENTREGADA);
+        assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.FINALIZADA);
+    }
+
+    @Test
+    void noEntregaVentaEnPreparacion() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.EN_REVISION);
+        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.EN_PREPARACION);
+
+        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
+
+        assertThatThrownBy(() -> ventaService.entregar(5L, "Encargada"))
+                .isInstanceOf(VentaInvalidaException.class)
+                .hasMessageContaining("confirmada");
     }
 }
