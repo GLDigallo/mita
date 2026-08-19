@@ -211,6 +211,10 @@ public class ConsultaService {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
         verificarAcceso(consulta);
+        if (esEstadoCerrado(consulta.getEstado())) {
+            throw new ConsultaInvalidaException(
+                    "La consulta está " + etiquetaEstado(consulta.getEstado()) + " y no admite cambios");
+        }
         consulta.setFormaPago(formaPago);
         Consulta guardada = consultaRepository.save(consulta);
         var infoFP = resolveEditableInfo(guardada);

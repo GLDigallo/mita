@@ -404,37 +404,39 @@ function VistaActual({
       </section>
 
       <footer className={styles.pie}>
-        <div className={styles.pieFila}>
-          <div className={styles.piePago}>
-            <span className={styles.piePagoEtiqueta}>Pago</span>
-            <div className={styles.pagoOpciones}>
-              <button
-                type="button"
-                className={`${styles.pagoOpcion} ${consulta.formaPago === 'EFECTIVO' ? styles.pagoOpcionActivo : ''}`}
-                onClick={() => onCambiarFormaPago('EFECTIVO')}
-                disabled={cambiandoEstado}
-              >
-                Efectivo
-              </button>
-              <button
-                type="button"
-                className={`${styles.pagoOpcion} ${consulta.formaPago === 'TARJETA' ? styles.pagoOpcionActivo : ''}`}
-                onClick={() => onCambiarFormaPago('TARJETA')}
-                disabled={cambiandoEstado}
-              >
-                Tarjeta
-              </button>
-              <button
-                type="button"
-                className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
-                onClick={() => onCambiarFormaPago('DIGITAL')}
-                disabled={cambiandoEstado}
-              >
-                Digital
-              </button>
+        {!esCerrada && (
+          <div className={styles.pieFila}>
+            <div className={styles.piePago}>
+              <span className={styles.piePagoEtiqueta}>Pago</span>
+              <div className={styles.pagoOpciones}>
+                <button
+                  type="button"
+                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'EFECTIVO' ? styles.pagoOpcionActivo : ''}`}
+                  onClick={() => onCambiarFormaPago('EFECTIVO')}
+                  disabled={cambiandoEstado}
+                >
+                  Efectivo
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'TARJETA' ? styles.pagoOpcionActivo : ''}`}
+                  onClick={() => onCambiarFormaPago('TARJETA')}
+                  disabled={cambiandoEstado}
+                >
+                  Tarjeta
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
+                  onClick={() => onCambiarFormaPago('DIGITAL')}
+                  disabled={cambiandoEstado}
+                >
+                  Digital
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className={styles.pieFila}>
           {!esCerrada && !consulta?.ventaAsociada && consulta?.editable && (
