@@ -548,6 +548,46 @@
   gap: 8px;
 }
 
+.catToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-fondo);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.catToggle:hover {
+  border-color: var(--color-marca);
+}
+
+.catToggleFlecha {
+  font-size: 12px;
+  transition: transform 0.2s;
+}
+
+.catToggleAbierto {
+  transform: rotate(180deg);
+}
+
+.catPanel {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  padding: 10px;
+  background: var(--color-superficie);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .catChips {
   display: flex;
   flex-wrap: wrap;
