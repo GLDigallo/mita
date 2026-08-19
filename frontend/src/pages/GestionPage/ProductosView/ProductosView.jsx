@@ -41,6 +41,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
   const [catInput, setCatInput] = useState('')
   const [confirmarEliminarCat, setConfirmarEliminarCat] = useState(null)
   const [subiendoImagen, setSubiendoImagen] = useState(false)
+  const [catsAbierto, setCatsAbierto] = useState(false)
 
   const tiendaSlug = tienda?.slug ?? ''
 
@@ -221,13 +222,14 @@ function ProductosView({ tienda, esDueno, tiendas }) {
   }
 
   async function crearCategoriaInline(nombre) {
-    if (!nombre.trim()) return
+    if (!nombre.trim()) return null
     setGuardando(true)
     setError('')
     try {
       await crearCategoria(tiendaSlug, nombre.trim())
-      await cargar()
-      return categorias.find((c) => c.nombre.toLowerCase() === nombre.trim().toLowerCase())
+      const cats = await fetchCategorias(tiendaSlug)
+      setCategorias(cats)
+      return cats.find((c) => c.nombre.toLowerCase() === nombre.trim().toLowerCase())
     } catch (err) {
       setError(err.message)
       return null
@@ -300,52 +302,89 @@ function ProductosView({ tienda, esDueno, tiendas }) {
 
             <label className={styles.formLabel}>
               Categoría *
-              <div className={styles.catFila}>
-                <select
-                  className={styles.formInput}
-                  value={editando.datos.categoriaSlug}
-                  onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
-                >
-                  <option value="">Seleccionar…</option>
-                  {categorias.map((c) => (
-                    <option key={c.slug} value={c.slug}>{c.nombre}</option>
-                  ))}
-                </select>
-                <div className={styles.catCrearFila}>
-                  <input
+              <div className={styles.catInline}>
+                <div className={styles.catHeader}>
+                  <select
                     className={styles.formInput}
-                    value={catInput}
-                    onChange={(e) => setCatInput(e.target.value)}
-                    placeholder="Nueva categoría…"
-                    onKeyDown={async (e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        if (!catInput.trim()) return
-                        const nueva = await crearCategoriaInline(catInput.trim())
-                        if (nueva) {
-                          actualizarCampo('categoriaSlug', nueva.slug)
-                          setCatInput('')
-                        }
-                      }
-                    }}
-                  />
-                  {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
-                    <button
-                      type="button"
-                      className={styles.catCrearBtn}
-                      onClick={async () => {
-                        const nueva = await crearCategoriaInline(catInput.trim())
-                        if (nueva) {
-                          actualizarCampo('categoriaSlug', nueva.slug)
-                          setCatInput('')
-                        }
-                      }}
-                      disabled={guardando}
-                    >
-                      + Crear
-                    </button>
-                  )}
+                    value={editando.datos.categoriaSlug}
+                    onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
+                  >
+                    <option value="">Seleccionar…</option>
+                    {categorias.map((c) => (
+                      <option key={c.slug} value={c.slug}>{c.nombre}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className={styles.catToggleBtn}
+                    onClick={() => setCatsAbierto(!catsAbierto)}
+                  >
+                    {catsAbierto ? 'Cerrar' : 'Gestionar'}
+                  </button>
                 </div>
+                {catsAbierto && (
+                  <div className={styles.catPanel}>
+                    <div className={styles.catChips}>
+                      {categorias.map((c) => (
+                        <span key={c.slug} className={styles.catChip}>
+                          <button
+                            type="button"
+                            className={`${styles.catChipBtn} ${editando.datos.categoriaSlug === c.slug ? styles.catChipActivo : ''}`}
+                            onClick={() => {
+                              actualizarCampo('categoriaSlug', c.slug)
+                              setCatsAbierto(false)
+                            }}
+                          >
+                            {c.nombre}
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.catChipX}
+                            onClick={() => borrarCategoria(c)}
+                            aria-label={`Eliminar ${c.nombre}`}
+                          >
+                            ×
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className={styles.catCrearFila}>
+                      <input
+                        className={styles.formInput}
+                        value={catInput}
+                        onChange={(e) => setCatInput(e.target.value)}
+                        placeholder="Nueva categoría…"
+                        onKeyDown={async (e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault()
+                            if (!catInput.trim()) return
+                            const nueva = await crearCategoriaInline(catInput.trim())
+                            if (nueva) {
+                              actualizarCampo('categoriaSlug', nueva.slug)
+                              setCatInput('')
+                            }
+                          }
+                        }}
+                      />
+                      {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
+                        <button
+                          type="button"
+                          className={styles.catCrearBtn}
+                          onClick={async () => {
+                            const nueva = await crearCategoriaInline(catInput.trim())
+                            if (nueva) {
+                              actualizarCampo('categoriaSlug', nueva.slug)
+                              setCatInput('')
+                            }
+                          }}
+                          disabled={guardando}
+                        >
+                          + Crear
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </label>
 

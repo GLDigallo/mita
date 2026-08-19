@@ -517,6 +517,103 @@
   min-width: 0;
 }
 
+.catInline {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catHeader {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.catHeader .formInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.catToggleBtn {
+  flex-shrink: 0;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.catToggleBtn:hover {
+  border-color: var(--color-marca);
+}
+
+.catPanel {
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  padding: 10px;
+  background: var(--color-fondo);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.catChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.catChip {
+  display: inline-flex;
+  align-items: center;
+}
+
+.catChipBtn {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-right: 0;
+  border-radius: var(--radio-sm) 0 0 var(--radio-sm);
+  cursor: pointer;
+  color: var(--color-texto);
+  transition: background 0.15s;
+}
+
+.catChipBtn:hover {
+  background: color-mix(in srgb, var(--color-marca) 10%, transparent);
+}
+
+.catChipActivo {
+  background: var(--color-marca);
+  border-color: var(--color-marca);
+  color: #fff;
+}
+
+.catChipX {
+  padding: 4px 7px;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--color-superficie);
+  border: 1px solid var(--color-borde);
+  border-radius: 0 var(--radio-sm) var(--radio-sm) 0;
+  cursor: pointer;
+  color: var(--color-texto-suave);
+  line-height: 1;
+  transition: color 0.15s, background 0.15s;
+}
+
+.catChipX:hover {
+  color: #dc2626;
+  background: #fef2f2;
+}
+
 .catCrearFila {
   display: flex;
   gap: 6px;
