@@ -459,59 +459,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
         </select>
       </div>
 
-      <div className={styles.catSection}>
-        <h4 className={styles.catTitulo}>Categorías</h4>
-        <div className={styles.catLista}>
-          {categorias.map((c) => (
-            <div key={c.id} className={styles.catItem}>
-              <span className={styles.catNombre}>{c.nombre}</span>
-              <div className={styles.catAcciones}>
-                <button
-                  type="button"
-                  className={styles.catBtn}
-                  onClick={() => { setCatEditando(c); setCatNombre(c.nombre) }}
-                >
-                  Editar
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.catBtn} ${styles.catBtnPeligro}`}
-                  onClick={() => setConfirmarEliminarCat(c)}
-                >
-                  ×
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className={styles.catForm}>
-          <input
-            className={styles.catInput}
-            value={catNombre}
-            onChange={(e) => setCatNombre(e.target.value)}
-            placeholder={catEditando ? 'Editar nombre…' : 'Nueva categoría…'}
-            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); guardarCategoria() } }}
-          />
-          <button
-            type="button"
-            className={styles.catGuardar}
-            onClick={guardarCategoria}
-            disabled={guardando || !catNombre.trim()}
-          >
-            {catEditando ? 'Actualizar' : '+ Agregar'}
-          </button>
-          {catEditando && (
-            <button
-              type="button"
-              className={styles.catCancelar}
-              onClick={() => { setCatEditando(null); setCatNombre('') }}
-            >
-              Cancelar
-            </button>
-          )}
-        </div>
-      </div>
-
       {error && <ErrorMessage message={error} />}
 
       {cargando ? (
@@ -565,18 +512,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
           peligro
           onConfirmar={confirmarBorrar}
           onCancelar={() => setConfirmarEliminar(null)}
-          cargando={guardando}
-        />
-      )}
-
-      {confirmarEliminarCat && (
-        <ConfirmDialog
-          titulo="Eliminar categoría"
-          mensaje={`¿Eliminar "${confirmarEliminarCat.nombre}"? Solo funciona si no tiene productos activos.`}
-          textoAccion="Eliminar"
-          peligro
-          onConfirmar={confirmarBorrarCategoria}
-          onCancelar={() => setConfirmarEliminarCat(null)}
           cargando={guardando}
         />
       )}

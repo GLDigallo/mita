@@ -246,11 +246,9 @@ export async function cancelarVenta(id) {
 
 export const ESTADOS_CONSULTA = [
   { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
-  { valor: 'EN_REVISION', etiqueta: 'En revisión' },
-  { valor: 'ESPERANDO_CLIENTE', etiqueta: 'Esperando cliente' },
-  { valor: 'CONFIRMADA', etiqueta: 'Confirmada' },
-  { valor: 'CANCELADA', etiqueta: 'Cancelada' },
-  { valor: 'FINALIZADA', etiqueta: 'Finalizada' },
+  { valor: 'EN_REVISION', etiqueta: 'Editado' },
+  { valor: 'CONFIRMADA', etiqueta: 'Confirmado' },
+  { valor: 'CANCELADA', etiqueta: 'Cancelado' },
 ]
 
 export const ESTADOS_VENTA = [
