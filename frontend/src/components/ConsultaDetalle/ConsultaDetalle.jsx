@@ -203,6 +203,8 @@ function ConsultaDetalle({
           </button>
         </div>
 
+        <div className={styles.contenidoScroll}>
+
         {vista !== 'actual' && (
           <header className={styles.encabezado}>
             <div>
@@ -273,6 +275,8 @@ function ConsultaDetalle({
             }}
           />
         )}
+
+        </div>
       </div>
     </div>
   )
@@ -343,27 +347,29 @@ function VistaActual({
         </section>
       )}
 
-      <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>Nota interna</p>
-        <p className={styles.notaInternaSub}>Solo la ves vos. No se envía al cliente por WhatsApp.</p>
-        <textarea
-          className={styles.notaInternaInput}
-          value={notaInterna}
-          onChange={(e) => onNotaInternaChange(e.target.value)}
-          placeholder="Ej: Cliente pidió que lo llamen después de las 18hs..."
-          rows={3}
-        />
-        {(notaInterna ?? '') !== (consulta.notaInterna ?? '') && (
-          <button
-            type="button"
-            className={styles.notaInternaBtn}
-            onClick={onGuardarNota}
-            disabled={guardandoNota}
-          >
-            {guardandoNota ? 'Guardando…' : 'Guardar nota'}
-          </button>
-        )}
-      </section>
+      {!esCerrada && (
+        <section className={styles.seccion}>
+          <p className={styles.tituloSeccion}>Nota interna</p>
+          <p className={styles.notaInternaSub}>Solo la ves vos. No se envía al cliente por WhatsApp.</p>
+          <textarea
+            className={styles.notaInternaInput}
+            value={notaInterna}
+            onChange={(e) => onNotaInternaChange(e.target.value)}
+            placeholder="Ej: Cliente pidió que lo llamen después de las 18hs..."
+            rows={3}
+          />
+          {(notaInterna ?? '') !== (consulta.notaInterna ?? '') && (
+            <button
+              type="button"
+              className={styles.notaInternaBtn}
+              onClick={onGuardarNota}
+              disabled={guardandoNota}
+            >
+              {guardandoNota ? 'Guardando…' : 'Guardar nota'}
+            </button>
+          )}
+        </section>
+      )}
 
       <section className={styles.seccion}>
         <p className={styles.tituloSeccion}>
