@@ -14,3 +14,9 @@ CREATE INDEX IF NOT EXISTS idx_variante_producto_color_talle
 
 -- Index for producto by tienda
 CREATE INDEX IF NOT EXISTS idx_producto_tienda ON producto (tienda_id);
+
+-- Unificar WhatsApp a un solo numero (dueño no quiere 4 numeros)
+UPDATE tienda SET whatsapp = '5491112345601';
+
+-- Borrar encargadas existentes para que se regeneren con usernames correctos
+DELETE FROM usuario WHERE rol = 'ENCARGADA';
