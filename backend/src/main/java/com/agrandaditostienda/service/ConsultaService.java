@@ -267,7 +267,11 @@ public class ConsultaService {
 
     private void validarModificable(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
-            throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
+            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hs(consulta)) {
+                // permitir editar consultas canceladas dentro de las 48h
+            } else {
+                throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
+            }
         }
         var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
         if (venta != null && venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.EN_PREPARACION) {
@@ -279,6 +283,9 @@ public class ConsultaService {
 
     private EditableInfo resolveEditableInfo(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
+            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hs(consulta)) {
+                return new EditableInfo(true, null);
+            }
             return new EditableInfo(false, null);
         }
         var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
@@ -294,6 +301,11 @@ public class ConsultaService {
         return estado == EstadoConsulta.CONFIRMADA
                 || estado == EstadoConsulta.CANCELADA
                 || estado == EstadoConsulta.FINALIZADA;
+    }
+
+    private boolean dentrodDe48hs(Consulta consulta) {
+        java.time.Instant ahora = java.time.Instant.now();
+        return java.time.Duration.between(consulta.getFechaConsulta(), ahora).toHours() < 48;
     }
 
     private void guardarVersion(Consulta consulta, MotivoModificacion motivo, String empleado,

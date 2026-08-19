@@ -296,6 +296,12 @@ function VistaActual({
   guardandoNota,
 }) {
   const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta?.estado)
+  const esCanceladaReciente = consulta?.estado === 'CANCELADA' && (() => {
+    if (!consulta?.fechaConsulta) return false
+    const horas = (Date.now() - new Date(consulta.fechaConsulta).getTime()) / (1000 * 60 * 60)
+    return horas < 48
+  })()
+  const etiquetaPago = { EFECTIVO: 'Efectivo', TARJETA: 'Tarjeta', DIGITAL: 'Digital' }
   return (
     <>
       <header className={styles.encabezado}>
@@ -404,6 +410,15 @@ function VistaActual({
       </section>
 
       <footer className={styles.pie}>
+        {consulta?.estado === 'CONFIRMADA' && (
+          <div className={styles.pieFila}>
+            <div className={styles.piePago}>
+              <span className={styles.piePagoEtiqueta}>Pago</span>
+              <span className={styles.pagoEtiqueta}>{etiquetaPago[consulta.formaPago] ?? '—'}</span>
+            </div>
+          </div>
+        )}
+
         {!esCerrada && (
           <div className={styles.pieFila}>
             <div className={styles.piePago}>
@@ -488,18 +503,19 @@ function VistaActual({
               >
                 Cancelar
               </button>
-              {consulta?.editable && (
-                <button type="button" className={styles.pieBoton} onClick={onEditar}>
-                  Editar consulta
-                </button>
-              )}
             </>
           )}
 
-          {consulta?.ventaAsociada === 'CANCELADA' && consulta?.editable && (
+          {esCanceladaReciente && consulta?.editable && (
             <button type="button" className={styles.pieBoton} onClick={onEditar}>
               Editar consulta
             </button>
+          )}
+
+          {esCerrada && !esCanceladaReciente && (
+            <span className={styles.cierreFinal}>
+              {consulta?.estado === 'CONFIRMADA' ? 'Compra finalizada' : 'Consulta cerrada'}
+            </span>
           )}
         </div>
       </footer>

@@ -853,3 +853,17 @@
   color: #fff;
 }
 
+.pagoEtiqueta {
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.cierreFinal {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+  opacity: 0.7;
+}
+
