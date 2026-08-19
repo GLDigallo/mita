@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom'
 import Hero from '../../components/Hero/Hero'
 import Header from '../../components/Header/Header'
 import Footer from '../../components/Footer/Footer'
@@ -9,12 +8,14 @@ import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import { useFetch } from '../../hooks/useFetch'
 import useSeo from '../../hooks/useSeo'
 import { fetchDestacados, fetchProductosGlobales, fetchTiendas } from '../../services/api'
+import { useState } from 'react'
 import styles from './HomePage.module.css'
 
 function HomePage() {
   const tiendas = useFetch(fetchTiendas, [])
   const destacados = useFetch(fetchDestacados, [])
   const productosGlobales = useFetch(fetchProductosGlobales, [])
+  const [pestana, setPestana] = useState('novedades')
 
   useSeo({
     titulo: 'AgrandaditosTienda · Tiendas de moda para chicos',
@@ -22,6 +23,9 @@ function HomePage() {
       'Las tiendas de moda para bebés, niños, niñas y adolescentes en Corrientes Capital. Entrá a la tienda de la edad de tu pibe: Mokositos, Agrandaditos y Mood Teens.',
     canonical: 'https://agrandaditostiendas.onrender.com/',
   })
+
+  const productosAMostrar = pestana === 'novedades' ? productosGlobales : destacados
+  const hayDestacados = destacados.data && destacados.data.length > 0
 
   return (
     <>
@@ -55,72 +59,45 @@ function HomePage() {
 
         <section className={styles.seccion}>
           <div className={styles.contenido}>
-            <div className={styles.cabeceraDestacados}>
-              <div>
-                <p className={styles.etiqueta}>Últimos productos</p>
-                <h2 className={styles.titulo}>Lo último que cargamos</h2>
-              </div>
-              <a href="#tiendas" className={styles.verTodos}>
-                Ver las tiendas →
-              </a>
+            <div className={styles.tabs}>
+              <button
+                className={`${styles.tab} ${pestana === 'novedades' ? styles.tabActivo : ''}`}
+                onClick={() => setPestana('novedades')}
+              >
+                Lo último
+              </button>
+              {hayDestacados && (
+                <button
+                  className={`${styles.tab} ${pestana === 'destacados' ? styles.tabActivo : ''}`}
+                  onClick={() => setPestana('destacados')}
+                >
+                  Destacados
+                </button>
+              )}
             </div>
-            {productosGlobales.isLoading && (
-              <div className={styles.destacadosGrid}>
-                {Array.from({ length: 8 }).map((_, indice) => (
+
+            {productosAMostrar.isLoading && (
+              <div className={styles.productosGrid}>
+                {Array.from({ length: 12 }).map((_, indice) => (
                   <SkeletonCard key={indice} />
                 ))}
               </div>
             )}
-            {productosGlobales.error && <ErrorMessage message={productosGlobales.error} />}
-            {productosGlobales.data && (
-              <div className={styles.destacadosGrid}>
-                {productosGlobales.data.map((producto) => (
-                  <Link
+            {productosAMostrar.error && <ErrorMessage message={productosAMostrar.error} />}
+            {productosAMostrar.data && (
+              <div className={styles.productosGrid}>
+                {productosAMostrar.data.map((producto) => (
+                  <ProductCard
                     key={producto.id}
-                    to={`/tienda/${producto.tiendaSlug}`}
-                    className={styles.tarjetaEnlace}
-                  >
-                    <ProductCard producto={producto} onSeleccionar={() => {}} mostrarTienda />
-                  </Link>
+                    producto={producto}
+                    onSeleccionar={() => {}}
+                    mostrarTienda
+                  />
                 ))}
               </div>
             )}
           </div>
         </section>
-
-        {destacados.data && destacados.data.length > 0 && (
-          <section className={styles.seccion}>
-            <div className={styles.contenido}>
-              <div className={styles.cabeceraDestacados}>
-                <div>
-                  <p className={styles.etiqueta}>Los favoritos</p>
-                  <h2 className={styles.titulo}>Destacados del grupo</h2>
-                </div>
-              </div>
-              {destacados.isLoading && (
-                <div className={styles.destacadosGrid}>
-                  {Array.from({ length: 8 }).map((_, indice) => (
-                    <SkeletonCard key={indice} />
-                  ))}
-                </div>
-              )}
-              {destacados.error && <ErrorMessage message={destacados.error} />}
-              {destacados.data && (
-                <div className={styles.destacadosGrid}>
-                  {destacados.data.map((producto) => (
-                    <Link
-                      key={producto.id}
-                      to={`/tienda/${producto.tiendaSlug}`}
-                      className={styles.tarjetaEnlace}
-                    >
-                      <ProductCard producto={producto} onSeleccionar={() => {}} />
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
-        )}
 
         <section className={styles.seccion}>
           <div className={styles.contenido}>

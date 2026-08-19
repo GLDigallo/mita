@@ -47,36 +47,39 @@
   animation: brillar 1.4s linear infinite;
 }
 
-.cabeceraDestacados {
+.tabs {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 0;
   margin-bottom: 24px;
+  border-bottom: 2px solid var(--color-borde);
 }
 
-.verTodos {
+.tab {
+  padding: 10px 20px;
+  font-size: 15px;
   font-weight: 600;
-  font-size: 14px;
   color: var(--color-texto-suave);
-  transition: color 0.25s ease;
-  padding-bottom: 4px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
 }
 
-.verTodos:hover {
+.tab:hover {
   color: var(--color-texto);
 }
 
-.destacadosGrid {
+.tabActivo {
+  color: var(--color-marca);
+  border-bottom-color: var(--color-marca);
+}
+
+.productosGrid {
   display: grid;
   gap: 16px;
   grid-template-columns: repeat(2, 1fr);
-}
-
-.tarjetaEnlace {
-  display: block;
-  min-width: 0;
 }
 
 .acerca {
@@ -91,13 +94,6 @@
   color: var(--color-texto);
   font-size: 15.5px;
   line-height: 1.75;
-}
-
-@media (min-width: 900px) {
-  .acercaTexto {
-    font-size: 16.5px;
-    line-height: 1.8;
-  }
 }
 
 @keyframes brillar {
@@ -124,17 +120,13 @@
     gap: 24px;
   }
 
-  .destacadosGrid {
+  .productosGrid {
     grid-template-columns: repeat(4, 1fr);
     gap: 24px;
   }
 
   .subtitulo {
     font-size: 17px;
-  }
-
-  .cabeceraDestacados {
-    margin-bottom: 32px;
   }
 }
 

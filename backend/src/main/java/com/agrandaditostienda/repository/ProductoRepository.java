@@ -22,7 +22,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     List<Producto> findByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc();
 
-    List<Producto> findTop10ByActivoTrueOrderByCreadoEnDesc();
+    List<Producto> findTop12ByActivoTrueOrderByCreadoEnDesc();
 
     @Query("select distinct p.genero from Producto p where p.tienda.id = :tiendaId and p.activo = true order by p.genero")
     List<Genero> findGenerosByTiendaId(@Param("tiendaId") Long tiendaId);

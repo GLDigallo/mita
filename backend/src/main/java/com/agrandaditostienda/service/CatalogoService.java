@@ -93,7 +93,7 @@ public class CatalogoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarProductosGlobales() {
-        return toDTOs(productoRepository.findTop10ByActivoTrueOrderByCreadoEnDesc());
+        return toDTOs(productoRepository.findTop12ByActivoTrueOrderByCreadoEnDesc());
     }
 
     @Transactional
