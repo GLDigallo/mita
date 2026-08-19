@@ -9,6 +9,7 @@ import { useFetch } from '../../hooks/useFetch'
 import useSeo from '../../hooks/useSeo'
 import { fetchDestacados, fetchProductosGlobales, fetchTiendas } from '../../services/api'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import styles from './HomePage.module.css'
 
 function HomePage() {
@@ -16,6 +17,7 @@ function HomePage() {
   const destacados = useFetch(fetchDestacados, [])
   const productosGlobales = useFetch(fetchProductosGlobales, [])
   const [pestana, setPestana] = useState('novedades')
+  const navigate = useNavigate()
 
   useSeo({
     titulo: 'AgrandaditosTienda · Tiendas de moda para chicos',
@@ -90,7 +92,7 @@ function HomePage() {
                   <ProductCard
                     key={producto.id}
                     producto={producto}
-                    onSeleccionar={() => {}}
+                    onSeleccionar={() => navigate(`/tienda/${producto.tiendaSlug}`)}
                     mostrarTienda
                   />
                 ))}

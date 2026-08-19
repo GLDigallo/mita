@@ -276,11 +276,12 @@ function ProductosView({ tienda, esDueno, tiendas }) {
 
           <label className={styles.formLabel}>
             Descripción
-            <textarea
-              className={styles.formTextarea}
+            <input
+              className={styles.formInput}
               value={editando.datos.descripcion}
               onChange={(e) => actualizarCampo('descripcion', e.target.value)}
-              rows={3}
+              placeholder="Descripción corta del producto…"
+              maxLength={200}
             />
           </label>
 
@@ -299,65 +300,52 @@ function ProductosView({ tienda, esDueno, tiendas }) {
 
             <label className={styles.formLabel}>
               Categoría *
-              <select
-                className={styles.formInput}
-                value={editando.datos.categoriaSlug}
-                onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
-              >
-                <option value="">Seleccionar…</option>
-                {categorias.map((c) => (
-                  <option key={c.slug} value={c.slug}>{c.nombre}</option>
-                ))}
-              </select>
-              <div className={styles.catGestion}>
-                {categorias.map((c) => (
-                  <span key={c.slug} className={styles.catMini}>
-                    <span className={styles.catMiniNombre}>{c.nombre}</span>
-                    <button
-                      type="button"
-                      className={styles.catMiniX}
-                      onClick={() => borrarCategoria(c)}
-                      aria-label={`Eliminar ${c.nombre}`}
-                    >
-                      ×
-                    </button>
-                  </span>
-                ))}
-              </div>
-              <div className={styles.catCrearFila}>
-                <input
+              <div className={styles.catFila}>
+                <select
                   className={styles.formInput}
-                  value={catInput}
-                  onChange={(e) => setCatInput(e.target.value)}
-                  placeholder="Nueva categoría…"
-                  onKeyDown={async (e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault()
-                      if (!catInput.trim()) return
-                      const nueva = await crearCategoriaInline(catInput.trim())
-                      if (nueva) {
-                        actualizarCampo('categoriaSlug', nueva.slug)
-                        setCatInput('')
-                      }
-                    }
-                  }}
-                />
-                {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
-                  <button
-                    type="button"
-                    className={styles.catCrearBtn}
-                    onClick={async () => {
-                      const nueva = await crearCategoriaInline(catInput.trim())
-                      if (nueva) {
-                        actualizarCampo('categoriaSlug', nueva.slug)
-                        setCatInput('')
+                  value={editando.datos.categoriaSlug}
+                  onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
+                >
+                  <option value="">Seleccionar…</option>
+                  {categorias.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.nombre}</option>
+                  ))}
+                </select>
+                <div className={styles.catCrearFila}>
+                  <input
+                    className={styles.formInput}
+                    value={catInput}
+                    onChange={(e) => setCatInput(e.target.value)}
+                    placeholder="Nueva categoría…"
+                    onKeyDown={async (e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        if (!catInput.trim()) return
+                        const nueva = await crearCategoriaInline(catInput.trim())
+                        if (nueva) {
+                          actualizarCampo('categoriaSlug', nueva.slug)
+                          setCatInput('')
+                        }
                       }
                     }}
-                    disabled={guardando}
-                  >
-                    + Crear
-                  </button>
-                )}
+                  />
+                  {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
+                    <button
+                      type="button"
+                      className={styles.catCrearBtn}
+                      onClick={async () => {
+                        const nueva = await crearCategoriaInline(catInput.trim())
+                        if (nueva) {
+                          actualizarCampo('categoriaSlug', nueva.slug)
+                          setCatInput('')
+                        }
+                      }}
+                      disabled={guardando}
+                    >
+                      + Crear
+                    </button>
+                  )}
+                </div>
               </div>
             </label>
 
@@ -415,6 +403,26 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               onChange={(e) => actualizarCampo('talles', e.target.value)}
               placeholder="XS / S / M / L / XL"
             />
+            <div className={styles.tallesSugerencia}>
+              {['0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15-16', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`${styles.talleChip} ${editando.datos.talles?.includes(t) ? styles.talleChipActivo : ''}`}
+                  onClick={() => {
+                    const actual = editando.datos.talles || ''
+                    const partes = actual.split('/').map((s) => s.trim()).filter(Boolean)
+                    if (partes.includes(t)) {
+                      actualizarCampo('talles', partes.filter((p) => p !== t).join(' / '))
+                    } else {
+                      actualizarCampo('talles', [...partes, t].join(' / '))
+                    }
+                  }}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
           </label>
 
           {esDueno && (

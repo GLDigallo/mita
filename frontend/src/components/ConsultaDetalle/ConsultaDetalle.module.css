@@ -39,6 +39,12 @@
   overflow-x: hidden;
   flex: 1;
   min-height: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.contenidoScroll::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes subir {

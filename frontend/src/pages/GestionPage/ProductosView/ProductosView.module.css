@@ -506,6 +506,58 @@
   cursor: pointer;
 }
 
+.catFila {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.catFila .formInput {
+  flex: 1;
+  min-width: 0;
+}
+
+.catCrearFila {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.catCrearFila .formInput {
+  width: 150px;
+  flex: none;
+}
+
+.tallesSugerencia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.talleChip {
+  padding: 3px 8px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-sm);
+  background: var(--color-fondo);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-texto-suave);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.talleChip:hover {
+  border-color: var(--color-marca);
+  color: var(--color-marca);
+}
+
+.talleChipActivo {
+  background: var(--color-marca);
+  border-color: var(--color-marca);
+  color: #fff;
+}
+
 /* Upload de imagen */
 .imagenOpciones {
   display: flex;
