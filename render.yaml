@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: agrandaditos-tiendas
+    name: agrandaditostiendas
     env: docker
     dockerfilePath: ./Dockerfile
     plan: free
