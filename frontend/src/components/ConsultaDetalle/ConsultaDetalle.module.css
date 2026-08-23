@@ -179,6 +179,30 @@
   opacity: 0.85;
 }
 
+.whatsappBtnGrande {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 48px;
+  margin-top: 12px;
+  padding: 10px 18px;
+  background: #25d366;
+  color: #fff;
+  border-radius: var(--radio-pill);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+  transition: background 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.whatsappBtnGrande:hover {
+  background: #1ebe57;
+  transform: translateY(-1px);
+}
+
 .notaInternaSub {
   font-size: 12px;
   color: var(--color-texto-suave);
@@ -241,16 +265,85 @@
 .items {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 8px;
 }
 
 .item {
-  display: flex;
-  gap: 14px;
-  padding: 14px;
   border: 1px solid var(--color-borde);
   border-radius: var(--radio-md);
   background: var(--color-fondo);
+  overflow: hidden;
+}
+
+.itemCompacto {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.itemCompacto:hover {
+  background: color-mix(in srgb, var(--color-marca) 5%, transparent);
+}
+
+.itemImagenChica {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radio-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.itemInfoCompacta {
+  flex: 1;
+  min-width: 0;
+}
+
+.itemNombreCompacto {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemResumen {
+  font-size: 12px;
+  color: var(--color-texto-suave);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemPrecioCompacto {
+  font-weight: 700;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.itemChevron {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-texto-suave);
+  transition: transform 0.2s;
+  font-size: 12px;
+}
+
+.itemChevronAbierto {
+  transform: rotate(180deg);
+}
+
+.itemDetalle {
+  padding: 0 12px 12px;
+  border-top: 1px solid var(--color-borde);
 }
 
 .itemImagen {
@@ -272,7 +365,7 @@
   margin-bottom: 4px;
 }
 
-.itemDetalle {
+.itemDetalleTexto {
   color: var(--color-texto-suave);
   font-size: 14px;
   margin-bottom: 4px;
@@ -333,6 +426,162 @@
 .stockAgotado {
   color: #c0392b;
   font-weight: 700;
+}
+
+.totalResumen {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 2px solid var(--color-borde);
+  margin-top: 4px;
+}
+
+.totalEtiqueta {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-texto-suave);
+}
+
+.totalMonto {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--color-texto);
+}
+
+.pagoSeccion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0;
+  border-top: 1px solid var(--color-borde);
+}
+
+.pagoLabel {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-texto-suave);
+}
+
+.pagoBotones {
+  display: flex;
+  gap: 6px;
+}
+
+.pagoBoton {
+  flex: 1;
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-borde);
+  background: var(--color-superficie);
+  border-radius: var(--radio-sm);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-texto);
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.pagoBoton:hover:not(:disabled) {
+  border-color: var(--color-marca);
+}
+
+.pagoBotonActivo {
+  border-color: var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+}
+
+.pagoBotonActivo:hover:not(:disabled) {
+  color: #fff;
+}
+
+.pagoBoton:disabled {
+  cursor: not-allowed;
+}
+
+.accionesFinales {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 0 4px;
+  border-top: 1px solid var(--color-borde);
+}
+
+.btnConfirmar {
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  background: #25d366;
+  color: #fff;
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btnConfirmar:hover:not(:disabled) {
+  background: #1ebe57;
+  transform: translateY(-1px);
+}
+
+.btnConfirmar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btnCancelar {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid #dc2626;
+  background: transparent;
+  color: #dc2626;
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btnCancelar:hover:not(:disabled) {
+  background: #dc2626;
+  color: #fff;
+}
+
+.btnCancelar:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecundario {
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--color-marca);
+  background: var(--color-marca);
+  color: #fff;
+  border-radius: var(--radio-pill);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.btnSecundario:hover:not(:disabled) {
+  background: var(--color-marca-oscuro);
+  transform: translateY(-1px);
+}
+
+.btnSecundario:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 .armarVenta {
   min-height: 44px;

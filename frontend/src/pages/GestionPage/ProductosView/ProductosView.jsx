@@ -3,7 +3,6 @@ import ConfirmDialog from '../../../components/ConfirmDialog/ConfirmDialog'
 import EmptyState from '../../../components/EmptyState/EmptyState'
 import ErrorMessage from '../../../components/ErrorMessage/ErrorMessage'
 import {
-  actualizarCategoria,
   actualizarProducto,
   crearCategoria,
   crearProducto,
@@ -13,6 +12,7 @@ import {
   fetchProductos,
   formatearPrecio,
   subirImagen,
+  tallesPorTienda,
 } from '../../../services/api'
 import styles from './ProductosView.module.css'
 
@@ -21,8 +21,6 @@ const GENEROS = [
   { valor: 'NINA', etiqueta: 'Niña' },
   { valor: 'UNISEX', etiqueta: 'Unisex' },
 ]
-
-const TALLES_DEFAULT = 'XS / S / M / L / XL'
 
 function ProductosView({ tienda, esDueno, tiendas }) {
   const [productos, setProductos] = useState([])
@@ -39,7 +37,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
   const [guardando, setGuardando] = useState(false)
 
   const [catInput, setCatInput] = useState('')
-  const [confirmarEliminarCat, setConfirmarEliminarCat] = useState(null)
   const [subiendoImagen, setSubiendoImagen] = useState(false)
   const [catsAbierto, setCatsAbierto] = useState(false)
 
@@ -102,7 +99,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
       descripcion: '',
       precio: '',
       imagen: '',
-      talles: TALLES_DEFAULT,
+      talles: '',
       genero: 'UNISEX',
       destacado: false,
       categoriaSlug: categorias[0]?.slug ?? '',
@@ -244,11 +241,14 @@ function ProductosView({ tienda, esDueno, tiendas }) {
     setError('')
     try {
       await eliminarCategoria(cat.id)
+      if (catFiltro === cat.slug) setCatFiltro('')
       const cats = await fetchCategorias(tiendaSlug)
       setCategorias(cats)
       if (editando?.datos?.categoriaSlug === cat.slug) {
         actualizarCampo('categoriaSlug', '')
       }
+      const prods = await fetchProductos(tiendaSlug, catFiltro === cat.slug ? '' : catFiltro, generoFiltro)
+      setProductos(prods)
     } catch (err) {
       setError(err.message)
     } finally {
@@ -273,17 +273,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               value={editando.datos.nombre}
               onChange={(e) => actualizarCampo('nombre', e.target.value)}
               maxLength={120}
-            />
-          </label>
-
-          <label className={styles.formLabel}>
-            Descripción
-            <input
-              className={styles.formInput}
-              value={editando.datos.descripcion}
-              onChange={(e) => actualizarCampo('descripcion', e.target.value)}
-              placeholder="Descripción corta del producto…"
-              maxLength={200}
+              placeholder="Nombre del producto"
             />
           </label>
 
@@ -301,94 +291,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
             </label>
 
             <label className={styles.formLabel}>
-              Categoría *
-              <div className={styles.catInline}>
-                <div className={styles.catHeader}>
-                  <select
-                    className={styles.formInput}
-                    value={editando.datos.categoriaSlug}
-                    onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
-                  >
-                    <option value="">Seleccionar…</option>
-                    {categorias.map((c) => (
-                      <option key={c.slug} value={c.slug}>{c.nombre}</option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className={styles.catToggleBtn}
-                    onClick={() => setCatsAbierto(!catsAbierto)}
-                  >
-                    {catsAbierto ? 'Cerrar' : 'Gestionar'}
-                  </button>
-                </div>
-                {catsAbierto && (
-                  <div className={styles.catPanel}>
-                    <div className={styles.catChips}>
-                      {categorias.map((c) => (
-                        <span key={c.slug} className={styles.catChip}>
-                          <button
-                            type="button"
-                            className={`${styles.catChipBtn} ${editando.datos.categoriaSlug === c.slug ? styles.catChipActivo : ''}`}
-                            onClick={() => {
-                              actualizarCampo('categoriaSlug', c.slug)
-                              setCatsAbierto(false)
-                            }}
-                          >
-                            {c.nombre}
-                          </button>
-                          <button
-                            type="button"
-                            className={styles.catChipX}
-                            onClick={() => borrarCategoria(c)}
-                            aria-label={`Eliminar ${c.nombre}`}
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                    <div className={styles.catCrearFila}>
-                      <input
-                        className={styles.formInput}
-                        value={catInput}
-                        onChange={(e) => setCatInput(e.target.value)}
-                        placeholder="Nueva categoría…"
-                        onKeyDown={async (e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault()
-                            if (!catInput.trim()) return
-                            const nueva = await crearCategoriaInline(catInput.trim())
-                            if (nueva) {
-                              actualizarCampo('categoriaSlug', nueva.slug)
-                              setCatInput('')
-                            }
-                          }
-                        }}
-                      />
-                      {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
-                        <button
-                          type="button"
-                          className={styles.catCrearBtn}
-                          onClick={async () => {
-                            const nueva = await crearCategoriaInline(catInput.trim())
-                            if (nueva) {
-                              actualizarCampo('categoriaSlug', nueva.slug)
-                              setCatInput('')
-                            }
-                          }}
-                          disabled={guardando}
-                        >
-                          + Crear
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
-            </label>
-
-            <label className={styles.formLabel}>
               Género
               <select
                 className={styles.formInput}
@@ -401,6 +303,94 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               </select>
             </label>
           </div>
+
+          <label className={styles.formLabel}>
+            Categoría *
+            <div className={styles.catInline}>
+              <div className={styles.catHeader}>
+                <select
+                  className={styles.formInput}
+                  value={editando.datos.categoriaSlug}
+                  onChange={(e) => actualizarCampo('categoriaSlug', e.target.value)}
+                >
+                  <option value="">Seleccionar…</option>
+                  {categorias.map((c) => (
+                    <option key={c.slug} value={c.slug}>{c.nombre}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  className={styles.catToggleBtn}
+                  onClick={() => setCatsAbierto(!catsAbierto)}
+                >
+                  {catsAbierto ? 'Cerrar' : 'Gestionar'}
+                </button>
+              </div>
+              {catsAbierto && (
+                <div className={styles.catPanel}>
+                  <div className={styles.catChips}>
+                    {categorias.map((c) => (
+                      <span key={c.slug} className={styles.catChip}>
+                        <button
+                          type="button"
+                          className={`${styles.catChipBtn} ${editando.datos.categoriaSlug === c.slug ? styles.catChipActivo : ''}`}
+                          onClick={() => {
+                            actualizarCampo('categoriaSlug', c.slug)
+                            setCatsAbierto(false)
+                          }}
+                        >
+                          {c.nombre}
+                        </button>
+                        <button
+                          type="button"
+                          className={styles.catChipX}
+                          onClick={() => borrarCategoria(c)}
+                          aria-label={`Eliminar ${c.nombre}`}
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                  <div className={styles.catCrearFila}>
+                    <input
+                      className={styles.formInput}
+                      value={catInput}
+                      onChange={(e) => setCatInput(e.target.value)}
+                      placeholder="Nueva categoría…"
+                      onKeyDown={async (e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault()
+                          if (!catInput.trim()) return
+                          const nueva = await crearCategoriaInline(catInput.trim())
+                          if (nueva) {
+                            actualizarCampo('categoriaSlug', nueva.slug)
+                            setCatInput('')
+                          }
+                        }
+                      }}
+                    />
+                    {catInput.trim() && !categorias.find((c) => c.nombre.toLowerCase() === catInput.trim().toLowerCase()) && (
+                      <button
+                        type="button"
+                        className={styles.catCrearBtn}
+                        onClick={async () => {
+                          const nueva = await crearCategoriaInline(catInput.trim())
+                          if (nueva) {
+                            actualizarCampo('categoriaSlug', nueva.slug)
+                            setCatInput('')
+                          }
+                        }}
+                        disabled={guardando}
+                      >
+                        + Crear
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </label>
 
           <label className={styles.formLabel}>
             Imagen
@@ -435,33 +425,48 @@ function ProductosView({ tienda, esDueno, tiendas }) {
           )}
 
           <label className={styles.formLabel}>
-            Talles disponibles
+            Talles
             <input
               className={styles.formInput}
               value={editando.datos.talles}
               onChange={(e) => actualizarCampo('talles', e.target.value)}
-              placeholder="XS / S / M / L / XL"
+              placeholder="Seleccioná abajo o escribí manualmente"
             />
-            <div className={styles.tallesSugerencia}>
-              {['0-1', '1-2', '2-3', '3-4', '4-5', '5-6', '6-7', '7-8', '8-9', '9-10', '10-11', '11-12', '12-13', '13-14', '14-15', '15-16', 'XS', 'S', 'M', 'L', 'XL', 'XXL'].map((t) => (
-                <button
-                  key={t}
-                  type="button"
-                  className={`${styles.talleChip} ${editando.datos.talles?.includes(t) ? styles.talleChipActivo : ''}`}
-                  onClick={() => {
-                    const actual = editando.datos.talles || ''
-                    const partes = actual.split('/').map((s) => s.trim()).filter(Boolean)
-                    if (partes.includes(t)) {
-                      actualizarCampo('talles', partes.filter((p) => p !== t).join(' / '))
-                    } else {
-                      actualizarCampo('talles', [...partes, t].join(' / '))
-                    }
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
+          </label>
+          {tallesPorTienda(tiendaSlug).map((grupo) => (
+            <div key={grupo.titulo} className={styles.talleGrupo}>
+              <span className={styles.talleGrupoTitulo}>{grupo.titulo}</span>
+              <div className={styles.tallesSugerencia}>
+                {grupo.talles.map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={`${styles.talleChip} ${(editando.datos.talles || '').split('/').map((s) => s.trim()).filter(Boolean).includes(t) ? styles.talleChipActivo : ''}`}
+                    onClick={() => {
+                      const partes = (editando.datos.talles || '').split('/').map((s) => s.trim()).filter(Boolean)
+                      if (partes.includes(t)) {
+                        actualizarCampo('talles', partes.filter((p) => p !== t).join(' / '))
+                      } else {
+                        actualizarCampo('talles', [...partes, t].join(' / '))
+                      }
+                    }}
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
+          ))}
+
+          <label className={styles.formLabel}>
+            Descripción
+            <input
+              className={styles.formInput}
+              value={editando.datos.descripcion}
+              onChange={(e) => actualizarCampo('descripcion', e.target.value)}
+              placeholder="Descripción corta (opcional)"
+              maxLength={200}
+            />
           </label>
 
           {esDueno && (
@@ -478,7 +483,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
           <div className={styles.variantesHeader}>
             <h4>Variantes (color + talle + stock)</h4>
             <button type="button" className={styles.agregarVarBtn} onClick={agregarVariante}>
-              + Agregar variante
+              + Agregar
             </button>
           </div>
 
@@ -522,7 +527,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               Cancelar
             </button>
             <button type="button" className={styles.btnGuardar} onClick={guardar} disabled={guardando}>
-              {guardando ? 'Guardando…' : editando.modo === 'crear' ? 'Crear producto' : 'Guardar cambios'}
+              {guardando ? 'Guardando…' : editando.modo === 'crear' ? 'Crear producto' : 'Guardar'}
             </button>
           </div>
         </div>

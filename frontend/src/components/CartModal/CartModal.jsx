@@ -3,7 +3,6 @@ import { crearConsulta, formatearPrecio } from '../../services/api'
 import styles from './CartModal.module.css'
 
 function CartModal({ items, tienda, onCerrar, onQuitar, onLimpiar }) {
-  const [nombre, setNombre] = useState('')
   const [telefono, setTelefono] = useState('')
   const [observaciones, setObservaciones] = useState('')
   const [enviando, setEnviando] = useState(false)
@@ -33,7 +32,6 @@ function CartModal({ items, tienda, onCerrar, onQuitar, onLimpiar }) {
     try {
       const creada = await crearConsulta({
         tiendaSlug: tienda.slug,
-        nombre: nombre.trim() || undefined,
         telefono: telefono.trim(),
         observaciones: observaciones.trim() || undefined,
         items: items.map((item) => ({
@@ -140,23 +138,8 @@ function CartModal({ items, tienda, onCerrar, onQuitar, onLimpiar }) {
             <form className={styles.formulario} onSubmit={manejarEnvio}>
               <h3 className={styles.tituloSeccion}>Tus datos</h3>
               <p className={styles.nota}>
-                Tu consulta queda registrada con un número. Te respondemos por WhatsApp en el horario del local.
+                Dejanos tu teléfono y si querés un comentario. Te respondemos por WhatsApp.
               </p>
-
-              <div className={styles.grupo}>
-                <label className={styles.titulo} htmlFor="carrito-nombre">
-                  Tu nombre (opcional)
-                </label>
-                <input
-                  id="carrito-nombre"
-                  className={styles.input}
-                  type="text"
-                  value={nombre}
-                  onChange={(evento) => setNombre(evento.target.value)}
-                  maxLength={120}
-                  placeholder="¿Cómo te llamás?"
-                />
-              </div>
 
               <div className={styles.grupo}>
                 <label className={styles.titulo} htmlFor="carrito-telefono">
@@ -175,7 +158,7 @@ function CartModal({ items, tienda, onCerrar, onQuitar, onLimpiar }) {
 
               <div className={styles.grupo}>
                 <label className={styles.titulo} htmlFor="carrito-observaciones">
-                  Observaciones (opcional)
+                  Comentario (opcional)
                 </label>
                 <textarea
                   id="carrito-observaciones"
@@ -184,7 +167,7 @@ function CartModal({ items, tienda, onCerrar, onQuitar, onLimpiar }) {
                   onChange={(evento) => setObservaciones(evento.target.value)}
                   rows={2}
                   maxLength={500}
-                  placeholder="Ej.: para regalo, talle de descarte, etc."
+                  placeholder="Ej.: talle específico, color que busco, etc."
                 />
               </div>
 

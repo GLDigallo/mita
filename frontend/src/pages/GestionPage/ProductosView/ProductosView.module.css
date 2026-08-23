@@ -629,7 +629,20 @@
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  margin-top: 6px;
+}
+
+.talleGrupo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.talleGrupoTitulo {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-texto-suave);
 }
 
 .talleChip {

@@ -201,6 +201,26 @@ export const MOTIVOS_MODIFICACION = [
   { valor: 'OTRO', etiqueta: 'Otro' },
 ]
 
+export const TALLES_POR_TIENDA = {
+  'mokositos-bebes': [
+    { titulo: 'Bebés', talles: ['RN', '0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M'] },
+  ],
+  'mokositos-ninos': [
+    { titulo: 'Pequeños', talles: ['2', '4', '6'] },
+    { titulo: 'Niños', talles: ['8', '10', '12'] },
+  ],
+  'agrandaditos': [
+    { titulo: 'Niños', talles: ['8', '10', '12', '14', '16'] },
+  ],
+  'mood-teens': [
+    { titulo: 'Adolescentes', talles: ['XXS', 'XS', 'S', 'M', 'L', 'XL'] },
+  ],
+}
+
+export function tallesPorTienda(slug) {
+  return TALLES_POR_TIENDA[slug] ?? TALLES_POR_TIENDA['agrandaditos']
+}
+
 export async function fetchVentas({ estado = '', tiendaId = '', busqueda = '' } = {}) {
   const params = new URLSearchParams()
   if (estado) params.set('estado', estado)

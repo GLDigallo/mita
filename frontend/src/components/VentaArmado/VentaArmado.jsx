@@ -76,7 +76,7 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
         variantes: variantesPorProducto.get(item.productoId) ?? [],
       })),
     )
-  }, [venta])
+  }, [venta, variantesPorProducto])
 
   const total = edicion.reduce((acc, linea) => acc + linea.precioUnitario * linea.cantidad, 0)
   const totalItems = edicion.reduce((acc, linea) => acc + linea.cantidad, 0)

@@ -299,13 +299,35 @@ function VistaActual({
   onGuardarNota,
   guardandoNota,
 }) {
+  const [itemsExpandidos, setItemsExpandidos] = useState(new Set())
+
   const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta?.estado)
   const esCanceladaReciente = consulta?.estado === 'CANCELADA' && (() => {
     if (!consulta?.fechaConsulta) return false
     const horas = (Date.now() - new Date(consulta.fechaConsulta).getTime()) / (1000 * 60 * 60)
     return horas < 48
   })()
-  const etiquetaPago = { EFECTIVO: 'Efectivo', TARJETA: 'Tarjeta', DIGITAL: 'Digital' }
+
+  const telefonoDigits = (consulta.clienteTelefono ?? '').replace(/\D/g, '')
+  const productosResumen = (consulta.productos ?? [])
+    .map((p) => `• ${p.productoNombre} (${p.color}, talle ${p.talle}) x${p.cantidad}`)
+    .join('%0A')
+  const mensajeWhatsApp = encodeURIComponent(
+    `Hola! Somos ${consulta.tiendaNombre}. Vi tu consulta ${consulta.numero} y estoy aquí para ayudarte.%0A%0A${productosResumen}${consulta.observaciones ? `%0A%0A${encodeURIComponent(consulta.observaciones)}` : ''}`
+  )
+  const urlWhatsApp = `https://wa.me/${telefonoDigits}?text=${mensajeWhatsApp}`
+
+  const totalEstimado = (consulta.productos ?? []).reduce((s, p) => s + (p.precioUnitario ?? 0) * (p.cantidad ?? 0), 0)
+
+  function toggleItem(id) {
+    setItemsExpandidos((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   return (
     <>
       <header className={styles.encabezado}>
@@ -320,24 +342,21 @@ function VistaActual({
       </header>
 
       <section className={styles.seccion}>
-        <p className={styles.tituloSeccion}>Cliente</p>
-        <p className={styles.clienteNombre}>{consulta.clienteNombre ?? 'Sin nombre'}</p>
-        <div className={styles.contactoFila}>
-          <a className={styles.clienteTelefono} href={`tel:${consulta.clienteTelefono}`}>
-            {consulta.clienteTelefono}
-          </a>
-          <a
-            className={styles.whatsappBtn}
-            href={`https://wa.me/${(consulta.clienteTelefono ?? '').replace(/\D/g, '')}`}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            WhatsApp
-          </a>
-        </div>
+        <p className={styles.tituloSeccion}>Contacto</p>
+        <p className={styles.clienteTelefono}>
+          {consulta.clienteTelefono}
+        </p>
         <p className={styles.tienda}>
           Tienda: <strong>{consulta.tiendaNombre}</strong>
         </p>
+        <a
+          className={styles.whatsappBtnGrande}
+          href={urlWhatsApp}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Abrir conversación en WhatsApp
+        </a>
       </section>
 
       {consulta.observaciones && (
@@ -376,155 +395,116 @@ function VistaActual({
           Productos ({consulta.totalItems} unidad{consulta.totalItems === 1 ? '' : 'es'})
         </p>
         <div className={styles.items}>
-          {(consulta.productos ?? []).map((item) => (
-            <article key={item.id} className={styles.item}>
-              <img className={styles.itemImagen} src={item.productoImagen} alt={item.productoNombre} />
-              <div className={styles.itemCuerpo}>
-                <p className={styles.itemNombre}>{item.productoNombre}</p>
-                <p className={styles.itemDetalle}>
-                  Talle {item.talle}
-                  {item.color ? ` · ${item.color}` : ''} · Cant. {item.cantidad}
-                </p>
-                <p className={styles.itemPrecio}>{formatearPrecio(item.precioUnitario)}</p>
-                {item.observaciones && <p className={styles.itemNota}>{item.observaciones}</p>}
+          {(consulta.productos ?? []).map((item) => {
+            const expandido = itemsExpandidos.has(item.id)
+            return (
+              <article key={item.id} className={styles.item}>
+                <div className={styles.itemCompacto} onClick={() => toggleItem(item.id)} role="button" tabIndex={0} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleItem(item.id) }}>
+                  <img className={styles.itemImagenChica} src={item.productoImagen} alt="" />
+                  <div className={styles.itemInfoCompacta}>
+                    <p className={styles.itemNombreCompacto}>{item.productoNombre}</p>
+                    <p className={styles.itemResumen}>
+                      {item.color} · Talle {item.talle} · x{item.cantidad} · {formatearPrecio(item.precioUnitario)}
+                    </p>
+                  </div>
+                  <span className={styles.itemPrecioCompacto}>{formatearPrecio(item.precioUnitario * item.cantidad)}</span>
+                  <span className={`${styles.itemChevron} ${expandido ? styles.itemChevronAbierto : ''}`}>▼</span>
+                </div>
 
-                {(item.variantes ?? []).length > 0 && (
-                  <div className={styles.stock}>
-                    <p className={styles.stockTitulo}>Stock disponible</p>
-                    <div className={styles.stockTabla} role="table" aria-label="Stock de variantes">
-                      <div className={styles.stockFila} role="row">
-                        <span role="columnheader">Color</span>
-                        <span role="columnheader">Talle</span>
-                        <span role="columnheader">Stock</span>
-                      </div>
-                      {(item.variantes ?? []).map((variante) => (
-                        <div className={styles.stockFila} role="row" key={variante.id}>
-                          <span role="cell">{variante.color}</span>
-                          <span role="cell">{variante.talle}</span>
-                          <span role="cell" className={variante.stock <= 0 ? styles.stockAgotado : undefined}>
-                            {variante.stock}
-                          </span>
+                {expandido && (
+                  <div className={styles.itemDetalle}>
+                    {item.observaciones && <p className={styles.itemNota}>{item.observaciones}</p>}
+
+                    {(item.variantes ?? []).length > 0 && (
+                      <div className={styles.stock}>
+                        <p className={styles.stockTitulo}>Stock disponible</p>
+                        <div className={styles.stockTabla} role="table" aria-label="Stock de variantes">
+                          <div className={styles.stockFila} role="row">
+                            <span role="columnheader">Color</span>
+                            <span role="columnheader">Talle</span>
+                            <span role="columnheader">Stock</span>
+                          </div>
+                          {(item.variantes ?? []).map((variante) => (
+                            <div className={styles.stockFila} role="row" key={variante.id}>
+                              <span role="cell">{variante.color}</span>
+                              <span role="cell">{variante.talle}</span>
+                              <span role="cell" className={variante.stock <= 0 ? styles.stockAgotado : undefined}>
+                                {variante.stock}
+                              </span>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            </article>
-          ))}
+              </article>
+            )
+          })}
+        </div>
+
+        <div className={styles.totalResumen}>
+          <span className={styles.totalEtiqueta}>Total estimado</span>
+          <span className={styles.totalMonto}>{formatearPrecio(totalEstimado)}</span>
         </div>
       </section>
 
-      <footer className={styles.pie}>
-        {consulta?.estado === 'CONFIRMADA' && (
-          <div className={styles.pieFila}>
-            <div className={styles.piePago}>
-              <span className={styles.piePagoEtiqueta}>Pago</span>
-              <span className={styles.pagoEtiqueta}>{etiquetaPago[consulta.formaPago] ?? '—'}</span>
+      {!esCerrada && (
+        <section className={styles.seccion}>
+          <div className={styles.pagoSeccion}>
+            <span className={styles.pagoLabel}>Forma de pago</span>
+            <div className={styles.pagoBotones}>
+              <button type="button" className={`${styles.pagoBoton} ${consulta.formaPago === 'EFECTIVO' ? styles.pagoBotonActivo : ''}`} onClick={() => onCambiarFormaPago('EFECTIVO')} disabled={cambiandoEstado}>Efectivo</button>
+              <button type="button" className={`${styles.pagoBoton} ${consulta.formaPago === 'TARJETA' ? styles.pagoBotonActivo : ''}`} onClick={() => onCambiarFormaPago('TARJETA')} disabled={cambiandoEstado}>Tarjeta</button>
+              <button type="button" className={`${styles.pagoBoton} ${consulta.formaPago === 'DIGITAL' ? styles.pagoBotonActivo : ''}`} onClick={() => onCambiarFormaPago('DIGITAL')} disabled={cambiandoEstado}>Digital</button>
             </div>
           </div>
-        )}
 
-        {!esCerrada && (
-          <div className={styles.pieFila}>
-            <div className={styles.piePago}>
-              <span className={styles.piePagoEtiqueta}>Pago</span>
-              <div className={styles.pagoOpciones}>
-                <button
-                  type="button"
-                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'EFECTIVO' ? styles.pagoOpcionActivo : ''}`}
-                  onClick={() => onCambiarFormaPago('EFECTIVO')}
-                  disabled={cambiandoEstado}
-                >
-                  Efectivo
+          <div className={styles.accionesFinales}>
+            {!consulta?.ventaAsociada && consulta?.editable && (
+              <button type="button" className={styles.btnSecundario} onClick={() => onArmarVenta(consulta)}>
+                Armar venta
+              </button>
+            )}
+
+            {consulta?.ventaAsociada === 'EN_PREPARACION' && (
+              <>
+                <button type="button" className={styles.btnConfirmar} onClick={() => onCambiarEstado('CONFIRMADA')} disabled={cambiandoEstado}>
+                  Confirmar compra
                 </button>
-                <button
-                  type="button"
-                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'TARJETA' ? styles.pagoOpcionActivo : ''}`}
-                  onClick={() => onCambiarFormaPago('TARJETA')}
-                  disabled={cambiandoEstado}
-                >
-                  Tarjeta
+                <button type="button" className={styles.btnCancelar} onClick={() => onCambiarEstado('CANCELADA')} disabled={cambiandoEstado}>
+                  Cancelar compra
                 </button>
-                <button
-                  type="button"
-                  className={`${styles.pagoOpcion} ${consulta.formaPago === 'DIGITAL' ? styles.pagoOpcionActivo : ''}`}
-                  onClick={() => onCambiarFormaPago('DIGITAL')}
-                  disabled={cambiandoEstado}
-                >
-                  Digital
+              </>
+            )}
+
+            {consulta?.ventaAsociada === 'CONFIRMADA' && (
+              <>
+                <button type="button" className={styles.btnConfirmar} onClick={() => onCambiarEstado('FINALIZADA')} disabled={cambiandoEstado}>
+                  Marcar como entregado
                 </button>
-              </div>
-            </div>
+                <button type="button" className={styles.btnCancelar} onClick={() => onCambiarEstado('CANCELADA')} disabled={cambiandoEstado}>
+                  Cancelar
+                </button>
+              </>
+            )}
+
+            {esCanceladaReciente && consulta?.editable && (
+              <button type="button" className={styles.btnSecundario} onClick={onEditar}>
+                Editar consulta
+              </button>
+            )}
           </div>
-        )}
+        </section>
+      )}
 
-        <div className={styles.pieFila}>
-          {!esCerrada && !consulta?.ventaAsociada && consulta?.editable && (
-            <button
-              type="button"
-              className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
-              onClick={() => onArmarVenta(consulta)}
-            >
-              Armar venta
-            </button>
-          )}
-
-          {consulta?.ventaAsociada === 'EN_PREPARACION' && (
-            <>
-              <button
-                type="button"
-                className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
-                onClick={() => onCambiarEstado('CONFIRMADA')}
-                disabled={cambiandoEstado}
-              >
-                Confirmar venta
-              </button>
-              <button
-                type="button"
-                className={`${styles.pieBoton} ${styles.pieBotonCancelar}`}
-                onClick={() => onCambiarEstado('CANCELADA')}
-                disabled={cambiandoEstado}
-              >
-                Cancelar
-              </button>
-            </>
-          )}
-
-          {consulta?.ventaAsociada === 'CONFIRMADA' && (
-            <>
-              <button
-                type="button"
-                className={`${styles.pieBoton} ${styles.pieBotonExitoso}`}
-                onClick={() => onCambiarEstado('FINALIZADA')}
-                disabled={cambiandoEstado}
-              >
-                Entregado
-              </button>
-              <button
-                type="button"
-                className={`${styles.pieBoton} ${styles.pieBotonCancelar}`}
-                onClick={() => onCambiarEstado('CANCELADA')}
-                disabled={cambiandoEstado}
-              >
-                Cancelar
-              </button>
-            </>
-          )}
-
-          {esCanceladaReciente && consulta?.editable && (
-            <button type="button" className={styles.pieBoton} onClick={onEditar}>
-              Editar consulta
-            </button>
-          )}
-
-          {esCerrada && !esCanceladaReciente && (
-            <span className={styles.cierreFinal}>
-              {consulta?.estado === 'CONFIRMADA' ? 'Compra finalizada' : 'Consulta cerrada'}
-            </span>
-          )}
-        </div>
-      </footer>
+      {esCerrada && !esCanceladaReciente && (
+        <section className={styles.seccion}>
+          <span className={styles.cierreFinal}>
+            {consulta?.estado === 'CONFIRMADA' ? 'Compra finalizada' : 'Consulta cerrada'}
+          </span>
+        </section>
+      )}
     </>
   )
 }
