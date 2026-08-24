@@ -72,7 +72,7 @@ function TiendaPage() {
   })
 
   useEffect(() => {
-    setCategoria('destacados')
+    setCategoria('')
     setGenero('')
     setProductoSeleccionado(null)
     setCarrito([])

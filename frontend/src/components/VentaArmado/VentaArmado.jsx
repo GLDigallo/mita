@@ -27,6 +27,7 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
   const [nuevoCantidad, setNuevoCantidad] = useState(1)
   const pendienteRef = useRef(null)
   const guardandoRef = useRef(false)
+  const errorRef = useRef(null)
 
   useEffect(() => {
     let activo = true
@@ -100,8 +101,10 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
         if (!pendienteRef.current) setVenta(nueva)
       }
       setError('')
+      errorRef.current = null
     } catch (err) {
       setError(err.message)
+      errorRef.current = err.message
     } finally {
       guardandoRef.current = false
       setGuardando(false)
@@ -179,6 +182,10 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
     setError('')
     try {
       await esperarGuardados()
+      if (errorRef.current) {
+        setConfirmando(false)
+        return
+      }
       const confirmada = await confirmarVenta(venta.id, metodoPago)
       onConfirmada(confirmada)
     } catch (err) {
@@ -206,7 +213,10 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
   const variantesDisponibles = (productoSeleccionado?.variantes ?? []).filter((v) => v.stock > 0)
 
   return (
-    <div className={styles.overlay} onClick={onCerrar} role="presentation">
+    <div className={styles.overlay} onClick={() => {
+      if (edicion.length > 0 && venta?.estado === 'EN_PREPARACION' && !window.confirm('Si cerrás sin confirmar la venta, los productos que agregaste no se guardan. ¿Querés cerrar?')) return
+      onCerrar()
+    }} role="presentation">
       <div
         className={styles.modal}
         role="dialog"
@@ -215,7 +225,10 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
         onClick={(evento) => evento.stopPropagation()}
       >
         <div className={styles.cerrarZona}>
-          <button type="button" className={styles.cerrar} onClick={onCerrar} aria-label="Cerrar armado de venta">
+          <button type="button" className={styles.cerrar} onClick={() => {
+            if (edicion.length > 0 && venta?.estado === 'EN_PREPARACION' && !window.confirm('Si cerrás sin confirmar la venta, los productos que agregaste no se guardan. ¿Querés cerrar?')) return
+            onCerrar()
+          }} aria-label="Cerrar armado de venta">
             ✕
           </button>
         </div>

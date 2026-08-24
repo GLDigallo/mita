@@ -3,10 +3,14 @@ package com.agrandaditostienda.config;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.net.URI;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Configuration
 public class DataSourceConfig {
@@ -15,22 +19,35 @@ public class DataSourceConfig {
     private String databaseUrl;
 
     @Bean
-    public HikariDataSource dataSource() {
+    public HikariDataSource dataSource(DataSourceProperties properties) {
         if (databaseUrl == null || databaseUrl.isBlank()) {
-            return new HikariDataSource();
+            HikariConfig config = new HikariConfig();
+            config.setJdbcUrl(properties.getUrl());
+            config.setUsername(properties.getUsername());
+            config.setPassword(properties.getPassword());
+            return new HikariDataSource(config);
         }
 
-        URI uri = URI.create(databaseUrl);
-        String host = uri.getHost();
-        int port = uri.getPort() != -1 ? uri.getPort() : 5432;
-        String dbName = uri.getPath().substring(1);
+        Pattern pattern = Pattern.compile(
+                "^postgresql://([^:]*):([^@]*)@([^:]+)(?::(\\d+))?/([^?]+)(?:\\?(.*))?$"
+        );
+        Matcher matcher = pattern.matcher(databaseUrl);
+        if (!matcher.matches()) {
+            throw new IllegalArgumentException("DATABASE_URL format invalid: " + databaseUrl.replaceAll("://[^:]*:[^@]*@", "://***:***@"));
+        }
+
+        String user = URLDecoder.decode(matcher.group(1), StandardCharsets.UTF_8);
+        String password = URLDecoder.decode(matcher.group(2), StandardCharsets.UTF_8);
+        String host = matcher.group(3);
+        int port = matcher.group(4) != null ? Integer.parseInt(matcher.group(4)) : 5432;
+        String dbName = matcher.group(5);
+        String query = matcher.group(6);
 
         HikariConfig config = new HikariConfig();
         config.setJdbcUrl("jdbc:postgresql://" + host + ":" + port + "/" + dbName);
-        config.setUsername(uri.getUserInfo().split(":")[0]);
-        config.setPassword(uri.getUserInfo().split(":")[1]);
+        config.setUsername(user);
+        config.setPassword(password);
 
-        String query = uri.getQuery();
         if (query != null && query.contains("sslmode=require")) {
             config.addDataSourceProperty("ssl", "true");
             config.addDataSourceProperty("sslmode", "require");

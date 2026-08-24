@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import ConfirmDialog from '../../../components/ConfirmDialog/ConfirmDialog'
 import EmptyState from '../../../components/EmptyState/EmptyState'
 import ErrorMessage from '../../../components/ErrorMessage/ErrorMessage'
@@ -41,6 +41,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
   const [catsAbierto, setCatsAbierto] = useState(false)
 
   const tiendaSlug = tienda?.slug ?? ''
+  const fileInputRef = useRef(null)
 
   const cargar = useCallback(async () => {
     if (!tiendaSlug) return
@@ -154,6 +155,13 @@ function ProductosView({ tienda, esDueno, tiendas }) {
       setError('El precio debe ser un número mayor a 0')
       return
     }
+    const variantesIncompletas = d.variantes.filter(
+      (v) => (v.color.trim() && !v.talle.trim()) || (!v.color.trim() && v.talle.trim())
+    )
+    if (variantesIncompletas.length > 0 && editando.modo === 'editar') {
+      if (!window.confirm('Hay variantes incompletas (falta color o talle). Se van a borrar al guardar. ¿Continuar?')) return
+    }
+
     const variantes = d.variantes
       .filter((v) => v.color.trim() && v.talle.trim())
       .map((v) => ({ color: v.color.trim(), talle: v.talle.trim(), stock: parseInt(v.stock, 10) || 0 }))
@@ -217,6 +225,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
       setError(err.message)
     } finally {
       setSubiendoImagen(false)
+      if (fileInputRef.current) fileInputRef.current.value = ''
     }
   }
 
@@ -400,6 +409,7 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               <label className={styles.imagenUpload}>
                 <input
                   type="file"
+                  ref={fileInputRef}
                   accept="image/jpeg,image/png,image/webp,image/gif"
                   className={styles.imagenUploadInput}
                   onChange={(e) => {

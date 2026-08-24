@@ -5,6 +5,15 @@ function CategoryFilter({ categorias, seleccionada, onSeleccionar, colorPrimario
     <div className={styles.filtro} role="group" aria-label="Filtrar por categoría">
       <button
         type="button"
+        className={`${styles.chip} ${seleccionada === '' ? styles.activo : ''}`}
+        style={seleccionada === '' ? { '--chip-color': colorPrimario } : undefined}
+        onClick={() => onSeleccionar('')}
+        aria-pressed={seleccionada === ''}
+      >
+        Todos
+      </button>
+      <button
+        type="button"
         className={`${styles.chip} ${styles.destacado} ${seleccionada === 'destacados' ? styles.activo : ''}`}
         style={seleccionada === 'destacados' ? { '--chip-color': colorPrimario } : undefined}
         onClick={() => onSeleccionar('destacados')}

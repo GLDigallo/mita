@@ -119,6 +119,10 @@ async function enviarJson(url, opciones = {}) {
       ...(opciones.headers ?? {}),
     },
   })
+  if (response.status === 401 && !url.includes('/auth/login')) {
+    window.dispatchEvent(new CustomEvent('auth:expired'))
+    throw new Error('Sesión expirada')
+  }
   if (!response.ok) {
     let mensaje = 'Error de servidor'
     try {

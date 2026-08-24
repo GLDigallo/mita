@@ -12,8 +12,11 @@ import PromosView from './PromosView/PromosView'
 import MetricasView from './MetricasView/MetricasView'
 import ProductosView from './ProductosView/ProductosView'
 import {
+  cancelarVenta,
   cambiarEstadoConsulta,
   cambiarFormaPagoConsulta,
+  confirmarVenta,
+  entregarVenta,
   fetchConsulta,
   fetchConsultas,
   fetchMe,
@@ -52,6 +55,9 @@ function GestionPage() {
   const [ventas, setVentas] = useState([])
   const [cargandoVentas, setCargandoVentas] = useState(true)
   const [errorVentas, setErrorVentas] = useState('')
+
+  const [consultasTodas, setConsultasTodas] = useState([])
+  const [ventasTodas, setVentasTodas] = useState([])
 
   const [detalleId, setDetalleId] = useState(null)
   const [detalle, setDetalle] = useState(null)
@@ -100,6 +106,20 @@ function GestionPage() {
   }, [])
 
   useEffect(() => {
+    function onAuthExpired() {
+      setSesion('anonimo')
+      setUsuario(null)
+      setConsultas([])
+      setVentas([])
+      setDetalleId(null)
+      setDetalle(null)
+      setArmando(null)
+    }
+    window.addEventListener('auth:expired', onAuthExpired)
+    return () => window.removeEventListener('auth:expired', onAuthExpired)
+  }, [])
+
+  useEffect(() => {
     if (sesion !== 'autenticado') return
     let activo = true
     fetchTiendas()
@@ -127,7 +147,15 @@ function GestionPage() {
     } finally {
       setCargando(false)
     }
-  }, [estadoFiltro, tiendaIdFiltro, busquedaAplicada])
+    try {
+      const todas = await fetchConsultas({
+        estado: '',
+        tiendaId: esDueño ? '' : (usuario?.tiendaId ?? ''),
+        busqueda: '',
+      })
+      setConsultasTodas(todas)
+    } catch {}
+  }, [estadoFiltro, tiendaIdFiltro, busquedaAplicada, esDueño, usuario])
 
   const cargarVentas = useCallback(async () => {
     setCargandoVentas(true)
@@ -145,7 +173,15 @@ function GestionPage() {
     } finally {
       setCargandoVentas(false)
     }
-  }, [ventaEstadoFiltro, ventaTiendaIdFiltro, ventaBusquedaAplicada])
+    try {
+      const todas = await fetchVentas({
+        estado: '',
+        tiendaId: esDueño ? '' : (usuario?.tiendaId ?? ''),
+        busqueda: '',
+      })
+      setVentasTodas(todas)
+    } catch {}
+  }, [ventaEstadoFiltro, ventaTiendaIdFiltro, ventaBusquedaAplicada, esDueño, usuario])
 
   useEffect(() => {
     if (sesion === 'autenticado' && (seccion === 'consultas' || seccion === 'inicio')) {
@@ -156,7 +192,22 @@ function GestionPage() {
   useEffect(() => {
     if (sesion !== 'autenticado') return
     let timeoutId
-    const audio = new Audio('/notification.mp3')
+    let audioCtx = null
+    function playBeep() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+        const osc = audioCtx.createOscillator()
+        const gain = audioCtx.createGain()
+        osc.connect(gain)
+        gain.connect(audioCtx.destination)
+        osc.frequency.value = 880
+        osc.type = 'sine'
+        gain.gain.value = 0.15
+        osc.start()
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3)
+        osc.stop(audioCtx.currentTime + 0.3)
+      } catch {}
+    }
     const intervalo = setInterval(() => {
       fetchConsultas({ estado: '', tiendaId: esDueño ? '' : (usuario?.tiendaId ?? ''), busqueda: '' })
         .then((datos) => {
@@ -165,7 +216,7 @@ function GestionPage() {
           if (snapshot > 0 && pendientes > snapshot) {
             const nuevas = pendientes - snapshot
             setNotificacion(`${nuevas} nueva${nuevas > 1 ? 's' : ''} consulta${nuevas > 1 ? 's' : ''} pendiente${nuevas > 1 ? 's' : ''}`)
-            try { audio.currentTime = 0; audio.play().catch(() => {}) } catch {}
+            try { playBeep() } catch {}
             clearTimeout(timeoutId)
             timeoutId = setTimeout(() => setNotificacion(null), 6000)
           }
@@ -176,8 +227,7 @@ function GestionPage() {
     return () => {
       clearInterval(intervalo)
       clearTimeout(timeoutId)
-      audio.pause()
-      audio.src = ''
+      if (audioCtx) audioCtx.close().catch(() => {})
     }
   }, [sesion, esDueño, usuario])
 
@@ -233,6 +283,23 @@ function GestionPage() {
     setUsuario(null)
     setConsultas([])
     setVentas([])
+    setConsultasTodas([])
+    setVentasTodas([])
+    setDetalleId(null)
+    setDetalle(null)
+    setErrorDetalle('')
+    setArmando(null)
+    setVentaDetalleId(null)
+    setNotificacion(null)
+    setEstadoFiltro('')
+    setTiendaIdFiltro('')
+    setBusquedaInput('')
+    setBusquedaAplicada('')
+    setVentaEstadoFiltro('')
+    setVentaTiendaIdFiltro('')
+    setVentaBusquedaInput('')
+    setVentaBusquedaAplicada('')
+    consultasSnapshot.current = 0
   }
 
   function manejarBusqueda(evento) {
@@ -266,6 +333,81 @@ function GestionPage() {
       } else {
         setDetalle(actualizada)
       }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
+
+  async function manejarConfirmarVenta(metodoPago) {
+    if (!detalle?.ventaId) return
+    setCambiandoEstado(true)
+    try {
+      await confirmarVenta(detalle.ventaId, metodoPago)
+      const actualizada = await fetchConsulta(detalle.id)
+      setDetalle(actualizada)
+      const indices = consultas
+        .map((c, i) => (c.id === actualizada.id ? i : -1))
+        .filter((i) => i !== -1)
+      if (indices.length > 0) {
+        setConsultas((actuales) => {
+          const copia = [...actuales]
+          copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
+          return copia
+        })
+      }
+      cargarVentas()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
+
+  async function manejarEntregarVenta() {
+    if (!detalle?.ventaId) return
+    setCambiandoEstado(true)
+    try {
+      await entregarVenta(detalle.ventaId)
+      const actualizada = await fetchConsulta(detalle.id)
+      setDetalle(actualizada)
+      const indices = consultas
+        .map((c, i) => (c.id === actualizada.id ? i : -1))
+        .filter((i) => i !== -1)
+      if (indices.length > 0) {
+        setConsultas((actuales) => {
+          const copia = [...actuales]
+          copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
+          return copia
+        })
+      }
+      cargarVentas()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
+
+  async function manejarCancelarVenta() {
+    if (!detalle?.ventaId) return
+    setCambiandoEstado(true)
+    try {
+      await cancelarVenta(detalle.ventaId)
+      const actualizada = await fetchConsulta(detalle.id)
+      setDetalle(actualizada)
+      const indices = consultas
+        .map((c, i) => (c.id === actualizada.id ? i : -1))
+        .filter((i) => i !== -1)
+      if (indices.length > 0) {
+        setConsultas((actuales) => {
+          const copia = [...actuales]
+          copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
+          return copia
+        })
+      }
+      cargarVentas()
     } catch (err) {
       setError(err.message)
     } finally {
@@ -679,7 +821,7 @@ function GestionPage() {
         ) : seccion === 'productos' && esEncargada ? (
           <ProductosView tienda={tiendaUsuario} esDueno={esDueño} tiendas={tiendas} />
         ) : esDueño && seccion === 'metricas' ? (
-          <MetricasView tiendas={tiendas} consultas={consultas} ventas={ventas} />
+          <MetricasView tiendas={tiendas} consultas={consultasTodas} ventas={ventasTodas} />
         ) : (
           <Navigate to="/home" replace />
         )}
@@ -710,6 +852,9 @@ function GestionPage() {
             onCambiarFormaPago={manejarCambioFormaPago}
             onArmarVenta={manejarArmarVenta}
             onModificada={manejarModificada}
+            onConfirmarVenta={manejarConfirmarVenta}
+            onEntregarVenta={manejarEntregarVenta}
+            onCancelarVenta={manejarCancelarVenta}
           />
         </ErrorBoundary>
       )}

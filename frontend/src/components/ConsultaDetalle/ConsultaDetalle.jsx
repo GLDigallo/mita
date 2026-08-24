@@ -18,6 +18,9 @@ function ConsultaDetalle({
   onCambiarFormaPago,
   onArmarVenta,
   onModificada,
+  onConfirmarVenta,
+  onEntregarVenta,
+  onCancelarVenta,
 }) {
   const [vista, setVista] = useState('actual')
 
@@ -311,9 +314,9 @@ function VistaActual({
   const telefonoDigits = (consulta.clienteTelefono ?? '').replace(/\D/g, '')
   const productosResumen = (consulta.productos ?? [])
     .map((p) => `• ${p.productoNombre} (${p.color}, talle ${p.talle}) x${p.cantidad}`)
-    .join('%0A')
+    .join('\n')
   const mensajeWhatsApp = encodeURIComponent(
-    `Hola! Somos ${consulta.tiendaNombre}. Vi tu consulta ${consulta.numero} y estoy aquí para ayudarte.%0A%0A${productosResumen}${consulta.observaciones ? `%0A%0A${encodeURIComponent(consulta.observaciones)}` : ''}`
+    `Hola! Somos ${consulta.tiendaNombre}. Vi tu consulta ${consulta.numero} y estoy aquí para ayudarte.\n\n${productosResumen}${consulta.observaciones ? `\n\n${consulta.observaciones}` : ''}`
   )
   const urlWhatsApp = `https://wa.me/${telefonoDigits}?text=${mensajeWhatsApp}`
 
@@ -469,10 +472,10 @@ function VistaActual({
 
             {consulta?.ventaAsociada === 'EN_PREPARACION' && (
               <>
-                <button type="button" className={styles.btnConfirmar} onClick={() => onCambiarEstado('CONFIRMADA')} disabled={cambiandoEstado}>
+                <button type="button" className={styles.btnConfirmar} onClick={() => onConfirmarVenta?.('EFECTIVO')} disabled={cambiandoEstado || !consulta?.ventaId}>
                   Confirmar compra
                 </button>
-                <button type="button" className={styles.btnCancelar} onClick={() => onCambiarEstado('CANCELADA')} disabled={cambiandoEstado}>
+                <button type="button" className={styles.btnCancelar} onClick={onCancelarVenta} disabled={cambiandoEstado || !consulta?.ventaId}>
                   Cancelar compra
                 </button>
               </>
@@ -480,10 +483,10 @@ function VistaActual({
 
             {consulta?.ventaAsociada === 'CONFIRMADA' && (
               <>
-                <button type="button" className={styles.btnConfirmar} onClick={() => onCambiarEstado('FINALIZADA')} disabled={cambiandoEstado}>
+                <button type="button" className={styles.btnConfirmar} onClick={onEntregarVenta} disabled={cambiandoEstado || !consulta?.ventaId}>
                   Marcar como entregado
                 </button>
-                <button type="button" className={styles.btnCancelar} onClick={() => onCambiarEstado('CANCELADA')} disabled={cambiandoEstado}>
+                <button type="button" className={styles.btnCancelar} onClick={onCancelarVenta} disabled={cambiandoEstado || !consulta?.ventaId}>
                   Cancelar
                 </button>
               </>

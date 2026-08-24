@@ -121,7 +121,7 @@ class ConsultaServiceTest {
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
                 .thenReturn(List.of());
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
-        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
     }
 
     private void prepararModificacion(Tienda tienda, Producto producto, Consulta consulta) {
@@ -133,7 +133,7 @@ class ConsultaServiceTest {
         when(varianteProductoRepository.findByProductoIdInAndActivoTrueOrderByColorAscTalleAsc(anyList()))
                 .thenReturn(List.of());
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
-        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
     }
 
     private Consulta consultaModificable(Tienda tienda) {
@@ -416,7 +416,7 @@ class ConsultaServiceTest {
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
         when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
-        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any())).thenReturn(null);
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
 
         consultaService.cambiarEstado(1L, EstadoConsulta.EN_REVISION);
 

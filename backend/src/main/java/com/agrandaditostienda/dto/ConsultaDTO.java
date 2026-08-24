@@ -23,6 +23,7 @@ public record ConsultaDTO(
         String notaInterna,
         int totalItems,
         List<ProductoConsultadoDTO> productos,
-        String ventaAsociada
+        String ventaAsociada,
+        Long ventaId
 ) {
 }
