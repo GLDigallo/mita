@@ -16,7 +16,7 @@ public record ProductoRequest(
         @NotBlank @Size(max = 120) String nombre,
         @Size(max = 500) String descripcion,
         @NotNull @Positive BigDecimal precio,
-        @Size(max = 500) String imagen,
+        String imagen,
         @Size(max = 60) String talles,
         @NotNull String genero,
         boolean destacado,

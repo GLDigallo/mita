@@ -42,7 +42,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/tiendas/*/categorias").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/categorias/*").authenticated()
                         .requestMatchers(HttpMethod.DELETE, "/api/categorias/*").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/upload/imagen/*").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/upload/imagen").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/consultas").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/consultas/**").authenticated()

@@ -108,12 +108,15 @@ public class CatalogoService {
 
         Genero genero = parseGenero(request.genero());
 
+        String imagen = request.imagen() != null ? request.imagen() : "";
+        String talles = request.talles() != null ? request.talles() : "";
+
         Producto producto = new Producto(
                 request.nombre(),
                 request.descripcion(),
                 request.precio(),
-                request.imagen(),
-                request.talles(),
+                imagen,
+                talles,
                 genero,
                 request.destacado(),
                 tienda,
@@ -144,8 +147,8 @@ public class CatalogoService {
         producto.setNombre(request.nombre());
         producto.setDescripcion(request.descripcion());
         producto.setPrecio(request.precio());
-        producto.setImagen(request.imagen());
-        producto.setTalles(request.talles());
+        producto.setImagen(request.imagen() != null ? request.imagen() : "");
+        producto.setTalles(request.talles() != null ? request.talles() : "");
         producto.setGenero(parseGenero(request.genero()));
         producto.setDestacado(request.destacado());
         producto.setCategoria(categoria);
