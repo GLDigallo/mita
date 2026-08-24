@@ -472,13 +472,16 @@ function ProductosView({ tienda, esDueno, tiendas }) {
                   placeholder="Color"
                   maxLength={40}
                 />
-                <input
-                  className={`${styles.varianteInput} ${sinTalle ? styles.inputError : ''}`}
+                <select
+                  className={`${styles.varianteInput} ${styles.varianteSelect} ${sinTalle ? styles.inputError : ''}`}
                   value={v.talle}
                   onChange={(e) => actualizarVariante(idx, 'talle', e.target.value)}
-                  placeholder="Talle"
-                  maxLength={20}
-                />
+                >
+                  <option value="">Talle</option>
+                  {tallesPorTienda(tiendaSlug).flatMap((g) => g.talles).map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
                 <input
                   className={`${styles.varianteInput} ${styles.varianteStock} ${sinStock ? styles.inputError : ''}`}
                   type="number"
@@ -498,37 +501,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               </div>
             )
           })}
-          {tallesPorTienda(tiendaSlug).length > 0 && (
-            <div className={styles.talleGrupo}>
-              <span className={styles.talleGrupoTitulo}>Talles disponibles para esta tienda</span>
-              <div className={styles.tallesSugerencia}>
-                {tallesPorTienda(tiendaSlug).flatMap((g) => g.talles).map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={styles.talleChip}
-                    onClick={() => {
-                      const existente = editando.datos.variantes.find((v) => v.talle === t)
-                      if (!existente) {
-                        agregarVariante()
-                        setTimeout(() => {
-                          setEditando((prev) => ({
-                            ...prev,
-                            datos: {
-                              ...prev.datos,
-                              variantes: [...prev.datos.variantes.slice(0, -1), { ...prev.datos.variantes[prev.datos.variantes.length - 1], talle: t }],
-                            },
-                          }))
-                        }, 0)
-                      }
-                    }}
-                  >
-                    + {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div className={styles.formAcciones}>
             <button type="button" className={styles.btnCancelar} onClick={() => { setVista('lista'); setEditando(null) }}>

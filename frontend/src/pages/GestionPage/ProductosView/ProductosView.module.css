@@ -317,6 +317,11 @@
   text-align: center;
 }
 
+.varianteSelect {
+  appearance: auto;
+  cursor: pointer;
+}
+
 .varianteEliminar {
   width: 32px;
   height: 32px;
