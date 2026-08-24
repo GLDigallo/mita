@@ -158,12 +158,14 @@ function ProductosView({ tienda, esDueno, tiendas }) {
       .filter((v) => v.color.trim() && v.talle.trim())
       .map((v) => ({ color: v.color.trim(), talle: v.talle.trim(), stock: parseInt(v.stock, 10) || 0 }))
 
+    const tallesAuto = [...new Set(variantes.map((v) => v.talle))].join(' / ')
+
     const payload = {
       nombre: d.nombre.trim(),
       descripcion: d.descripcion.trim(),
       precio,
       imagen: d.imagen.trim(),
-      talles: d.talles.trim(),
+      talles: tallesAuto,
       genero: d.genero,
       destacado: d.destacado,
       categoriaSlug: d.categoriaSlug,
@@ -425,40 +427,6 @@ function ProductosView({ tienda, esDueno, tiendas }) {
           )}
 
           <label className={styles.formLabel}>
-            Talles
-            <input
-              className={styles.formInput}
-              value={editando.datos.talles}
-              onChange={(e) => actualizarCampo('talles', e.target.value)}
-              placeholder="Seleccioná abajo o escribí manualmente"
-            />
-          </label>
-          {tallesPorTienda(tiendaSlug).map((grupo) => (
-            <div key={grupo.titulo} className={styles.talleGrupo}>
-              <span className={styles.talleGrupoTitulo}>{grupo.titulo}</span>
-              <div className={styles.tallesSugerencia}>
-                {grupo.talles.map((t) => (
-                  <button
-                    key={t}
-                    type="button"
-                    className={`${styles.talleChip} ${(editando.datos.talles || '').split('/').map((s) => s.trim()).filter(Boolean).includes(t) ? styles.talleChipActivo : ''}`}
-                    onClick={() => {
-                      const partes = (editando.datos.talles || '').split('/').map((s) => s.trim()).filter(Boolean)
-                      if (partes.includes(t)) {
-                        actualizarCampo('talles', partes.filter((p) => p !== t).join(' / '))
-                      } else {
-                        actualizarCampo('talles', [...partes, t].join(' / '))
-                      }
-                    }}
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-
-          <label className={styles.formLabel}>
             Descripción
             <input
               className={styles.formInput}
@@ -486,41 +454,81 @@ function ProductosView({ tienda, esDueno, tiendas }) {
               + Agregar
             </button>
           </div>
+          <p className={styles.variantesHint}>
+            Cada variante es un producto distinto. Completá color, talle y stock.
+          </p>
 
-          {editando.datos.variantes.map((v, idx) => (
-            <div key={idx} className={styles.varianteFila}>
-              <input
-                className={styles.varianteInput}
-                value={v.color}
-                onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
-                placeholder="Color"
-                maxLength={40}
-              />
-              <input
-                className={styles.varianteInput}
-                value={v.talle}
-                onChange={(e) => actualizarVariante(idx, 'talle', e.target.value)}
-                placeholder="Talle"
-                maxLength={20}
-              />
-              <input
-                className={`${styles.varianteInput} ${styles.varianteStock}`}
-                type="number"
-                min="0"
-                value={v.stock}
-                onChange={(e) => actualizarVariante(idx, 'stock', e.target.value)}
-                placeholder="Stock"
-              />
-              <button
-                type="button"
-                className={styles.varianteEliminar}
-                onClick={() => eliminarVariante(idx)}
-                aria-label="Eliminar variante"
-              >
-                ×
-              </button>
+          {editando.datos.variantes.map((v, idx) => {
+            const sinColor = v.color.trim() === ''
+            const sinTalle = v.talle.trim() === ''
+            const sinStock = !v.stock && v.stock !== '0'
+            const incompleta = sinColor || sinTalle || sinStock
+            return (
+              <div key={idx} className={`${styles.varianteFila} ${incompleta ? styles.varianteIncompleta : ''}`}>
+                <input
+                  className={`${styles.varianteInput} ${sinColor ? styles.inputError : ''}`}
+                  value={v.color}
+                  onChange={(e) => actualizarVariante(idx, 'color', e.target.value)}
+                  placeholder="Color"
+                  maxLength={40}
+                />
+                <input
+                  className={`${styles.varianteInput} ${sinTalle ? styles.inputError : ''}`}
+                  value={v.talle}
+                  onChange={(e) => actualizarVariante(idx, 'talle', e.target.value)}
+                  placeholder="Talle"
+                  maxLength={20}
+                />
+                <input
+                  className={`${styles.varianteInput} ${styles.varianteStock} ${sinStock ? styles.inputError : ''}`}
+                  type="number"
+                  min="0"
+                  value={v.stock}
+                  onChange={(e) => actualizarVariante(idx, 'stock', e.target.value)}
+                  placeholder="Stock"
+                />
+                <button
+                  type="button"
+                  className={styles.varianteEliminar}
+                  onClick={() => eliminarVariante(idx)}
+                  aria-label="Eliminar variante"
+                >
+                  ×
+                </button>
+              </div>
+            )
+          })}
+          {tallesPorTienda(tiendaSlug).length > 0 && (
+            <div className={styles.talleGrupo}>
+              <span className={styles.talleGrupoTitulo}>Talles disponibles para esta tienda</span>
+              <div className={styles.tallesSugerencia}>
+                {tallesPorTienda(tiendaSlug).flatMap((g) => g.talles).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    className={styles.talleChip}
+                    onClick={() => {
+                      const existente = editando.datos.variantes.find((v) => v.talle === t)
+                      if (!existente) {
+                        agregarVariante()
+                        setTimeout(() => {
+                          setEditando((prev) => ({
+                            ...prev,
+                            datos: {
+                              ...prev.datos,
+                              variantes: [...prev.datos.variantes.slice(0, -1), { ...prev.datos.variantes[prev.datos.variantes.length - 1], talle: t }],
+                            },
+                          }))
+                        }, 0)
+                      }
+                    }}
+                  >
+                    + {t}
+                  </button>
+                ))}
+              </div>
             </div>
-          ))}
+          )}
 
           <div className={styles.formAcciones}>
             <button type="button" className={styles.btnCancelar} onClick={() => { setVista('lista'); setEditando(null) }}>

@@ -783,6 +783,21 @@
   background: #fef2f2;
 }
 
+.variantesHint {
+  margin: 4px 0 8px;
+  font-size: 12px;
+  color: var(--color-texto-suave);
+}
+
+.varianteIncompleta {
+  background: #fffbeb;
+  border-radius: var(--radio-sm);
+}
+
+.inputError {
+  border-color: #dc2626 !important;
+}
+
 @media (max-width: 600px) {
   .fila {
     flex-direction: column;

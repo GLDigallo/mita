@@ -23,7 +23,7 @@ import styles from './TiendaPage.module.css'
 
 function TiendaPage() {
   const { slug } = useParams()
-  const [categoria, setCategoria] = useState('destacados')
+  const [categoria, setCategoria] = useState('')
   const [genero, setGenero] = useState('')
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
   const [carrito, setCarrito] = useState([])
