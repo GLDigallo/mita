@@ -32,7 +32,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
         <button
           type="button"
           className={`${chipBase} ${todoActivo ? chipActivo : ''}`}
-          style={(todoActivo && colorPrimario ? { '--chip-color': colorPrimario } : undefined) as CSSProperties | undefined}
+          style={(todoActivo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined}
           onClick={onTodo}
           aria-pressed={todoActivo}
         >
@@ -46,7 +46,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
             key={genero}
             type="button"
             className={`${chipBase} ${activo ? chipActivo : ''}`}
-            style={(activo && colorPrimario ? { '--chip-color': colorPrimario } : undefined) as CSSProperties | undefined}
+            style={(activo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined}
             onClick={() => onSeleccionar(genero)}
             aria-pressed={activo}
           >

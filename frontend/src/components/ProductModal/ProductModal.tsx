@@ -43,11 +43,15 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
     const manejarTecla = (evento: KeyboardEvent) => {
       if (evento.key === 'Escape') onCerrar()
     }
-    document.addEventListener('keydown', manejarTecla)
+    const overflowAnteriorHtml = document.documentElement.style.overflow
+    const overflowAnteriorBody = document.body.style.overflow
+    document.documentElement.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
+    document.addEventListener('keydown', manejarTecla)
     return () => {
       document.removeEventListener('keydown', manejarTecla)
-      document.body.style.overflow = ''
+      document.documentElement.style.overflow = overflowAnteriorHtml
+      document.body.style.overflow = overflowAnteriorBody
     }
   }, [onCerrar])
 
