@@ -17,6 +17,7 @@ import com.agrandaditostienda.repository.ProductoRepository;
 import com.agrandaditostienda.repository.VarianteProductoRepository;
 import com.agrandaditostienda.security.Seguridad;
 import com.agrandaditostienda.security.UsuarioPrincipal;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@RequiredArgsConstructor
 @Service
 public class CatalogoService {
 
@@ -33,20 +35,6 @@ public class CatalogoService {
     private final CategoriaMapper categoriaMapper;
     private final ProductoMapper productoMapper;
     private final TiendaService tiendaService;
-
-    public CatalogoService(CategoriaRepository categoriaRepository,
-                           ProductoRepository productoRepository,
-                           VarianteProductoRepository varianteProductoRepository,
-                           CategoriaMapper categoriaMapper,
-                           ProductoMapper productoMapper,
-                           TiendaService tiendaService) {
-        this.categoriaRepository = categoriaRepository;
-        this.productoRepository = productoRepository;
-        this.varianteProductoRepository = varianteProductoRepository;
-        this.categoriaMapper = categoriaMapper;
-        this.productoMapper = productoMapper;
-        this.tiendaService = tiendaService;
-    }
 
     @Transactional(readOnly = true)
     public List<CategoriaDTO> listarCategoriasDeTienda(String tiendaSlug) {

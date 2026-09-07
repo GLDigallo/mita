@@ -24,6 +24,7 @@ import com.agrandaditostienda.repository.VentaRepository;
 import com.agrandaditostienda.security.Seguridad;
 import com.agrandaditostienda.security.UsuarioPrincipal;
 import jakarta.persistence.EntityManager;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +36,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@RequiredArgsConstructor
 @Service
 public class VentaService {
 
@@ -45,22 +47,6 @@ public class VentaService {
     private final VentaMapper ventaMapper;
     private final ConsultaMapper consultaMapper;
     private final EntityManager entityManager;
-
-    public VentaService(VentaRepository ventaRepository,
-                        ConsultaRepository consultaRepository,
-                        ProductoRepository productoRepository,
-                        VarianteProductoRepository varianteProductoRepository,
-                        VentaMapper ventaMapper,
-                        ConsultaMapper consultaMapper,
-                        EntityManager entityManager) {
-        this.ventaRepository = ventaRepository;
-        this.consultaRepository = consultaRepository;
-        this.productoRepository = productoRepository;
-        this.varianteProductoRepository = varianteProductoRepository;
-        this.ventaMapper = ventaMapper;
-        this.consultaMapper = consultaMapper;
-        this.entityManager = entityManager;
-    }
 
     @Transactional
     public VentaDTO crearDesdeConsulta(Long consultaId, String empleado) {

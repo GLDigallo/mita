@@ -1,5 +1,6 @@
 package com.agrandaditostienda.controller;
 
+import com.agrandaditostienda.service.CloudinaryStorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,12 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/upload")
 public class UploadController {
+
+    private final CloudinaryStorageService storage;
+
+    public UploadController(CloudinaryStorageService storage) {
+        this.storage = storage;
+    }
 
     @PostMapping("/imagen")
     public ResponseEntity<Map<String, String>> subirImagen(@RequestParam("archivo") MultipartFile archivo) throws IOException {
@@ -36,6 +43,11 @@ public class UploadController {
         if (archivo.getSize() > 10 * 1024 * 1024) {
             return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
                     .body(Map.of("message", "La imagen no puede superar 10MB"));
+        }
+
+        if (storage.estaConfigurado()) {
+            String url = storage.subirImagen(archivo.getBytes());
+            return ResponseEntity.ok(Map.of("url", url));
         }
 
         String contentType = archivo.getContentType();

@@ -10,9 +10,10 @@ import com.agrandaditostienda.repository.CategoriaRepository;
 import com.agrandaditostienda.repository.ProductoRepository;
 import com.agrandaditostienda.repository.TiendaRepository;
 import com.agrandaditostienda.repository.VarianteProductoRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +22,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
+@RequiredArgsConstructor
 @Component
+@Order(1)
 public class DataInitializer implements CommandLineRunner {
-
-    private static final Logger log = LoggerFactory.getLogger(DataInitializer.class);
 
     private static final List<String> COLORES_BEBE = List.of("Rosa", "Celeste");
     private static final List<String> COLORES_NINOS = List.of("Azul", "Gris");
@@ -36,18 +38,6 @@ public class DataInitializer implements CommandLineRunner {
     private final ProductoRepository productoRepository;
     private final VarianteProductoRepository varianteProductoRepository;
     private final JdbcTemplate jdbcTemplate;
-
-    public DataInitializer(TiendaRepository tiendaRepository,
-                           CategoriaRepository categoriaRepository,
-                           ProductoRepository productoRepository,
-                           VarianteProductoRepository varianteProductoRepository,
-                           JdbcTemplate jdbcTemplate) {
-        this.tiendaRepository = tiendaRepository;
-        this.categoriaRepository = categoriaRepository;
-        this.productoRepository = productoRepository;
-        this.varianteProductoRepository = varianteProductoRepository;
-        this.jdbcTemplate = jdbcTemplate;
-    }
 
     @Override
     public void run(String... args) {

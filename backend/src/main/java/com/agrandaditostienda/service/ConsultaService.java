@@ -30,12 +30,12 @@ import com.agrandaditostienda.repository.VarianteProductoRepository;
 import com.agrandaditostienda.repository.VentaRepository;
 import com.agrandaditostienda.security.Seguridad;
 import com.agrandaditostienda.security.UsuarioPrincipal;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.net.URLEncoder;
@@ -52,10 +52,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class ConsultaService {
 
-    private static final Logger log = LoggerFactory.getLogger(ConsultaService.class);
     private static final Duration TIEMPO_CANCELACION_PENDIENTE = Duration.ofHours(48);
 
     private static final Map<EstadoConsulta, Set<EstadoConsulta>> TRANSICIONES_VALIDAS = new EnumMap<>(EstadoConsulta.class);
@@ -73,24 +74,6 @@ public class ConsultaService {
     private final ConsultaMapper consultaMapper;
     private final ConsultaVersionRepository consultaVersionRepository;
     private final VentaRepository ventaRepository;
-
-    public ConsultaService(ConsultaRepository consultaRepository,
-                           ClienteRepository clienteRepository,
-                           ProductoRepository productoRepository,
-                           VarianteProductoRepository varianteProductoRepository,
-                           TiendaService tiendaService,
-                           ConsultaMapper consultaMapper,
-                           ConsultaVersionRepository consultaVersionRepository,
-                           VentaRepository ventaRepository) {
-        this.consultaRepository = consultaRepository;
-        this.clienteRepository = clienteRepository;
-        this.productoRepository = productoRepository;
-        this.varianteProductoRepository = varianteProductoRepository;
-        this.tiendaService = tiendaService;
-        this.consultaMapper = consultaMapper;
-        this.consultaVersionRepository = consultaVersionRepository;
-        this.ventaRepository = ventaRepository;
-    }
 
     @Transactional
     public ConsultaCreadaDTO crear(CrearConsultaRequest request) {
