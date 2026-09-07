@@ -23,22 +23,14 @@ public class CloudinaryStorageService {
     private final Cloudinary cloudinary;
     private final boolean configurado;
 
-    public CloudinaryStorageService(@Value("${cloudinary.cloud-name:}") String cloudName,
-                                    @Value("${cloudinary.api-key:}") String apiKey,
-                                    @Value("${cloudinary.api-secret:}") String apiSecret) {
-        boolean hayCredenciales = cloudName != null && !cloudName.isBlank()
-                && apiKey != null && !apiKey.isBlank()
-                && apiSecret != null && !apiSecret.isBlank();
-        if (!hayCredenciales) {
+    public CloudinaryStorageService(@Value("${cloudinary.url:}") String cloudinaryUrl) {
+        if (cloudinaryUrl == null || cloudinaryUrl.isBlank()) {
             this.cloudinary = null;
             this.configurado = false;
             log.info("Cloudinary no configurado: las subidas usan el fallback base64 y no se migran imágenes.");
             return;
         }
-        this.cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", cloudName,
-                "api_key", apiKey,
-                "api_secret", apiSecret));
+        this.cloudinary = new Cloudinary(cloudinaryUrl);
         this.configurado = true;
     }
 
