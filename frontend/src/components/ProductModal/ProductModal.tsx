@@ -108,6 +108,9 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
               {producto.categoriaNombre}
             </p>
             <h2 className="mb-3 text-[30px] tracking-[-0.02em]">{producto.nombre}</h2>
+            {producto.descripcion && (
+              <p className="mb-4 text-[15px] leading-relaxed text-[var(--color-texto-suave)]">{producto.descripcion}</p>
+            )}
             <p className="mb-4 text-[28px] font-bold">{formatearPrecio(producto.precio)}</p>
 
             {variantes.length === 0 && (

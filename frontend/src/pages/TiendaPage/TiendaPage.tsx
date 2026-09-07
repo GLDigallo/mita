@@ -27,6 +27,7 @@ function TiendaPage() {
   const { slug } = useParams()
   const [categoria, setCategoria] = useState('')
   const [genero, setGenero] = useState('')
+  const [hayDestacados, setHayDestacados] = useState(false)
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [carrito, setCarrito] = useState<CarritoItem[]>([])
   const [carritoAbierto, setCarritoAbierto] = useState(false)
@@ -85,11 +86,18 @@ function TiendaPage() {
   useEffect(() => {
     setCategoria('')
     setGenero('')
+    setHayDestacados(false)
     setProductoSeleccionado(null)
     setCarrito([])
     setCarritoAbierto(false)
     window.scrollTo(0, 0)
   }, [slug])
+
+  useEffect(() => {
+    if (productos.data && categoria === '' && genero === '') {
+      setHayDestacados(productos.data.some((p) => p.destacado))
+    }
+  }, [productos.data, categoria, genero])
 
   const cantidadCarrito = carrito.reduce((suma, item) => suma + item.cantidad, 0)
 
@@ -205,6 +213,7 @@ function TiendaPage() {
                 categorias.data && (
                   <CategoryFilter
                     categorias={categorias.data}
+                    tieneDestacados={hayDestacados}
                     seleccionada={categoria}
                     onSeleccionar={setCategoria}
                     colorPrimario={tiendaActual.colorPrimario}

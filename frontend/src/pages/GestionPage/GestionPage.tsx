@@ -7,7 +7,8 @@ import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary'
 import VentaArmado from '../../components/VentaArmado/VentaArmado'
 import VentaDetalle from '../../components/VentaDetalle/VentaDetalle'
 import EmptyState from '../../components/EmptyState/EmptyState'
-import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
+import ToastHost from '../../components/Toast/Toast'
+import { useToasts } from '../../hooks/useToasts'
 import PromosView from './PromosView/PromosView'
 import MetricasView from './MetricasView/MetricasView'
 import ProductosView from './ProductosView/ProductosView'
@@ -76,7 +77,7 @@ function GestionPage() {
   const [busquedaAplicada, setBusquedaAplicada] = useState('')
   const [consultas, setConsultas] = useState<ConsultaLista[]>([])
   const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState('')
+  const { toasts, mostrar, quitar } = useToasts()
 
   const [ventaEstadoFiltro, setVentaEstadoFiltro] = useState('')
   const [ventaTiendaIdFiltro, setVentaTiendaIdFiltro] = useState('')
@@ -84,7 +85,6 @@ function GestionPage() {
   const [ventaBusquedaAplicada, setVentaBusquedaAplicada] = useState('')
   const [ventas, setVentas] = useState<VentaLista[]>([])
   const [cargandoVentas, setCargandoVentas] = useState(true)
-  const [errorVentas, setErrorVentas] = useState('')
 
   const [consultasTodas, setConsultasTodas] = useState<ConsultaLista[]>([])
   const [ventasTodas, setVentasTodas] = useState<VentaLista[]>([])
@@ -164,7 +164,6 @@ function GestionPage() {
 
   const cargarConsultas = useCallback(async () => {
     setCargando(true)
-    setError('')
     try {
       const datos = await fetchConsultas({
         estado: estadoFiltro,
@@ -176,7 +175,7 @@ function GestionPage() {
         consultasSnapshot.current = datos.filter((c) => c.estado === 'PENDIENTE').length
       }
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
       setConsultas([])
     } finally {
       setCargando(false)
@@ -193,7 +192,6 @@ function GestionPage() {
 
   const cargarVentas = useCallback(async () => {
     setCargandoVentas(true)
-    setErrorVentas('')
     try {
       const datos = await fetchVentas({
         estado: ventaEstadoFiltro,
@@ -202,7 +200,7 @@ function GestionPage() {
       })
       setVentas(datos)
     } catch (err) {
-      setErrorVentas((err as Error).message)
+      mostrar('error', (err as Error).message)
       setVentas([])
     } finally {
       setCargandoVentas(false)
@@ -370,7 +368,7 @@ function GestionPage() {
         setDetalle(actualizada)
       }
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setCambiandoEstado(false)
     }
@@ -395,7 +393,7 @@ function GestionPage() {
       }
       cargarVentas()
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setCambiandoEstado(false)
     }
@@ -420,7 +418,7 @@ function GestionPage() {
       }
       cargarVentas()
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setCambiandoEstado(false)
     }
@@ -445,7 +443,7 @@ function GestionPage() {
       }
       cargarVentas()
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setCambiandoEstado(false)
     }
@@ -468,7 +466,7 @@ function GestionPage() {
         })
       }
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setCambiandoEstado(false)
     }
@@ -709,8 +707,6 @@ function GestionPage() {
               )}
             </form>
 
-            {error && <ErrorMessage message={error} />}
-
             {cargando ? (
               <div className="flex flex-col gap-2.5">
                 {Array.from({ length: 6 }).map((_, indice) => (
@@ -784,8 +780,6 @@ function GestionPage() {
                 </select>
               )}
             </form>
-
-            {errorVentas && <ErrorMessage message={errorVentas} />}
 
             {cargandoVentas ? (
               <div className="flex flex-col gap-2.5">
@@ -896,6 +890,8 @@ function GestionPage() {
           onEditar={manejarEditarVenta}
         />
       )}
+
+      <ToastHost toasts={toasts} onCerrar={quitar} />
     </div>
   )
 }

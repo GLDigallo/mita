@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import ConfirmDialog from '../../../components/ConfirmDialog/ConfirmDialog'
 import EmptyState from '../../../components/EmptyState/EmptyState'
-import ErrorMessage from '../../../components/ErrorMessage/ErrorMessage'
+import ToastHost from '../../../components/Toast/Toast'
+import { useToasts } from '../../../hooks/useToasts'
 import {
   actualizarProducto,
   crearCategoria,
@@ -68,7 +69,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
   const [productos, setProductos] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [cargando, setCargando] = useState(true)
-  const [error, setError] = useState('')
+  const { toasts, mostrar, quitar } = useToasts()
 
   const [catFiltro, setCatFiltro] = useState('')
   const [generoFiltro, setGeneroFiltro] = useState('')
@@ -88,7 +89,6 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
   const cargar = useCallback(async () => {
     if (!tiendaSlug) return
     setCargando(true)
-    setError('')
     try {
       const [prods, cats] = await Promise.all([
         fetchProductos(tiendaSlug, catFiltro, generoFiltro),
@@ -97,7 +97,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
       setProductos(prods)
       setCategorias(cats)
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
       setProductos([])
     } finally {
       setCargando(false)
@@ -183,12 +183,12 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
     if (!editando) return
     const d = editando.datos
     if (!d.nombre.trim() || !d.precio || !d.categoriaSlug) {
-      setError('Completá nombre, precio y categoría')
+      mostrar('error', 'Completá nombre, precio y categoría')
       return
     }
     const precio = parseFloat(d.precio)
     if (isNaN(precio) || precio <= 0) {
-      setError('El precio debe ser un número mayor a 0')
+      mostrar('error', 'El precio debe ser un número mayor a 0')
       return
     }
     const variantesIncompletas = d.variantes.filter(
@@ -217,7 +217,6 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
     }
 
     setGuardando(true)
-    setError('')
     try {
       if (editando.modo === 'crear') {
         await crearProducto(tiendaSlug, payload)
@@ -228,7 +227,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
       setVista('lista')
       cargar()
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setGuardando(false)
     }
@@ -242,7 +241,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
       setConfirmarEliminar(null)
       cargar()
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setGuardando(false)
     }
@@ -253,12 +252,11 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
 
   async function handleSubirImagen(archivo: File) {
     setSubiendoImagen(true)
-    setError('')
     try {
       const resultado = await subirImagen(archivo)
       actualizarCampo('imagen', resultado.url)
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setSubiendoImagen(false)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -268,14 +266,13 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
   async function crearCategoriaInline(nombre: string): Promise<Categoria | null> {
     if (!nombre.trim()) return null
     setGuardando(true)
-    setError('')
     try {
       await crearCategoria(tiendaSlug, nombre.trim())
       const cats = await fetchCategorias(tiendaSlug)
       setCategorias(cats)
       return cats.find((c) => c.nombre.toLowerCase() === nombre.trim().toLowerCase()) ?? null
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
       return null
     } finally {
       setGuardando(false)
@@ -285,7 +282,6 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
   async function borrarCategoria(cat: Categoria) {
     if (!window.confirm(`¿Eliminar la categoría "${cat.nombre}"?`)) return
     setGuardando(true)
-    setError('')
     try {
       await eliminarCategoria(cat.id)
       if (catFiltro === cat.slug) setCatFiltro('')
@@ -297,7 +293,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
       const prods = await fetchProductos(tiendaSlug, catFiltro === cat.slug ? '' : catFiltro, generoFiltro)
       setProductos(prods)
     } catch (err) {
-      setError((err as Error).message)
+      mostrar('error', (err as Error).message)
     } finally {
       setGuardando(false)
     }
@@ -309,8 +305,6 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
         <div className="mb-5 flex items-center gap-3">
           <h3 className="text-[18px] font-bold">{editando.modo === 'crear' ? 'Nuevo producto' : 'Editar producto'}</h3>
         </div>
-
-        {error && <ErrorMessage message={error} />}
 
         <div className="flex flex-col gap-4">
           <label className="flex flex-col gap-1 text-[13px] font-semibold text-[var(--color-texto-suave)]">
@@ -566,6 +560,8 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
             </button>
           </div>
         </div>
+
+        <ToastHost toasts={toasts} onCerrar={quitar} />
       </div>
     )
   }
@@ -594,8 +590,6 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
         </select>
       </div>
 
-      {error && <ErrorMessage message={error} />}
-
       {cargando ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 5 }).map((_, i) => (
@@ -620,9 +614,16 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
                     {p.variantes?.length > 0 ? ` · ${totalStock(p)} uds en stock` : ''}
                   </p>
                   {p.variantes?.length > 0 && (
-                    <p className="mt-0.5 text-[12px] text-[var(--color-texto-suave)] opacity-70">
-                      {p.variantes.map((v) => `${v.color}/${v.talle}`).join(', ')}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {p.variantes.map((v) => (
+                        <span
+                          key={`${v.color}/${v.talle}`}
+                          className="inline-flex items-center whitespace-nowrap rounded-full border border-[var(--color-borde)] bg-[var(--color-fondo)] px-2 py-0.5 text-[11px] font-medium text-[var(--color-texto-suave)]"
+                        >
+                          {v.color} · {v.talle}
+                        </span>
+                      ))}
+                    </div>
                   )}
                 </div>
               </div>
@@ -650,6 +651,8 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
           cargando={guardando}
         />
       )}
+
+      <ToastHost toasts={toasts} onCerrar={quitar} />
     </div>
   )
 }
