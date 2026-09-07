@@ -30,8 +30,16 @@ public class CloudinaryStorageService {
             log.info("Cloudinary no configurado: las subidas usan el fallback base64 y no se migran imágenes.");
             return;
         }
-        this.cloudinary = new Cloudinary(cloudinaryUrl);
-        this.configurado = true;
+        Cloudinary instancia;
+        try {
+            instancia = new Cloudinary(cloudinaryUrl);
+        } catch (IllegalArgumentException e) {
+            instancia = null;
+            log.warn("CLOUDINARY_URL mal formada (se ignora, sin exponer credenciales): "
+                    + "las subidas usan el fallback base64 y no se migran imágenes.");
+        }
+        this.cloudinary = instancia;
+        this.configurado = instancia != null;
     }
 
     public boolean estaConfigurado() {
