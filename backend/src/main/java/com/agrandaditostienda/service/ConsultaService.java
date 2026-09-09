@@ -184,6 +184,9 @@ public class ConsultaService {
                     "No se puede pasar de " + etiquetaEstado(actual) + " a " + etiquetaEstado(estado));
         }
         consulta.setEstado(estado);
+        if (estado == EstadoConsulta.CANCELADA) {
+            consulta.setFechaCancelacion(Instant.now());
+        }
         Consulta guardada = consultaRepository.save(consulta);
         var infoEstado = resolveEditableInfo(guardada);
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoEstado.editable(), infoEstado.ventaEstado(), infoEstado.ventaId());
@@ -225,6 +228,7 @@ public class ConsultaService {
         }
         for (Consulta consulta : vencidas) {
             consulta.setEstado(EstadoConsulta.CANCELADA);
+            consulta.setFechaCancelacion(Instant.now());
         }
         consultaRepository.saveAll(vencidas);
         log.info("{} consulta(s) PENDIENTE canceladas automáticamente por superar las 48h", vencidas.size());
@@ -250,8 +254,8 @@ public class ConsultaService {
 
     private void validarModificable(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
-            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hs(consulta)) {
-                // permitir editar consultas canceladas dentro de las 48h
+            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hsCancelacion(consulta)) {
+                // permitir editar consultas canceladas dentro de las 48h desde la cancelación
             } else {
                 throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
             }
@@ -266,7 +270,7 @@ public class ConsultaService {
 
     private EditableInfo resolveEditableInfo(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
-            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hs(consulta)) {
+            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hsCancelacion(consulta)) {
                 var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
                 return new EditableInfo(true, null, venta != null ? venta.getId() : null);
             }
@@ -291,6 +295,13 @@ public class ConsultaService {
     private boolean dentrodDe48hs(Consulta consulta) {
         java.time.Instant ahora = java.time.Instant.now();
         return java.time.Duration.between(consulta.getFechaConsulta(), ahora).toHours() < 48;
+    }
+
+    private boolean dentrodDe48hsCancelacion(Consulta consulta) {
+        Instant base = consulta.getFechaCancelacion() != null
+                ? consulta.getFechaCancelacion()
+                : consulta.getFechaConsulta();
+        return Instant.now().isBefore(base.plus(TIEMPO_CANCELACION_PENDIENTE));
     }
 
     private void guardarVersion(Consulta consulta, MotivoModificacion motivo, String empleado,

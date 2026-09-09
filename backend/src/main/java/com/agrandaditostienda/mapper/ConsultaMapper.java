@@ -10,15 +10,20 @@ import com.agrandaditostienda.entity.Consulta;
 import com.agrandaditostienda.entity.ConsultaVersion;
 import com.agrandaditostienda.entity.ConsultaVersionCambio;
 import com.agrandaditostienda.entity.ConsultaVersionItem;
+import com.agrandaditostienda.entity.EstadoConsulta;
 import com.agrandaditostienda.entity.ProductoConsultado;
 import com.agrandaditostienda.entity.VarianteProducto;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
 @Component
 public class ConsultaMapper {
+
+    private static final Duration TIEMPO_LIMITE = Duration.ofHours(48);
 
     private final VarianteMapper varianteMapper;
 
@@ -55,8 +60,22 @@ public class ConsultaMapper {
                 totalItems,
                 productos,
                 ventaAsociada,
-                ventaId
+                ventaId,
+                fechaLimite(consulta, editable)
         );
+    }
+
+    private Instant fechaLimite(Consulta consulta, boolean editable) {
+        if (consulta.getEstado() == EstadoConsulta.PENDIENTE) {
+            return consulta.getFechaConsulta().plus(TIEMPO_LIMITE);
+        }
+        if (consulta.getEstado() == EstadoConsulta.CANCELADA && editable) {
+            Instant base = consulta.getFechaCancelacion() != null
+                    ? consulta.getFechaCancelacion()
+                    : consulta.getFechaConsulta();
+            return base.plus(TIEMPO_LIMITE);
+        }
+        return null;
     }
 
     public ConsultaVersionDTO toVersionDTO(Consulta consulta, ConsultaVersion version) {

@@ -94,6 +94,7 @@ export interface ConsultaDetalle extends ConsultaLista {
   productos: ProductoConsultado[]
   ventaAsociada: EstadoVenta | null
   ventaId: number | null
+  fechaLimite: string | null
 }
 
 export interface VentaLista {

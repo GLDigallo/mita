@@ -381,13 +381,23 @@ function VistaActual({
   const [itemsExpandidos, setItemsExpandidos] = useState<Set<number>>(new Set())
 
   const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta?.estado)
-  const esCanceladaReciente =
-    consulta?.estado === 'CANCELADA' &&
-    (() => {
-      if (!consulta?.fechaConsulta) return false
-      const horas = (Date.now() - new Date(consulta.fechaConsulta).getTime()) / (1000 * 60 * 60)
-      return horas < 48
-    })()
+  const esCanceladaReciente = consulta?.estado === 'CANCELADA' && !!consulta?.editable && !!consulta?.fechaLimite
+
+  const [ahora, setAhora] = useState(() => Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setAhora(Date.now()), 30_000)
+    return () => clearInterval(id)
+  }, [])
+
+  function textoRestante(limite: string | null | undefined): string {
+    if (!limite) return ''
+    const ms = new Date(limite).getTime() - ahora
+    if (ms <= 0) return 'menos de 1 minuto'
+    const totalMin = Math.ceil(ms / 60_000)
+    const horas = Math.floor(totalMin / 60)
+    const minutos = totalMin % 60
+    return horas > 0 ? `${horas} h ${minutos} min` : `${minutos} min`
+  }
 
   const telefonoDigits = (consulta.clienteTelefono ?? '').replace(/\D/g, '')
   const productosResumen = (consulta.productos ?? [])
@@ -428,6 +438,24 @@ function VistaActual({
         </div>
         <EstadoBadge estado={consulta.estado} />
       </header>
+
+      {(consulta.estado === 'PENDIENTE' || esCanceladaReciente) && consulta.fechaLimite && (
+        <div
+          className="flex min-h-[38px] items-center gap-2 border-b border-[var(--color-borde)] px-5 py-2 text-[13px] font-semibold"
+          style={{
+            background: 'color-mix(in srgb, var(--gestion-color, var(--color-marca)) 10%, transparent)',
+            color: 'var(--gestion-color, var(--color-marca))',
+          }}
+        >
+          <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          {consulta.estado === 'PENDIENTE'
+            ? `Se cancela automáticamente en ${textoRestante(consulta.fechaLimite)}`
+            : `Podés editarla todavía · quedan ${textoRestante(consulta.fechaLimite)}`}
+        </div>
+      )}
 
       <section className="border-b border-[var(--color-borde)] px-5 py-3.5">
         <p className={tituloSeccion}>Contacto</p>

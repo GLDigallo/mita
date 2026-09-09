@@ -95,6 +95,7 @@ public class DataInitializer implements CommandLineRunner {
         jdbcTemplate.execute("create unique index if not exists uk_venta_consulta on venta (consulta_id)");
         jdbcTemplate.execute("create unique index if not exists uk_cv_consulta_version on consulta_version (consulta_id, version)");
         jdbcTemplate.execute("alter table consulta add column if not exists version integer not null default 0");
+        jdbcTemplate.execute("alter table consulta add column if not exists fecha_cancelacion timestamp");
     }
 
     private void asegurarWhatsappReal() {

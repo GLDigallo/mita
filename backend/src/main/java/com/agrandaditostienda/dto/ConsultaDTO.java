@@ -24,6 +24,7 @@ public record ConsultaDTO(
         int totalItems,
         List<ProductoConsultadoDTO> productos,
         String ventaAsociada,
-        Long ventaId
+        Long ventaId,
+        Instant fechaLimite
 ) {
 }

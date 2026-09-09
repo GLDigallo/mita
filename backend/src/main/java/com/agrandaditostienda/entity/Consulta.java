@@ -46,6 +46,9 @@ public class Consulta {
     @Column(nullable = false, updatable = false)
     private Instant fechaConsulta;
 
+    @Column(name = "fecha_cancelacion")
+    private Instant fechaCancelacion;
+
     @Column(length = 1000)
     private String observaciones;
 
