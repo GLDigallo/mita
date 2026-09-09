@@ -18,6 +18,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,10 @@ public class DataInitializer implements CommandLineRunner {
     private static final List<String> COLORES_PREADO = List.of("Rosa", "Violeta");
     private static final List<String> COLORES_TEENS = List.of("Negro", "Blanco");
 
+    private static final String WHATSAPP_REAL = "5493795107224";
+    private static final List<String> WHATSAPP_PRUEBA = List.of(
+            "5491112345601", "5491112345602", "5491112345603", "5491112345604");
+
     private final TiendaRepository tiendaRepository;
     private final CategoriaRepository categoriaRepository;
     private final ProductoRepository productoRepository;
@@ -42,6 +47,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     public void run(String... args) {
         asegurarEsquemaBase();
+        asegurarWhatsappReal();
         if (tiendaRepository.count() > 0) {
             log.info("Base de datos ya contiene datos, se omite el seed.");
             return;
@@ -52,25 +58,25 @@ public class DataInitializer implements CommandLineRunner {
                 "Ropa y accesorios pensados para los más chiquitos de la casa. Algodón suave, colores tiernos y diseños que acompañan cada etapa del bebé.",
                 "#F59E6B", "#B85C38",
                 "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=1200&h=800&fit=crop&q=70",
-                "5491112345601", 1);
+                WHATSAPP_REAL, 1);
 
         Tienda guri = crearTienda("Mokositos", "mokositos-ninos", RangoEdad.INFANTIL, "Niños 2-8 años",
                 "Moda infantil para pibes y pibas que juegan, corren y crecen. Prendas resistentes, cómodas y con onda, hechas para la aventura de cada día.",
                 "#2A9D8F", "#1C6B61",
                 "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=1200&h=800&fit=crop&q=70",
-                "5491112345602", 2);
+                WHATSAPP_REAL, 2);
 
         Tienda chinita = crearTienda("Agrandaditos", "agrandaditos", RangoEdad.PREADOLESCENTES, "Preadolescentes 8-12 años",
                 "Ropa con actitud para los que ya no son tan chicos: estilos urbanos y divertidos para pibes y pibas de 8 a 12.",
                 "#E0568C", "#A1285A",
                 "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=1200&h=800&fit=crop&q=70",
-                "5491112345603", 3);
+                WHATSAPP_REAL, 3);
 
         Tienda pibe = crearTienda("Mood Teens", "mood-teens", RangoEdad.ADOLESCENTES, "Adolescentes 12-16 años",
                 "La onda urbana para pibes y pibas que marcan tendencia. Oversize, streetwear y básicos con actitud para la etapa más canchera.",
                 "#4F46E5", "#1E1B4B",
                 "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&h=800&fit=crop&q=70",
-                "5491112345604", 4);
+                WHATSAPP_REAL, 4);
 
         tiendaRepository.saveAll(List.of(nunu, guri, chinita, pibe));
 
@@ -89,6 +95,20 @@ public class DataInitializer implements CommandLineRunner {
         jdbcTemplate.execute("create unique index if not exists uk_venta_consulta on venta (consulta_id)");
         jdbcTemplate.execute("create unique index if not exists uk_cv_consulta_version on consulta_version (consulta_id, version)");
         jdbcTemplate.execute("alter table consulta add column if not exists version integer not null default 0");
+    }
+
+    private void asegurarWhatsappReal() {
+        List<Object[]> parametros = new ArrayList<>();
+        for (String nro : WHATSAPP_PRUEBA) {
+            parametros.add(new Object[]{WHATSAPP_REAL, nro});
+        }
+        int corregidas = 0;
+        for (Object[] p : parametros) {
+            corregidas += jdbcTemplate.update("update tienda set whatsapp = ? where whatsapp = ?", p);
+        }
+        if (corregidas > 0) {
+            log.info("Número de WhatsApp corregido al real en {} tienda(s).", corregidas);
+        }
     }
 
     private Tienda crearTienda(String nombre, String slug, RangoEdad rango, String etiqueta,

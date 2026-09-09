@@ -20,7 +20,7 @@ function StoreCard({ tienda }: PropsStoreCard) {
           alt={`${tienda.nombre} — ${tienda.etiquetaEdad}`}
           loading="lazy"
         />
-        <span className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full border border-white/55 bg-black/60 px-3 py-1.5 text-[12.5px] font-bold text-white shadow-sm backdrop-blur-sm">
+        <span className="absolute left-1/2 top-3 max-w-full -translate-x-1/2 whitespace-nowrap rounded-full border border-white/55 bg-black/60 px-2.5 py-1.5 text-[12.5px] font-bold text-white shadow-sm backdrop-blur-sm max-[479px]:px-2 max-[479px]:text-[9px] sm:px-3 sm:text-[13px]">
           {tienda.etiquetaEdad}
         </span>
         <div className="absolute inset-x-0 bottom-0 flex items-end justify-center bg-[linear-gradient(180deg,transparent_0%,rgba(15,15,25,0.55)_55%,rgba(15,15,25,0.8)_100%)] p-[44px_18px_18px] text-center">
