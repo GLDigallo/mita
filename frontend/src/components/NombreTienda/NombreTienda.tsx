@@ -38,13 +38,14 @@ function NombreTienda({ tienda, className }: PropsNombreTienda) {
 
   if (tienda.slug === 'mood-teens') {
     return (
-      <span className={`inline-flex flex-wrap items-center gap-[0.24em] leading-[1.05] ${className ?? ''}`}>
+      <span className={`inline-flex flex-wrap items-baseline gap-[0.22em] leading-[1.05] ${className ?? ''}`}>
         <span
-          className="font-[var(--font-anton)] font-normal uppercase tracking-[0.1em] text-white"
+          className="font-[var(--font-anton)] font-normal uppercase tracking-[0.06em] text-white"
           style={{
-            WebkitTextStroke: '0.045em #000',
+            WebkitTextStroke: '0.05em #000',
             paintOrder: 'stroke fill',
-            textShadow: '0 2px 6px rgba(0,0,0,0.35)',
+            textShadow:
+              '0.04em 0 0 #000, -0.04em 0 0 #000, 0 0.04em 0 #000, 0 -0.04em 0 #000, 0 0.06em 0.03em rgba(0,0,0,0.35)',
           }}
         >
           {primerPalabra}
