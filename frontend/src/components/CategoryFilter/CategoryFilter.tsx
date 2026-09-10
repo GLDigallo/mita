@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { Categoria } from '../../types'
+import { textoConContraste } from '../../utils/textoContraste'
 
 interface PropsCategoryFilter {
   categorias: Categoria[]
@@ -15,9 +16,10 @@ const fila =
 const chipBase =
   'inline-flex min-h-[42px] shrink-0 items-center justify-center whitespace-nowrap rounded-[var(--radius-pill)] border border-[var(--color-borde)] bg-[var(--color-superficie)] px-[18px] text-[14.5px] font-semibold text-[var(--color-texto-suave)] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:-translate-y-px hover:border-[var(--color-texto)] hover:text-[var(--color-texto)]'
 
-const chipActivo = 'border-[var(--chip-color)] bg-[var(--chip-color)] text-white'
+const chipActivo = 'border-[var(--chip-color)] bg-[var(--chip-color)]'
 
 function CategoryFilter({ categorias, tieneDestacados, seleccionada, onSeleccionar, colorPrimario }: PropsCategoryFilter) {
+  const textoActivo = textoConContraste(colorPrimario)
   const renderChip = (slug: string, etiqueta: string, extraClase?: string) => {
     const activo = seleccionada === slug
     const estilo = (activo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined
@@ -25,7 +27,7 @@ function CategoryFilter({ categorias, tieneDestacados, seleccionada, onSeleccion
       <button
         key={slug}
         type="button"
-        className={`${chipBase} ${activo ? chipActivo : ''} ${extraClase ?? ''}`}
+        className={`${chipBase} ${activo ? `${chipActivo} ${textoActivo}` : ''} ${extraClase ?? ''}`}
         style={estilo}
         onClick={() => onSeleccionar(activo ? '' : slug)}
         aria-pressed={activo}

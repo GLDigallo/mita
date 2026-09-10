@@ -114,7 +114,6 @@ function TiendaPage() {
       return [...prev, item]
     })
     setProductoSeleccionado(null)
-    setCarritoAbierto(true)
   }
 
   const quitarDelCarrito = (indice: number) => {

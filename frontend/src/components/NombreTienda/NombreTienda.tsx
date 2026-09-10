@@ -18,7 +18,7 @@ function LetrasDisney({ nombre }: PropsLetras) {
             transform: `rotate(${((i * 47) % 9) - 4}deg) translateY(${(((i + 1) * 31) % 5) - 2}px)`,
             WebkitTextStroke: '2px #23263a',
             textShadow:
-              '1px 0 0 #ffffff, -1px 0 0 #ffffff, 0 1px 0 #ffffff, 0 -1px 0 #ffffff, 2px 0 0 #ffffff, -2px 0 0 #ffffff, 0 2px 0 #ffffff, 0 -2px 0 #ffffff, 3px 0 0 #23263a, -3px 0 0 #23263a, 0 3px 0 #23263a, 0 -3px 0 #23263a, 2px 2px 0 #23263a, -2px 2px 0 #23263a, 2px -2px 0 #23263a, -2px -2px 0 #23263a, 0 4px 0 #2a2e45, 0 6px 0 #1e2233, 0 8px 14px rgba(0,0,0,0.35)',
+              '3px 0 0 #23263a, -3px 0 0 #23263a, 0 3px 0 #23263a, 0 -3px 0 #23263a, 2px 2px 0 #23263a, -2px 2px 0 #23263a, 2px -2px 0 #23263a, -2px -2px 0 #23263a, 0 4px 0 #2a2e45, 0 6px 0 #1e2233, 0 8px 14px rgba(0,0,0,0.35)',
           }}
         >
           {letra}

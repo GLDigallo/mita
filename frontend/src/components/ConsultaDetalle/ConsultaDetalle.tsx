@@ -601,9 +601,14 @@ function VistaActual({
 
           <div className="flex flex-col gap-2 border-t border-[var(--color-borde)] py-3 pb-1">
             {!consulta?.ventaAsociada && consulta?.editable && (
-              <button type="button" className={`${btnSecundario} w-full`} onClick={() => onArmarVenta(consulta)} disabled={cambiandoEstado}>
-                Armar venta
-              </button>
+              <>
+                <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
+                  Editar consulta
+                </button>
+                <button type="button" className={`${btnConfirmar} w-full`} onClick={() => onArmarVenta(consulta)} disabled={cambiandoEstado}>
+                  Armar venta
+                </button>
+              </>
             )}
 
             {consulta?.ventaAsociada === 'EN_PREPARACION' && (
