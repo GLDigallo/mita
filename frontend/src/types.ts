@@ -144,16 +144,3 @@ export interface Usuario {
   tiendaSlug: string
   tiendaNombre: string
 }
-
-export interface ItemCarritoConsulta {
-  productoId: number
-  color: string
-  talle: string
-  cantidad: number
-}
-
-export interface ItemVentaPayload {
-  productoId: number
-  varianteId: number
-  cantidad: number
-}

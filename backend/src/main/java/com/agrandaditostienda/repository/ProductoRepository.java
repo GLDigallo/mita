@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
-    List<Producto> findByTiendaIdAndActivoTrueOrderByCreadoEnDesc(Long tiendaId);
+    List<Producto> findTop20ByTiendaIdAndActivoTrueOrderByCreadoEnDesc(Long tiendaId);
 
     List<Producto> findByTiendaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(Long tiendaId, List<Genero> generos);
 
@@ -20,7 +20,7 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findByTiendaIdAndCategoriaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(
             Long tiendaId, Long categoriaId, List<Genero> generos);
 
-    List<Producto> findByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc();
+    List<Producto> findTop12ByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc();
 
     List<Producto> findTop12ByActivoTrueOrderByCreadoEnDesc();
 

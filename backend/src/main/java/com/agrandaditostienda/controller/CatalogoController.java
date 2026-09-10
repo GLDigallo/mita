@@ -33,11 +33,6 @@ public class CatalogoController {
         return catalogoService.crearCategoria(slug, request);
     }
 
-    @PutMapping("/categorias/{id}")
-    public CategoriaDTO actualizarCategoria(@PathVariable Long id, @Valid @RequestBody CategoriaRequest request) {
-        return catalogoService.actualizarCategoria(id, request);
-    }
-
     @DeleteMapping("/categorias/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void eliminarCategoria(@PathVariable Long id) {

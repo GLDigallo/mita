@@ -14,7 +14,6 @@ import MetricasView from './MetricasView/MetricasView'
 import ProductosView from './ProductosView/ProductosView'
 import {
   cancelarVenta,
-  cambiarEstadoConsulta,
   cambiarFormaPagoConsulta,
   confirmarVenta,
   entregarVenta,
@@ -33,7 +32,6 @@ import {
 import type {
   ConsultaDetalle as ConsultaDetalleTipo,
   ConsultaLista,
-  EstadoConsulta,
   FormaPago,
   MetodoPago,
   Tienda,
@@ -344,34 +342,6 @@ function GestionPage() {
   function manejarBusquedaVentas(evento: React.FormEvent) {
     evento.preventDefault()
     setVentaBusquedaAplicada(ventaBusquedaInput.trim())
-  }
-
-  async function manejarCambioEstado(estado: EstadoConsulta) {
-    if (!detalle) return
-    setCambiandoEstado(true)
-    try {
-      const actualizada = await cambiarEstadoConsulta(detalle.id, estado)
-      const indices = consultas
-        .map((c, i) => (c.id === actualizada.id ? i : -1))
-        .filter((i) => i !== -1)
-      if (indices.length > 0) {
-        setConsultas((actuales) => {
-          const copia = [...actuales]
-          copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
-          return copia
-        })
-      }
-      if (estado === 'CANCELADA' || estado === 'FINALIZADA') {
-        setDetalleId(null)
-        setDetalle(null)
-      } else {
-        setDetalle(actualizada)
-      }
-    } catch (err) {
-      mostrar('error', (err as Error).message)
-    } finally {
-      setCambiandoEstado(false)
-    }
   }
 
   async function manejarConfirmarVenta(metodoPago: MetodoPago) {
@@ -819,7 +789,7 @@ function GestionPage() {
         ) : esDueno && seccion === 'promos' ? (
           <PromosView tiendas={tiendas} usuario={usuario} />
         ) : seccion === 'productos' && esEncargada ? (
-          <ProductosView tienda={tiendaUsuario} esDueno={esDueno} tiendas={tiendas} />
+          <ProductosView tienda={tiendaUsuario} esDueno={esDueno} />
         ) : esDueno && seccion === 'metricas' ? (
           <MetricasView tiendas={tiendas} consultas={consultasTodas} ventas={ventasTodas} />
         ) : (
@@ -854,7 +824,6 @@ function GestionPage() {
           <ConsultaDetalle
             consulta={detalle}
             onCerrar={() => { setDetalleId(null); setErrorDetalle('') }}
-            onCambiarEstado={manejarCambioEstado}
             cambiandoEstado={cambiandoEstado}
             onCambiarFormaPago={manejarCambioFormaPago}
             onArmarVenta={manejarArmarVenta}

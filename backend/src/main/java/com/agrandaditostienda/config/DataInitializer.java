@@ -54,36 +54,36 @@ public class DataInitializer implements CommandLineRunner {
         }
         log.info("Sembrando datos iniciales...");
 
-        Tienda nunu = crearTienda("Mokositos", "mokositos-bebes", RangoEdad.BEBES, "Bebés 0-2 años",
+        Tienda mokositosBebes = crearTienda("Mokositos", "mokositos-bebes", RangoEdad.BEBES, "Bebés 0-2 años",
                 "Ropa y accesorios pensados para los más chiquitos de la casa. Algodón suave, colores tiernos y diseños que acompañan cada etapa del bebé.",
                 "#F59E6B", "#B85C38",
                 "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=1200&h=800&fit=crop&q=70",
                 WHATSAPP_REAL, 1);
 
-        Tienda guri = crearTienda("Mokositos", "mokositos-ninos", RangoEdad.INFANTIL, "Niños 2-8 años",
+        Tienda mokositosNinos = crearTienda("Mokositos", "mokositos-ninos", RangoEdad.INFANTIL, "Niños 2-8 años",
                 "Moda infantil para pibes y pibas que juegan, corren y crecen. Prendas resistentes, cómodas y con onda, hechas para la aventura de cada día.",
                 "#2A9D8F", "#1C6B61",
                 "https://images.unsplash.com/photo-1571945153237-4929e783af4a?w=1200&h=800&fit=crop&q=70",
                 WHATSAPP_REAL, 2);
 
-        Tienda chinita = crearTienda("Agrandaditos", "agrandaditos", RangoEdad.PREADOLESCENTES, "Preadolescentes 8-12 años",
+        Tienda agrandaditos = crearTienda("Agrandaditos", "agrandaditos", RangoEdad.PREADOLESCENTES, "Preadolescentes 8-12 años",
                 "Ropa con actitud para los que ya no son tan chicos: estilos urbanos y divertidos para pibes y pibas de 8 a 12.",
                 "#E0568C", "#A1285A",
                 "https://images.unsplash.com/photo-1518831959646-742c3a14ebf7?w=1200&h=800&fit=crop&q=70",
                 WHATSAPP_REAL, 3);
 
-        Tienda pibe = crearTienda("Mood Teens", "mood-teens", RangoEdad.ADOLESCENTES, "Adolescentes 12-16 años",
+        Tienda moodTeens = crearTienda("Mood Teens", "mood-teens", RangoEdad.ADOLESCENTES, "Adolescentes 12-16 años",
                 "La onda urbana para pibes y pibas que marcan tendencia. Oversize, streetwear y básicos con actitud para la etapa más canchera.",
                 "#4F46E5", "#1E1B4B",
                 "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&h=800&fit=crop&q=70",
                 WHATSAPP_REAL, 4);
 
-        tiendaRepository.saveAll(List.of(nunu, guri, chinita, pibe));
+        tiendaRepository.saveAll(List.of(mokositosBebes, mokositosNinos, agrandaditos, moodTeens));
 
-        seedNunu(nunu);
-        seedGuri(guri);
-        seedChinita(chinita);
-        seedPibe(pibe);
+        seedMokositosBebes(mokositosBebes);
+        seedMokositosNinos(mokositosNinos);
+        seedAgrandaditos(agrandaditos);
+        seedMoodTeens(moodTeens);
 
         log.info("Seed finalizado.");
     }
@@ -118,7 +118,7 @@ public class DataInitializer implements CommandLineRunner {
         return new Tienda(nombre, slug, rango, etiqueta, descripcion, primario, secundario, hero, whatsapp, orden);
     }
 
-    private void seedNunu(Tienda tienda) {
+    private void seedMokositosBebes(Tienda tienda) {
         Map<String, Categoria> categorias = crearCategorias(tienda, "Conjuntos", "Enteritos", "Baberos", "Vestidos", "Pies y accesorios");
         Categoria conjuntos = categorias.get("Conjuntos");
         Categoria enteritos = categorias.get("Enteritos");
@@ -164,7 +164,7 @@ public class DataInitializer implements CommandLineRunner {
                 "3-6 / 6-12 / 12-18", false);
     }
 
-    private void seedGuri(Tienda tienda) {
+    private void seedMokositosNinos(Tienda tienda) {
         Map<String, Categoria> categorias = crearCategorias(tienda, "Remeras", "Pantalones", "Buzos", "Shorts", "Vestidos y polleras", "Conjuntos");
         Categoria remeras = categorias.get("Remeras");
         Categoria pantalones = categorias.get("Pantalones");
@@ -229,7 +229,7 @@ public class DataInitializer implements CommandLineRunner {
                 "2 / 4 / 6 / 8", false);
     }
 
-    private void seedChinita(Tienda tienda) {
+    private void seedAgrandaditos(Tienda tienda) {
         Map<String, Categoria> categorias = crearCategorias(tienda, "Remeras", "Vestidos", "Pantalones", "Polleras", "Buzos", "Shorts");
         Categoria remeras = categorias.get("Remeras");
         Categoria vestidos = categorias.get("Vestidos");
@@ -285,7 +285,7 @@ public class DataInitializer implements CommandLineRunner {
                 "8 / 10 / 12 / 14", false);
     }
 
-    private void seedPibe(Tienda tienda) {
+    private void seedMoodTeens(Tienda tienda) {
         Map<String, Categoria> categorias = crearCategorias(tienda, "Remeras", "Hoodies", "Joggers", "Cargo", "Gorras");
         Categoria remeras = categorias.get("Remeras");
         Categoria hoodies = categorias.get("Hoodies");

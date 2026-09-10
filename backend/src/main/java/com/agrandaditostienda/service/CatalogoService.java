@@ -57,7 +57,7 @@ public class CatalogoService {
         boolean sinCategoria = categoriaSlug == null || categoriaSlug.isBlank();
 
         if (sinCategoria && generos == null) {
-            return toDTOs(productoRepository.findByTiendaIdAndActivoTrueOrderByCreadoEnDesc(tienda.getId()));
+            return toDTOs(productoRepository.findTop20ByTiendaIdAndActivoTrueOrderByCreadoEnDesc(tienda.getId()));
         }
         if (sinCategoria) {
             return toDTOs(productoRepository.findByTiendaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), generos));
@@ -76,7 +76,7 @@ public class CatalogoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarDestacados() {
-        return toDTOs(productoRepository.findByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc());
+        return toDTOs(productoRepository.findTop12ByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc());
     }
 
     @Transactional(readOnly = true)
@@ -211,29 +211,6 @@ public class CatalogoService {
                 .mapToInt(Categoria::getOrden).max().orElse(0);
 
         Categoria categoria = new Categoria(nombre, slug, maxOrden + 1, tienda);
-        categoriaRepository.save(categoria);
-        return categoriaMapper.toDTO(categoria);
-    }
-
-    @Transactional
-    public CategoriaDTO actualizarCategoria(Long categoriaId, CategoriaRequest request) {
-        UsuarioPrincipal usuario = Seguridad.principalRequerido();
-        Categoria categoria = categoriaRepository.findById(categoriaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Categoría no encontrada: " + categoriaId));
-        verificarAcceso(usuario, categoria.getTienda());
-
-        String nombre = request.nombre().trim();
-        String slug = normalizarSlug(nombre);
-
-        categoriaRepository.findByTiendaIdAndSlug(categoria.getTienda().getId(), slug)
-                .filter(c -> !c.getId().equals(categoriaId))
-                .ifPresent(c -> {
-                    throw new com.agrandaditostienda.exception.ConsultaInvalidaException(
-                            "Ya existe una categoría con ese nombre en la tienda");
-                });
-
-        categoria.setNombre(nombre);
-        categoria.setSlug(slug);
         categoriaRepository.save(categoria);
         return categoriaMapper.toDTO(categoria);
     }

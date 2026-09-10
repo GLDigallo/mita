@@ -42,11 +42,6 @@ public class VentaController {
         return ventaService.obtener(id);
     }
 
-    @GetMapping("/consultas/{id}/venta")
-    public VentaDTO obtenerPorConsulta(@PathVariable Long id) {
-        return ventaService.obtenerPorConsulta(id);
-    }
-
     @PutMapping("/ventas/{id}/items")
     public VentaDTO actualizarItems(@PathVariable Long id,
                                     @Valid @RequestBody ActualizarItemsVentaRequest request) {

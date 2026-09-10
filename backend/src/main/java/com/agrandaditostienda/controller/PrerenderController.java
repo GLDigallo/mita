@@ -69,7 +69,9 @@ public class PrerenderController {
         List<ProductoDTO> productos;
         try {
             tienda = tiendaService.obtenerTiendaPorSlug(slug);
-            productos = catalogoService.listarProductosDeTienda(slug, null, null);
+            productos = catalogoService.listarProductosDeTienda(slug, null, null).stream()
+                    .limit(MAX_PRODUCTOS)
+                    .toList();
         } catch (RecursoNoEncontradoException e) {
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             String html = reemplazar(baseHtml,

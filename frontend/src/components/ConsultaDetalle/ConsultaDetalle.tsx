@@ -8,7 +8,6 @@ import {
   modificarConsulta,
 } from '../../services/api'
 import type {
-  EstadoConsulta,
   FormaPago,
   MetodoPago,
   Producto,
@@ -20,7 +19,6 @@ import EstadoBadge from '../EstadoBadge/EstadoBadge'
 interface PropsConsultaDetalle {
   consulta: ConsultaDetalleTipo
   onCerrar: () => void
-  onCambiarEstado: (estado: EstadoConsulta) => void
   cambiandoEstado: boolean
   onCambiarFormaPago: (forma: FormaPago) => void
   onArmarVenta: (consulta: ConsultaDetalleTipo) => void
@@ -72,7 +70,6 @@ function varianteActual(item: ConsultaDetalleTipo['productos'][number]): number 
 function ConsultaDetalle({
   consulta,
   onCerrar,
-  onCambiarEstado,
   cambiandoEstado,
   onCambiarFormaPago,
   onArmarVenta,
@@ -287,7 +284,6 @@ function ConsultaDetalle({
             <VistaActual
               consulta={consulta}
               cambiandoEstado={cambiandoEstado}
-              onCambiarEstado={onCambiarEstado}
               onCambiarFormaPago={onCambiarFormaPago}
               onArmarVenta={onArmarVenta}
               onEditar={() => {
@@ -351,7 +347,6 @@ function ConsultaDetalle({
 interface PropsVistaActual {
   consulta: ConsultaDetalleTipo
   cambiandoEstado: boolean
-  onCambiarEstado: (estado: EstadoConsulta) => void
   onCambiarFormaPago: (forma: FormaPago) => void
   onArmarVenta: (consulta: ConsultaDetalleTipo) => void
   onEditar: () => void

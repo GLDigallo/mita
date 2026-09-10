@@ -1,6 +1,5 @@
 package com.agrandaditostienda.controller;
 
-import com.agrandaditostienda.dto.CambiarEstadoConsultaRequest;
 import com.agrandaditostienda.dto.CambiarFormaPagoRequest;
 import com.agrandaditostienda.dto.ConsultaCreadaDTO;
 import com.agrandaditostienda.dto.ConsultaDTO;
@@ -43,12 +42,6 @@ public class ConsultaController {
     @GetMapping("/{id}")
     public ConsultaDTO obtener(@PathVariable Long id) {
         return consultaService.obtener(id);
-    }
-
-    @PatchMapping("/{id}/estado")
-    public ConsultaDTO cambiarEstado(@PathVariable Long id,
-                                     @Valid @RequestBody CambiarEstadoConsultaRequest request) {
-        return consultaService.cambiarEstado(id, request.estado());
     }
 
     @PatchMapping("/{id}/forma-pago")

@@ -95,13 +95,6 @@ export async function crearCategoria(slug: string, nombre: string): Promise<Cate
   })
 }
 
-export async function actualizarCategoria(id: number, nombre: string) {
-  return enviarJson(`${API_BASE}/categorias/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify({ nombre }),
-  })
-}
-
 export async function eliminarCategoria(id: number) {
   return enviarJson(`${API_BASE}/categorias/${id}`, { method: 'DELETE' })
 }
@@ -215,13 +208,6 @@ export async function fetchConsulta(id: number): Promise<ConsultaDetalle> {
   return enviarJson(`${API_BASE}/consultas/${id}`)
 }
 
-export async function cambiarEstadoConsulta(id: number, estado: EstadoConsulta): Promise<ConsultaDetalle> {
-  return enviarJson(`${API_BASE}/consultas/${id}/estado`, {
-    method: 'PATCH',
-    body: JSON.stringify({ estado }),
-  })
-}
-
 export async function cambiarFormaPagoConsulta(id: number, formaPago: FormaPago): Promise<ConsultaDetalle> {
   return enviarJson(`${API_BASE}/consultas/${id}/forma-pago`, {
     method: 'PATCH',
@@ -258,8 +244,6 @@ export const MOTIVOS_MODIFICACION = [
   { valor: 'OTRO', etiqueta: 'Otro' },
 ] as const
 
-export type MotivoModificacion = (typeof MOTIVOS_MODIFICACION)[number]['valor']
-
 export const TALLES_POR_TIENDA: Record<string, { titulo: string; talles: string[] }[]> = {
   'mokositos-bebes': [
     { titulo: 'Bebés', talles: ['RN', '0-3M', '3-6M', '6-9M', '9-12M', '12-18M', '18-24M'] },
@@ -291,10 +275,6 @@ export async function fetchVentas(filtros: FiltrosLista = {}): Promise<VentaList
 
 export async function fetchVenta(id: number): Promise<VentaDetalle> {
   return enviarJson(`${API_BASE}/ventas/${id}`)
-}
-
-export async function fetchVentaDeConsulta(consultaId: number): Promise<VentaDetalle> {
-  return enviarJson(`${API_BASE}/consultas/${consultaId}/venta`)
 }
 
 export async function crearVenta(consultaId: number): Promise<VentaDetalle> {

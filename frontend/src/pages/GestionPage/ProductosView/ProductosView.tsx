@@ -20,7 +20,6 @@ import type { Categoria, Genero, Producto, Tienda } from '../../../types'
 interface PropsProductosView {
   tienda: Tienda | null
   esDueno: boolean
-  tiendas: Tienda[]
 }
 
 interface VarianteForm {

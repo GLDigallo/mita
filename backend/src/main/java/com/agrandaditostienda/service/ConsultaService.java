@@ -44,13 +44,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -58,13 +55,6 @@ import java.util.Set;
 public class ConsultaService {
 
     private static final Duration TIEMPO_CANCELACION_PENDIENTE = Duration.ofHours(48);
-
-    private static final Map<EstadoConsulta, Set<EstadoConsulta>> TRANSICIONES_VALIDAS = new EnumMap<>(EstadoConsulta.class);
-    static {
-        TRANSICIONES_VALIDAS.put(EstadoConsulta.PENDIENTE, EnumSet.of(EstadoConsulta.EN_REVISION, EstadoConsulta.CANCELADA));
-        TRANSICIONES_VALIDAS.put(EstadoConsulta.EN_REVISION, EnumSet.of(EstadoConsulta.ESPERANDO_CLIENTE, EstadoConsulta.CONFIRMADA, EstadoConsulta.CANCELADA));
-        TRANSICIONES_VALIDAS.put(EstadoConsulta.ESPERANDO_CLIENTE, EnumSet.of(EstadoConsulta.EN_REVISION, EstadoConsulta.CONFIRMADA, EstadoConsulta.CANCELADA));
-    }
 
     private final ConsultaRepository consultaRepository;
     private final ClienteRepository clienteRepository;
@@ -169,30 +159,6 @@ public class ConsultaService {
     }
 
     @Transactional
-    public ConsultaDTO cambiarEstado(Long id, EstadoConsulta estado) {
-        Consulta consulta = consultaRepository.findDetalle(id)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
-        verificarAcceso(consulta);
-        EstadoConsulta actual = consulta.getEstado();
-        if (esEstadoCerrado(actual)) {
-            throw new ConsultaInvalidaException(
-                    "La consulta está " + etiquetaEstado(actual) + " y no admite cambios de estado");
-        }
-        Set<EstadoConsulta> destinosPermitidos = TRANSICIONES_VALIDAS.get(actual);
-        if (destinosPermitidos == null || !destinosPermitidos.contains(estado)) {
-            throw new ConsultaInvalidaException(
-                    "No se puede pasar de " + etiquetaEstado(actual) + " a " + etiquetaEstado(estado));
-        }
-        consulta.setEstado(estado);
-        if (estado == EstadoConsulta.CANCELADA) {
-            consulta.setFechaCancelacion(Instant.now());
-        }
-        Consulta guardada = consultaRepository.save(consulta);
-        var infoEstado = resolveEditableInfo(guardada);
-        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoEstado.editable(), infoEstado.ventaEstado(), infoEstado.ventaId());
-    }
-
-    @Transactional
     public ConsultaDTO cambiarFormaPago(Long id, FormaPago formaPago) {
         Consulta consulta = consultaRepository.findDetalle(id)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
@@ -290,11 +256,6 @@ public class ConsultaService {
         return estado == EstadoConsulta.CONFIRMADA
                 || estado == EstadoConsulta.CANCELADA
                 || estado == EstadoConsulta.FINALIZADA;
-    }
-
-    private boolean dentrodDe48hs(Consulta consulta) {
-        java.time.Instant ahora = java.time.Instant.now();
-        return java.time.Duration.between(consulta.getFechaConsulta(), ahora).toHours() < 48;
     }
 
     private boolean dentrodDe48hsCancelacion(Consulta consulta) {

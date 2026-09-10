@@ -286,14 +286,6 @@ public class VentaService {
         return ventaMapper.toDTO(venta);
     }
 
-    @Transactional(readOnly = true)
-    public VentaDTO obtenerPorConsulta(Long consultaId) {
-        Venta venta = ventaRepository.findByConsultaId(consultaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("La consulta no tiene una venta asociada"));
-        verificarAcceso(venta);
-        return ventaMapper.toDTO(venta);
-    }
-
     private Long tiendaIdPermitida(Long tiendaId) {
         UsuarioPrincipal principal = Seguridad.principalRequerido();
         if (principal.esEncargada()) {
