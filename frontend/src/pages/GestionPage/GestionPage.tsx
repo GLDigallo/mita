@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useLocation } from 'react-router-dom'
 import LoginForm from '../../components/LoginForm/LoginForm'
+import { colorContraste } from '../../utils/textoContraste'
 import EstadoBadge from '../../components/EstadoBadge/EstadoBadge'
 import ConsultaDetalle from '../../components/ConsultaDetalle/ConsultaDetalle'
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary'
@@ -106,7 +107,7 @@ function GestionPage() {
   const colorTiendaSec = tiendaUsuario?.colorSecundario ?? null
 
   const estiloTienda = colorTienda
-    ? ({ '--gestion-color': colorTienda, '--gestion-color-sec': colorTiendaSec } as CSSProperties)
+    ? ({ '--gestion-color': colorTienda, '--gestion-color-sec': colorTiendaSec, '--gestion-texto': colorContraste(colorTienda) } as CSSProperties)
     : undefined
 
   useEffect(() => {
@@ -496,10 +497,10 @@ function GestionPage() {
   if (sesion === 'anonimo') {
     return (
       <div className="flex min-h-screen flex-col bg-[var(--color-gestion-fondo,#f5f5f0)]">
-        <header className="flex items-center justify-between border-b border-[var(--color-borde)] bg-[var(--gestion-color,var(--color-superficie))] px-5 text-white md:px-6">
-          <Link to="/" className="font-[var(--font-display)] text-[20px] font-bold tracking-[-0.02em] text-white">
+        <header className="flex items-center justify-between border-b border-[var(--color-borde)] bg-[var(--gestion-color,var(--color-superficie))] px-5 text-[var(--gestion-texto,#1b1b1f)] md:px-6">
+          <Link to="/" className="font-[var(--font-display)] text-[20px] font-bold tracking-[-0.02em] text-[var(--gestion-texto,#1b1b1f)]">
             AgrandaditosTienda
-            <span className="ml-2 text-[13px] text-white/70">home</span>
+            <span className="ml-2 text-[13px] text-[color-mix(in_srgb,var(--gestion-texto,#1b1b1f)_70%,transparent)]">home</span>
           </Link>
         </header>
         <main className="flex flex-1 items-center justify-center px-4 py-6">
@@ -511,16 +512,16 @@ function GestionPage() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: 'color-mix(in srgb, var(--gestion-color, #f5f5f0) 6%, #f5f5f0)', ...estiloTienda } as CSSProperties}>
-      <header className="flex items-center justify-between gap-3 border-b border-[var(--color-borde)] bg-[var(--gestion-color,var(--color-superficie))] px-5 py-4 text-white md:px-6">
-        <Link to="/" className="font-[var(--font-display)] text-[20px] font-bold tracking-[-0.02em] text-white">
+      <header className="flex items-center justify-between gap-3 border-b border-[var(--color-borde)] bg-[var(--gestion-color,var(--color-superficie))] px-5 py-4 text-[var(--gestion-texto,#1b1b1f)] md:px-6">
+        <Link to="/" className="font-[var(--font-display)] text-[20px] font-bold tracking-[-0.02em] text-[var(--gestion-texto,#1b1b1f)]">
           AgrandaditosTienda
         </Link>
         <div className="flex min-w-0 items-center gap-3">
-          <span className="truncate text-[14px] font-semibold text-white">
+          <span className="truncate text-[14px] font-semibold text-[var(--gestion-texto,#1b1b1f)]">
             {usuario?.nombre ?? usuario?.usuario}
             {esDueno ? ' · Dueño' : usuario?.tiendaNombre ? ` · ${usuario.tiendaNombre}` : ''}
           </span>
-          <button type="button" className="rounded-full border border-white/40 bg-transparent px-4 font-semibold text-white transition-colors duration-200 hover:border-white hover:bg-white/15" onClick={manejarLogout}>
+          <button type="button" className="rounded-full border border-[color-mix(in_srgb,var(--gestion-texto,#1b1b1f)_35%,transparent)] bg-transparent px-4 font-semibold text-[var(--gestion-texto,#1b1b1f)] transition-colors duration-200 hover:border-[var(--gestion-texto,#1b1b1f)] hover:bg-[color-mix(in_srgb,var(--gestion-texto,#1b1b1f)_14%,transparent)]" onClick={manejarLogout}>
             Salir
           </button>
         </div>
@@ -528,7 +529,7 @@ function GestionPage() {
 
       <main className="mx-auto w-full max-w-[1200px] px-4 py-6 pb-12 md:px-6 md:py-8 md:pb-14">
         {notificacion && (
-          <div className="sticky top-0 z-10 mb-4 rounded-[var(--radius-sm)] bg-[var(--gestion-color,#059669)] px-4 py-2.5 text-center text-[14px] font-semibold text-white animate-abrir-notif">
+          <div className="sticky top-0 z-10 mb-4 rounded-[var(--radius-sm)] bg-[var(--gestion-color,#059669)] px-4 py-2.5 text-center text-[14px] font-semibold text-[var(--gestion-texto,#fff)] animate-abrir-notif">
             {notificacion}
           </div>
         )}

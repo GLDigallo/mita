@@ -30,7 +30,7 @@ const botonPeligro =
   'min-h-[38px] rounded-full border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3.5 py-1.5 text-[13px] font-semibold text-[#c0392b] transition-colors duration-200 hover:border-[#c0392b]'
 
 const botonCrear =
-  'min-h-12 rounded-[var(--radius-sm)] border-0 bg-[var(--gestion-color,var(--color-marca))] px-5 text-[15px] font-bold text-white transition-opacity duration-200 hover:opacity-90'
+  'min-h-12 rounded-[var(--radius-sm)] border-0 bg-[var(--gestion-color,var(--color-marca))] px-5 text-[15px] font-bold text-[var(--gestion-texto,#fff)] transition-opacity duration-200 hover:opacity-90'
 
 function hoyISO() {
   const ahora = new Date()

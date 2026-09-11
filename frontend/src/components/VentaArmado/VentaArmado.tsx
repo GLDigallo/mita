@@ -303,7 +303,7 @@ function VentaArmado({ consulta, ventaInicial, onCerrar, onConfirmada, onCancela
                     <p className={titulo}>Productos ({totalItems})</p>
                     <button
                       type="button"
-                      className="min-h-10 rounded-full border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3.5 py-2 text-[13px] font-semibold text-[var(--gestion-color,var(--color-marca))] transition-colors duration-200 hover:border-[var(--gestion-color,var(--color-marca))] hover:bg-[var(--gestion-color,var(--color-marca))] hover:text-white"
+                      className="min-h-10 rounded-full border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3.5 py-2 text-[13px] font-semibold text-[var(--gestion-color,var(--color-marca))] transition-colors duration-200 hover:border-[var(--gestion-color,var(--color-marca))] hover:bg-[var(--gestion-color,var(--color-marca))] hover:text-[var(--gestion-texto,#fff)]"
                       onClick={() => setAgregarAbierto((v) => !v)}
                     >
                       {agregarAbierto ? 'Cerrar búsqueda' : 'Agregar producto'}

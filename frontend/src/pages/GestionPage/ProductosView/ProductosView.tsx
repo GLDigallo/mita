@@ -55,7 +55,7 @@ const inputBase =
   'w-full min-h-11 rounded-[var(--radius-sm)] border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3 py-2 text-[15px] text-[var(--color-texto)] transition-[border-color,box-shadow] duration-200 focus:border-[var(--color-marca)] focus:shadow-[0_0_0_3px_color-mix(in_srgb,var(--color-marca)_15%,transparent)] focus:outline-none'
 
 const botonGuardar =
-  'min-h-10 rounded-[var(--radius-sm)] border border-[var(--gestion-color,var(--color-marca))] bg-[var(--gestion-color,var(--color-marca))] px-4 text-[14px] font-semibold text-white transition-opacity duration-200 hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50'
+  'min-h-10 rounded-[var(--radius-sm)] border border-[var(--gestion-color,var(--color-marca))] bg-[var(--gestion-color,var(--color-marca))] px-4 text-[14px] font-semibold text-[var(--gestion-texto,#fff)] transition-opacity duration-200 hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-50'
 
 const botonSecundario =
   'min-h-10 rounded-[var(--radius-sm)] border border-[var(--color-borde)] bg-[var(--color-superficie)] px-4 text-[14px] font-semibold text-[var(--color-texto)] transition-colors duration-200 hover:border-[var(--color-marca)]'

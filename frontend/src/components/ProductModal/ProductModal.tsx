@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { formatearPrecio } from '../../services/api'
+import { colorContraste } from '../../utils/textoContraste'
 import type { Producto, Tienda } from '../../types'
 import { WhatsAppIcon } from '../icons'
 
@@ -24,7 +25,7 @@ const botonWhatsApp =
 const talleBase =
   'inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-[var(--radius-sm)] border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3.5 py-2 text-[14px] font-semibold text-[var(--color-texto-suave)] transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:border-[var(--color-texto)] hover:text-[var(--color-texto)]'
 
-const talleActivo = 'border-[var(--talle-color)] bg-[var(--talle-color)] text-white'
+const talleActivo = 'border-[var(--talle-color)] bg-[var(--talle-color)] text-[var(--talle-texto,#fff)]'
 
 function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductModal) {
   const variantes = useMemo(() => producto.variantes ?? [], [producto.variantes])
@@ -151,7 +152,7 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
                           key={c}
                           type="button"
                           className={`${talleBase} ${color === c ? talleActivo : ''}`}
-                          style={color === c ? { ['--talle-color' as string]: tienda.colorPrimario } : undefined}
+                          style={color === c ? { ['--talle-color' as string]: tienda.colorPrimario, ['--talle-texto' as string]: colorContraste(tienda.colorPrimario) } : undefined}
                           onClick={() => setColor(c)}
                           aria-pressed={color === c}
                         >
@@ -175,7 +176,7 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
                           key={t}
                           type="button"
                           className={`${talleBase} ${talle === t ? talleActivo : ''}`}
-                          style={talle === t ? { ['--talle-color' as string]: tienda.colorPrimario } : undefined}
+                          style={talle === t ? { ['--talle-color' as string]: tienda.colorPrimario, ['--talle-texto' as string]: colorContraste(tienda.colorPrimario) } : undefined}
                           onClick={() => setTalle(t)}
                           aria-pressed={talle === t}
                         >

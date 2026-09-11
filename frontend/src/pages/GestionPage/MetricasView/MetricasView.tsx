@@ -78,7 +78,7 @@ function MetricasView({ tiendas, consultas, ventas }: PropsMetricasView) {
               type="button"
               className={`min-h-[34px] rounded-full border-0 px-3.5 py-1 text-[13px] font-semibold transition-colors duration-200 ${
                 rango === r.valor
-                  ? 'bg-[var(--gestion-color,var(--color-marca))] text-white'
+                  ? 'bg-[var(--gestion-color,var(--color-marca))] text-[var(--gestion-texto,#fff)]'
                   : 'bg-transparent text-[var(--color-texto-suave)] hover:text-[var(--color-texto)]'
               }`}
               onClick={() => setRango(r.valor)}
