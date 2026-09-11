@@ -377,6 +377,7 @@ function VistaActual({
 
   const esCerrada = ['CONFIRMADA', 'CANCELADA', 'FINALIZADA'].includes(consulta?.estado)
   const esCanceladaReciente = consulta?.estado === 'CANCELADA' && !!consulta?.editable && !!consulta?.fechaLimite
+  const esCanceladaDefinitiva = consulta?.estado === 'CANCELADA' && !esCanceladaReciente
 
   const [ahora, setAhora] = useState(() => Date.now())
   useEffect(() => {
@@ -458,9 +459,11 @@ function VistaActual({
         <p className="mt-2.5 text-[14px] text-[var(--color-texto-suave)]">
           Tienda: <strong>{consulta.tiendaNombre}</strong>
         </p>
-        <a className={whatsappBtnGrande} href={urlWhatsApp} target="_blank" rel="noopener noreferrer">
-          Abrir conversación en WhatsApp
-        </a>
+        {!esCanceladaDefinitiva && (
+          <a className={whatsappBtnGrande} href={urlWhatsApp} target="_blank" rel="noopener noreferrer">
+            Abrir conversación en WhatsApp
+          </a>
+        )}
       </section>
 
       {consulta.observaciones && (
