@@ -7,8 +7,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URLDecoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @Slf4j
@@ -27,7 +25,7 @@ public class CloudinaryStorageService {
         if (cloudinaryUrl == null || cloudinaryUrl.isBlank()) {
             this.cloudinary = null;
             this.configurado = false;
-            log.info("Cloudinary no configurado: las subidas usan el fallback base64 y no se migran imágenes.");
+            log.info("Cloudinary no configurado: las subidas usan el fallback base64.");
             return;
         }
         Cloudinary instancia;
@@ -36,7 +34,7 @@ public class CloudinaryStorageService {
         } catch (IllegalArgumentException e) {
             instancia = null;
             log.warn("CLOUDINARY_URL mal formada (se ignora, sin exponer credenciales): "
-                    + "las subidas usan el fallback base64 y no se migran imágenes.");
+                    + "las subidas usan el fallback base64.");
         }
         this.cloudinary = instancia;
         this.configurado = instancia != null;
@@ -53,7 +51,7 @@ public class CloudinaryStorageService {
      */
     public String subirImagen(byte[] bytes) throws IOException {
         try {
-            Map<?, ?> res = subir(bytes, null);
+            Map<?, ?> res = subir(bytes);
             return urlDeEntrega(res);
         } catch (IOException e) {
             throw e;
@@ -62,32 +60,11 @@ public class CloudinaryStorageService {
         }
     }
 
-    /**
-     * Migra una imagen remota existente: Cloudinary la descarga, la convierte a
-     * WebP optimizado y la guarda como única copia (sin original). Devuelve la URL
-     * de entrega, o null si no se pudo migrar.
-     */
-    public String migrarImagenDesdeUrl(String urlRemota) {
-        if (!configurado) {
-            return null;
-        }
-        try {
-            Map<?, ?> res = subir(null, urlRemota);
-            return urlDeEntrega(res);
-        } catch (Exception e) {
-            log.warn("No se pudo migrar la imagen {} a Cloudinary: {}", urlRemota, e.getMessage());
-            return null;
-        }
-    }
-
-    private Map<?, ?> subir(byte[] bytes, String urlRemota) throws Exception {
+    private Map<?, ?> subir(byte[] bytes) throws Exception {
         Map<Object, Object> params = ObjectUtils.asMap(
                 "folder", CARPETA_PRODUCTOS,
                 "format", "webp",
                 "transformation", TRANSFORMACION_ORIGEN);
-        if (urlRemota != null) {
-            return cloudinary.uploader().upload(urlRemota, params);
-        }
         return cloudinary.uploader().upload(bytes, params);
     }
 
@@ -100,26 +77,5 @@ public class CloudinaryStorageService {
                 + TRANSFORMACION_ENTREGA
                 + "/v" + version
                 + "/" + publicId + ".webp";
-    }
-
-    /**
-     * Devuelve true si la URL ya es una entrega Cloudinary migrada (upload).
-     */
-    public boolean esUrlCloudinaryMigrada(String url) {
-        return url != null && url.startsWith(PREFIJO_CLOUDINARY) && url.contains("/image/upload/");
-    }
-
-    /**
-     * Extrae la URL remota original de una URL de fetch generada por una corrida anterior.
-     */
-    public String extraerOrigenDeFetch(String url) {
-        if (url == null || !url.contains("/image/fetch/")) {
-            return null;
-        }
-        int inicio = url.indexOf("https%3A");
-        if (inicio < 0) {
-            return null;
-        }
-        return URLDecoder.decode(url.substring(inicio), StandardCharsets.UTF_8);
     }
 }
