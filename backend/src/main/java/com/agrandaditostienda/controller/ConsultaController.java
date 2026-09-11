@@ -10,6 +10,8 @@ import com.agrandaditostienda.dto.ModificarConsultaRequest;
 import com.agrandaditostienda.dto.NotaInternaRequest;
 import com.agrandaditostienda.entity.EstadoConsulta;
 import com.agrandaditostienda.service.ConsultaService;
+import com.agrandaditostienda.service.LimiteConsultasService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,14 +24,27 @@ import java.util.List;
 public class ConsultaController {
 
     private final ConsultaService consultaService;
+    private final LimiteConsultasService limiteConsultasService;
 
-    public ConsultaController(ConsultaService consultaService) {
+    public ConsultaController(ConsultaService consultaService, LimiteConsultasService limiteConsultasService) {
         this.consultaService = consultaService;
+        this.limiteConsultasService = limiteConsultasService;
     }
 
     @PostMapping
-    public ResponseEntity<ConsultaCreadaDTO> crear(@Valid @RequestBody CrearConsultaRequest request) {
+    public ResponseEntity<ConsultaCreadaDTO> crear(@Valid @RequestBody CrearConsultaRequest request,
+                                                    HttpServletRequest http) {
+        limiteConsultasService.verificar(request.telefono(), ip(http));
         return ResponseEntity.status(HttpStatus.CREATED).body(consultaService.crear(request));
+    }
+
+    private String ip(HttpServletRequest http) {
+        String xForwarded = http.getHeader("X-Forwarded-For");
+        if (xForwarded != null && !xForwarded.isBlank()) {
+            return xForwarded.split(",")[0].trim();
+        }
+        String ip = http.getRemoteAddr();
+        return ip == null ? "desconocida" : ip;
     }
 
     @GetMapping

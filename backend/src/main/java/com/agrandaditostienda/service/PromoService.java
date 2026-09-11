@@ -22,6 +22,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.LinkedHashMap;
@@ -61,7 +62,7 @@ public class PromoService {
         }
 
         Instant inicio = parseFecha(request.fechaInicio(), "fecha de inicio");
-        Instant fin = parseFecha(request.fechaFin(), "fecha de fin");
+        Instant fin = parseFinDia(request.fechaFin());
         if (fin.isBefore(inicio)) {
             throw new ReglaNegocioException("La fecha de fin no puede ser anterior a la de inicio");
         }
@@ -228,6 +229,15 @@ public class PromoService {
             return fecha.atStartOfDay(ZONA).toInstant();
         } catch (DateTimeParseException e) {
             throw new ReglaNegocioException("La " + campo + " debe tener formato aaaa-mm-dd");
+        }
+    }
+
+    private Instant parseFinDia(String valor) {
+        try {
+            LocalDate fecha = LocalDate.parse(valor);
+            return fecha.atTime(LocalTime.MAX).atZone(ZONA).toInstant();
+        } catch (DateTimeParseException e) {
+            throw new ReglaNegocioException("La fecha de fin debe tener formato aaaa-mm-dd");
         }
     }
 

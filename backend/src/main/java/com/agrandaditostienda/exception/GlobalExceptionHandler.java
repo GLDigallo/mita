@@ -40,6 +40,12 @@ public class GlobalExceptionHandler {
                 .body(new ApiError(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
     }
 
+    @ExceptionHandler(DemasiadasConsultasException.class)
+    public ResponseEntity<ApiError> handleDemasiadasConsultas(DemasiadasConsultasException ex) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(new ApiError(HttpStatus.TOO_MANY_REQUESTS.value(), ex.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiError> handleValidacion(MethodArgumentNotValidException ex) {
         String mensaje = ex.getBindingResult().getFieldErrors().stream()

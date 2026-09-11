@@ -1,7 +1,3 @@
-export function textoConContraste(hexColor?: string): string {
-  return esClaro(hexColor) ? 'text-black' : 'text-white'
-}
-
 export function colorContraste(hexColor?: string): string {
   return esClaro(hexColor) ? '#111111' : '#ffffff'
 }

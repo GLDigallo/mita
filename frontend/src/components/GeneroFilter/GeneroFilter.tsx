@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { Genero } from '../../types'
-import { colorContraste, textoConContraste } from '../../utils/textoContraste'
+import { colorContraste } from '../../utils/textoContraste'
 
 interface PropsGeneroFilter {
   generos: Genero[]
@@ -23,7 +23,6 @@ const chipBase =
 const chipActivo = 'border-[var(--chip-color)] bg-[var(--chip-color)] shadow-[0_4px_14px_rgba(0,0,0,0.18)]'
 
 function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onTodo, todoActivo }: PropsGeneroFilter) {
-  const textoActivo = textoConContraste(colorPrimario)
   return (
     <div
       className="flex gap-2.5 overflow-x-auto whitespace-nowrap px-0 pb-1.5 pt-2 [-webkit-overflow-scrolling:touch] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden md:flex-wrap md:overflow-x-visible"
@@ -33,7 +32,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
       {onTodo && (
         <button
           type="button"
-          className={`${chipBase} ${todoActivo ? `${chipActivo} ${textoActivo}` : ''}`}
+          className={`${chipBase} ${todoActivo ? chipActivo : ''}`}
           style={(todoActivo ? { '--chip-color': colorPrimario ?? '#4f46e5', color: colorContraste(colorPrimario) } : undefined) as CSSProperties | undefined}
           onClick={onTodo}
           aria-pressed={todoActivo}
@@ -47,7 +46,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
           <button
             key={genero}
             type="button"
-            className={`${chipBase} ${activo ? `${chipActivo} ${textoActivo}` : ''}`}
+            className={`${chipBase} ${activo ? chipActivo : ''}`}
             style={(activo ? { '--chip-color': colorPrimario ?? '#4f46e5', color: colorContraste(colorPrimario) } : undefined) as CSSProperties | undefined}
             onClick={() => onSeleccionar(genero)}
             aria-pressed={activo}
