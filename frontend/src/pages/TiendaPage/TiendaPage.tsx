@@ -10,7 +10,7 @@ import CartModal from '../../components/CartModal/CartModal'
 import SkeletonCard from '../../components/SkeletonCard/SkeletonCard'
 import ErrorMessage from '../../components/ErrorMessage/ErrorMessage'
 import NombreTienda from '../../components/NombreTienda/NombreTienda'
-import { colorContraste } from '../../utils/textoContraste'
+
 import { useFetch } from '../../hooks/useFetch'
 import useSeo from '../../hooks/useSeo'
 import {
@@ -154,20 +154,19 @@ function TiendaPage() {
   const estiloHero = {
     '--primario': tiendaActual.colorPrimario,
     '--secundario': tiendaActual.colorSecundario,
-    '--primario-texto': colorContraste(tiendaActual.colorPrimario),
   } as CSSProperties
-  const estiloCarrito = { '--primario': tiendaActual.colorPrimario, '--primario-texto': colorContraste(tiendaActual.colorPrimario) } as CSSProperties
+  const estiloCarrito = { '--primario': tiendaActual.colorPrimario } as CSSProperties
 
   return (
     <>
       <Header colorPrimario={tiendaActual.colorPrimario} />
       <main>
-        <section className="bg-[linear-gradient(135deg,var(--primario)_0%,var(--secundario)_100%)] text-[var(--primario-texto,#fff)]" style={estiloHero}>
+        <section className="bg-[linear-gradient(135deg,var(--primario)_0%,var(--secundario)_100%),linear-gradient(135deg,rgba(12,12,20,0.34)_0%,rgba(12,12,20,0.64)_100%)] text-white" style={estiloHero}>
           <div className="mx-auto max-w-[1200px] px-4 py-11 pb-13 sm:px-5 md:px-6 md:py-15 md:pb-18">
             <div className="mb-7 flex flex-wrap items-center justify-between gap-3 md:gap-4">
               <Link
                 to="/"
-                className="inline-flex items-center gap-1 rounded-full border border-[color-mix(in_srgb,var(--primario-texto,#fff)_28%,transparent)] bg-[color-mix(in_srgb,var(--primario-texto,#fff)_12%,transparent)] px-2.5 py-1.5 text-[10.5px] font-semibold text-[var(--primario-texto,#fff)] transition-colors duration-200 hover:bg-[color-mix(in_srgb,var(--primario-texto,#fff)_22%,transparent)]"
+                className="inline-flex items-center gap-1 rounded-full border border-white/30 bg-white/12 px-2.5 py-1.5 text-[10.5px] font-semibold text-white transition-colors duration-200 hover:bg-white/22"
               >
                 <span className="text-[12px] leading-none transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] group-hover:-translate-x-1" aria-hidden="true">
                   ←
@@ -176,7 +175,7 @@ function TiendaPage() {
               </Link>
             </div>
             <NombreTienda tienda={tiendaActual} className="text-[clamp(38px,12vw,68px)] tracking-[-0.03em] md:text-[clamp(44px,7vw,68px)]" />
-            <p className="mt-3.5 max-w-[640px] text-[15px] leading-[1.65] text-[color-mix(in_srgb,var(--primario-texto,#fff)_88%,transparent)] md:text-[16.5px]">
+            <p className="mt-3.5 max-w-[640px] text-[15px] leading-[1.65] text-white/90 md:text-[16.5px]">
               {tiendaActual.descripcion}
             </p>
           </div>
@@ -261,7 +260,7 @@ function TiendaPage() {
       {carrito.length > 0 && (
         <button
           type="button"
-          className="fixed bottom-4 right-4 z-[calc(var(--z-modal)-1)] flex h-15 w-15 items-center justify-center rounded-full border-0 bg-[var(--primario,#4f46e5)] text-[var(--primario-texto,#fff)] shadow-[var(--shadow-lg)] transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(20,20,30,0.35)] md:bottom-6 md:right-6 md:h-16 md:w-16"
+          className="fixed bottom-4 right-4 z-[calc(var(--z-modal)-1)] flex h-15 w-15 items-center justify-center rounded-full border-0 bg-[color-mix(in_srgb,var(--primario,#4f46e5)_65%,#1e1b2e)] text-white shadow-[var(--shadow-lg)] transition-transform duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1 hover:shadow-[0_16px_32px_rgba(20,20,30,0.35)] md:bottom-6 md:right-6 md:h-16 md:w-16"
           style={estiloCarrito}
           onClick={() => setCarritoAbierto(true)}
           aria-label={`Abrir carrito, ${cantidadCarrito} productos`}

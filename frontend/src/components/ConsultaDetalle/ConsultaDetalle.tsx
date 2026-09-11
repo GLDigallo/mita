@@ -602,9 +602,11 @@ function VistaActual({
           <div className="flex flex-col gap-2 border-t border-[var(--color-borde)] py-3 pb-1">
             {!consulta?.ventaAsociada && consulta?.editable && (
               <>
-                <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
-                  Editar consulta
-                </button>
+                {consulta.estado !== 'PENDIENTE' && (
+                  <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
+                    Editar consulta
+                  </button>
+                )}
                 <button type="button" className={`${btnConfirmar} w-full`} onClick={() => onArmarVenta(consulta)} disabled={cambiandoEstado}>
                   Armar venta
                 </button>
@@ -632,12 +634,19 @@ function VistaActual({
                 </button>
               </>
             )}
+          </div>
+        </section>
+      )}
 
-            {esCanceladaReciente && consulta?.editable && (
-              <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
-                Editar consulta
-              </button>
-            )}
+      {esCanceladaReciente && (
+        <section className="border-b border-[var(--color-borde)] px-5 py-3.5">
+          <div className="flex flex-col gap-2 border-t border-[var(--color-borde)] py-3 pb-1">
+            <p className="text-[12px] font-bold uppercase tracking-[0.04em] text-[var(--color-texto-suave)]">
+              Consulta cancelada
+            </p>
+            <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
+              Editar consulta
+            </button>
           </div>
         </section>
       )}
