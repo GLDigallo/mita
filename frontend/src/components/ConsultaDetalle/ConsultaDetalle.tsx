@@ -9,7 +9,6 @@ import {
 } from '../../services/api'
 import type {
   FormaPago,
-  MetodoPago,
   Producto,
   VarianteProducto,
   ConsultaDetalle as ConsultaDetalleTipo,
@@ -21,9 +20,9 @@ interface PropsConsultaDetalle {
   onCerrar: () => void
   cambiandoEstado: boolean
   onCambiarFormaPago: (forma: FormaPago) => void
-  onArmarVenta: (consulta: ConsultaDetalleTipo) => void
   onModificada: (consulta: ConsultaDetalleTipo) => void
-  onConfirmarVenta: (metodo: MetodoPago) => void
+  onConfirmarConsulta: () => void
+  onCancelarConsulta: () => void
   onEntregarVenta: () => void
   onCancelarVenta: () => void
 }
@@ -72,9 +71,9 @@ function ConsultaDetalle({
   onCerrar,
   cambiandoEstado,
   onCambiarFormaPago,
-  onArmarVenta,
   onModificada,
-  onConfirmarVenta,
+  onConfirmarConsulta,
+  onCancelarConsulta,
   onEntregarVenta,
   onCancelarVenta,
 }: PropsConsultaDetalle) {
@@ -285,7 +284,6 @@ function ConsultaDetalle({
               consulta={consulta}
               cambiandoEstado={cambiandoEstado}
               onCambiarFormaPago={onCambiarFormaPago}
-              onArmarVenta={onArmarVenta}
               onEditar={() => {
                 setError('')
                 setVista('editar')
@@ -294,7 +292,8 @@ function ConsultaDetalle({
               onNotaInternaChange={setNotaInterna}
               onGuardarNota={guardarNotaInterna}
               guardandoNota={guardandoNota}
-              onConfirmarVenta={onConfirmarVenta}
+              onConfirmarConsulta={onConfirmarConsulta}
+              onCancelarConsulta={onCancelarConsulta}
               onEntregarVenta={onEntregarVenta}
               onCancelarVenta={onCancelarVenta}
             />
@@ -348,13 +347,13 @@ interface PropsVistaActual {
   consulta: ConsultaDetalleTipo
   cambiandoEstado: boolean
   onCambiarFormaPago: (forma: FormaPago) => void
-  onArmarVenta: (consulta: ConsultaDetalleTipo) => void
   onEditar: () => void
   notaInterna: string
   onNotaInternaChange: (valor: string) => void
   onGuardarNota: () => void
   guardandoNota: boolean
-  onConfirmarVenta: (metodo: MetodoPago) => void
+  onConfirmarConsulta: () => void
+  onCancelarConsulta: () => void
   onEntregarVenta: () => void
   onCancelarVenta: () => void
 }
@@ -363,13 +362,13 @@ function VistaActual({
   consulta,
   cambiandoEstado,
   onCambiarFormaPago,
-  onArmarVenta,
   onEditar,
   notaInterna,
   onNotaInternaChange,
   onGuardarNota,
   guardandoNota,
-  onConfirmarVenta,
+  onConfirmarConsulta,
+  onCancelarConsulta,
   onEntregarVenta,
   onCancelarVenta,
 }: PropsVistaActual) {
@@ -435,7 +434,7 @@ function VistaActual({
         <EstadoBadge estado={consulta.estado} />
       </header>
 
-      {(consulta.estado === 'PENDIENTE' || esCanceladaReciente) && consulta.fechaLimite && (
+      {(consulta.estado === 'EN_PREPARACION' || esCanceladaReciente) && consulta.fechaLimite && (
         <div
           className="flex min-h-[38px] items-center gap-2 border-b border-[var(--color-borde)] px-5 py-2 text-[13px] font-semibold"
           style={{
@@ -447,7 +446,7 @@ function VistaActual({
             <circle cx="12" cy="12" r="10" />
             <polyline points="12 6 12 12 16 14" />
           </svg>
-          {consulta.estado === 'PENDIENTE'
+          {consulta.estado === 'EN_PREPARACION'
             ? `Se cancela automáticamente en ${textoRestante(consulta.fechaLimite)}`
             : `Podés editarla todavía · quedan ${textoRestante(consulta.fechaLimite)}`}
         </div>
@@ -605,24 +604,14 @@ function VistaActual({
           <div className="flex flex-col gap-2 border-t border-[var(--color-borde)] py-3 pb-1">
             {!consulta?.ventaAsociada && consulta?.editable && (
               <>
-                {consulta.estado !== 'PENDIENTE' && (
-                  <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
-                    Editar consulta
-                  </button>
-                )}
-                <button type="button" className={`${btnConfirmar} w-full`} onClick={() => onArmarVenta(consulta)} disabled={cambiandoEstado}>
-                  Armar venta
+                <button type="button" className={`${btnSecundario} w-full`} onClick={onEditar} disabled={cambiandoEstado}>
+                  Editar consulta
                 </button>
-              </>
-            )}
-
-            {consulta?.ventaAsociada === 'EN_PREPARACION' && (
-              <>
-                <button type="button" className={`${btnConfirmar} w-full`} onClick={() => onConfirmarVenta?.('EFECTIVO')} disabled={cambiandoEstado || !consulta?.ventaId}>
+                <button type="button" className={`${btnConfirmar} w-full`} onClick={onConfirmarConsulta} disabled={cambiandoEstado}>
                   Confirmar compra
                 </button>
-                <button type="button" className={`${btnCancelar} w-full`} onClick={onCancelarVenta} disabled={cambiandoEstado || !consulta?.ventaId}>
-                  Cancelar compra
+                <button type="button" className={`${btnCancelar} w-full`} onClick={onCancelarConsulta} disabled={cambiandoEstado}>
+                  Cancelar consulta
                 </button>
               </>
             )}

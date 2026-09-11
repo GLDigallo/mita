@@ -43,7 +43,7 @@ function MetricasView({ tiendas, consultas, ventas }: PropsMetricasView) {
   const consultasFiltradas = consultas.filter((c) => dentroDeRango(c.fechaConsulta, rango))
   const ventasFiltradas = ventas.filter((v) => dentroDeRango(v.fechaVenta, rango))
 
-  const pendientes = consultasFiltradas.filter((c) => c.estado === 'PENDIENTE').length
+  const pendientes = consultasFiltradas.filter((c) => c.estado === 'EN_PREPARACION').length
   const importeTotal = ventasFiltradas.reduce((suma, v) => suma + (v.importeTotal ?? 0), 0)
 
   const porTienda = tiendas.map((tienda) => {
@@ -96,7 +96,7 @@ function MetricasView({ tiendas, consultas, ventas }: PropsMetricasView) {
         </div>
         <div className="flex flex-col gap-1 rounded-[var(--radius-md)] border border-[var(--color-borde)] border-t-[3px] border-t-[var(--gestion-color,var(--color-marca))] bg-[var(--color-superficie)] p-4">
           <span className="font-[var(--font-display)] text-2xl font-bold text-[var(--gestion-color,var(--color-marca))]">{pendientes}</span>
-          <span className="text-[13px] text-[var(--color-texto-suave)]">Pendientes</span>
+          <span className="text-[13px] text-[var(--color-texto-suave)]">En preparación</span>
         </div>
         <div className="flex flex-col gap-1 rounded-[var(--radius-md)] border border-[var(--color-borde)] border-t-[3px] border-t-[var(--gestion-color,var(--color-marca))] bg-[var(--color-superficie)] p-4">
           <span className="font-[var(--font-display)] text-2xl font-bold text-[var(--gestion-color,var(--color-marca))]">{ventasFiltradas.length}</span>

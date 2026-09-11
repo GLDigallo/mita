@@ -71,6 +71,11 @@ public class ConsultaController {
         return consultaService.modificar(id, request);
     }
 
+    @PatchMapping("/{id}/cancelar")
+    public ConsultaDTO cancelar(@PathVariable Long id) {
+        return consultaService.cancelar(id);
+    }
+
     @PatchMapping("/{id}/nota-interna")
     public ConsultaDTO actualizarNotaInterna(@PathVariable Long id,
                                              @RequestBody NotaInternaRequest request) {

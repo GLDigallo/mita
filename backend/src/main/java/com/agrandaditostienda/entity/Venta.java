@@ -33,7 +33,7 @@ public class Venta {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private EstadoVenta estado = EstadoVenta.EN_PREPARACION;
+    private EstadoVenta estado = EstadoVenta.CONFIRMADA;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "consulta_id", nullable = false)

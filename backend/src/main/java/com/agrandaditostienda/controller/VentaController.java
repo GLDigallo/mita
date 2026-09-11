@@ -1,14 +1,10 @@
 package com.agrandaditostienda.controller;
 
-import com.agrandaditostienda.dto.ActualizarItemsVentaRequest;
-import com.agrandaditostienda.dto.ConfirmarVentaRequest;
 import com.agrandaditostienda.dto.VentaDTO;
 import com.agrandaditostienda.dto.VentaResumenDTO;
 import com.agrandaditostienda.entity.EstadoVenta;
 import com.agrandaditostienda.security.Seguridad;
 import com.agrandaditostienda.service.VentaService;
-import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,10 +20,9 @@ public class VentaController {
         this.ventaService = ventaService;
     }
 
-    @PostMapping("/consultas/{id}/ventas")
-    public ResponseEntity<VentaDTO> crearDesdeConsulta(@PathVariable Long id) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ventaService.crearDesdeConsulta(id, Seguridad.principalRequerido().nombre()));
+    @PostMapping("/consultas/{id}/confirmar")
+    public VentaDTO confirmarConsulta(@PathVariable Long id) {
+        return ventaService.confirmar(id, Seguridad.principalRequerido().nombre());
     }
 
     @GetMapping("/ventas")
@@ -40,18 +35,6 @@ public class VentaController {
     @GetMapping("/ventas/{id}")
     public VentaDTO obtener(@PathVariable Long id) {
         return ventaService.obtener(id);
-    }
-
-    @PutMapping("/ventas/{id}/items")
-    public VentaDTO actualizarItems(@PathVariable Long id,
-                                    @Valid @RequestBody ActualizarItemsVentaRequest request) {
-        return ventaService.actualizarItems(id, request, Seguridad.principalRequerido().nombre());
-    }
-
-    @PostMapping("/ventas/{id}/confirmar")
-    public VentaDTO confirmar(@PathVariable Long id,
-                              @Valid @RequestBody ConfirmarVentaRequest request) {
-        return ventaService.confirmar(id, request, Seguridad.principalRequerido().nombre());
     }
 
     @PostMapping("/ventas/{id}/entregar")

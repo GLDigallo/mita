@@ -322,25 +322,12 @@ export async function fetchVenta(id: number): Promise<VentaDetalle> {
   return enviarJson(`${API_BASE}/ventas/${id}`)
 }
 
-export async function crearVenta(consultaId: number): Promise<VentaDetalle> {
-  return enviarJson(`${API_BASE}/consultas/${consultaId}/ventas`, { method: 'POST' })
+export async function confirmarConsulta(consultaId: number): Promise<VentaDetalle> {
+  return enviarJson(`${API_BASE}/consultas/${consultaId}/confirmar`, { method: 'POST' })
 }
 
-export async function actualizarItemsVenta(
-  id: number,
-  items: { productoId: number; varianteId: number; cantidad: number }[],
-): Promise<VentaDetalle> {
-  return enviarJson(`${API_BASE}/ventas/${id}/items`, {
-    method: 'PUT',
-    body: JSON.stringify({ items }),
-  })
-}
-
-export async function confirmarVenta(id: number, metodoPago: MetodoPago): Promise<VentaDetalle> {
-  return enviarJson(`${API_BASE}/ventas/${id}/confirmar`, {
-    method: 'POST',
-    body: JSON.stringify({ metodoPago }),
-  })
+export async function cancelarConsulta(id: number): Promise<ConsultaDetalle> {
+  return enviarJson(`${API_BASE}/consultas/${id}/cancelar`, { method: 'PATCH' })
 }
 
 export async function entregarVenta(id: number): Promise<VentaDetalle> {
@@ -352,14 +339,12 @@ export async function cancelarVenta(id: number): Promise<VentaDetalle> {
 }
 
 export const ESTADOS_CONSULTA: { valor: EstadoConsulta; etiqueta: string }[] = [
-  { valor: 'PENDIENTE', etiqueta: 'Pendiente' },
-  { valor: 'EN_REVISION', etiqueta: 'Editado' },
+  { valor: 'EN_PREPARACION', etiqueta: 'En preparación' },
   { valor: 'CONFIRMADA', etiqueta: 'Confirmado' },
   { valor: 'CANCELADA', etiqueta: 'Cancelado' },
 ]
 
 export const ESTADOS_VENTA: { valor: EstadoVenta; etiqueta: string }[] = [
-  { valor: 'EN_PREPARACION', etiqueta: 'En preparación' },
   { valor: 'CONFIRMADA', etiqueta: 'Confirmada' },
   { valor: 'ENTREGADA', etiqueta: 'Entregada' },
   { valor: 'CANCELADA', etiqueta: 'Cancelada' },

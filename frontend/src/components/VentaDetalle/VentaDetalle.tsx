@@ -14,13 +14,12 @@ interface PropsVentaDetalle {
   ventaId: number
   onCerrar: () => void
   onActualizada: (venta: VentaDetalleTipo) => void
-  onEditar: (venta: VentaDetalleTipo) => void
 }
 
 const titulo =
   'text-[12px] font-bold uppercase tracking-[0.06em] text-[var(--color-texto-suave)]'
 
-function VentaDetalle({ ventaId, onCerrar, onActualizada, onEditar }: PropsVentaDetalle) {
+function VentaDetalle({ ventaId, onCerrar, onActualizada }: PropsVentaDetalle) {
   const [venta, setVenta] = useState<VentaDetalleTipo | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
@@ -156,28 +155,16 @@ function VentaDetalle({ ventaId, onCerrar, onActualizada, onEditar }: PropsVenta
 
                 {error && <p className="px-5 py-3 text-[14px] text-[#c0392b]">{error}</p>}
 
-                {(venta.estado === 'EN_PREPARACION' || venta.estado === 'CONFIRMADA') && (
+                {(venta.estado === 'CONFIRMADA') && (
                   <footer className="flex flex-wrap justify-end gap-2.5 px-5 py-4">
-                    {venta.estado === 'EN_PREPARACION' && (
-                      <button
-                        type="button"
-                        className="min-h-[42px] rounded-full border border-[var(--color-borde)] bg-[var(--color-superficie)] px-4 text-[14px] font-semibold text-[var(--color-texto)] transition-colors duration-200 hover:border-[var(--color-marca)] hover:text-[var(--color-marca)] disabled:cursor-not-allowed disabled:opacity-50"
-                        onClick={() => onEditar(venta)}
-                        disabled={accionando}
-                      >
-                        Editar venta
-                      </button>
-                    )}
-                    {venta.estado === 'CONFIRMADA' && (
-                      <button
-                        type="button"
-                        className="min-h-[42px] rounded-full border-0 bg-[var(--color-marca)] px-4 text-[14px] font-semibold text-white transition-colors duration-200 hover:bg-[var(--color-marca-oscuro)] disabled:cursor-not-allowed disabled:opacity-50"
-                        onClick={() => ejecutar(() => entregarVenta(venta.id), 'No se pudo entregar la venta')}
-                        disabled={accionando}
-                      >
-                        {accionando ? 'Procesando…' : 'Marcar como entregada'}
-                      </button>
-                    )}
+                    <button
+                      type="button"
+                      className="min-h-[42px] rounded-full border-0 bg-[var(--color-marca)] px-4 text-[14px] font-semibold text-white transition-colors duration-200 hover:bg-[var(--color-marca-oscuro)] disabled:cursor-not-allowed disabled:opacity-50"
+                      onClick={() => ejecutar(() => entregarVenta(venta.id), 'No se pudo entregar la venta')}
+                      disabled={accionando}
+                    >
+                      {accionando ? 'Procesando…' : 'Marcar como entregada'}
+                    </button>
                     <button
                       type="button"
                       className="min-h-[42px] rounded-full border border-[var(--color-borde)] bg-[var(--color-superficie)] px-4 text-[14px] font-semibold text-[#c0392b] transition-colors duration-200 hover:border-[#c0392b] hover:bg-[#fee2e2] disabled:cursor-not-allowed disabled:opacity-50"

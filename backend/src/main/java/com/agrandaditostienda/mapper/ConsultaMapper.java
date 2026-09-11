@@ -66,8 +66,8 @@ public class ConsultaMapper {
     }
 
     private Instant fechaLimite(Consulta consulta, boolean editable) {
-        if (consulta.getEstado() == EstadoConsulta.PENDIENTE) {
-            return consulta.getFechaConsulta().plus(TIEMPO_LIMITE);
+        if (consulta.getEstado() == EstadoConsulta.EN_PREPARACION) {
+            return consulta.getActualizadaEn().plus(TIEMPO_LIMITE);
         }
         if (consulta.getEstado() == EstadoConsulta.CANCELADA && editable) {
             Instant base = consulta.getFechaCancelacion() != null

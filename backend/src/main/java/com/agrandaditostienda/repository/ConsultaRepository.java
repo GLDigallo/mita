@@ -52,7 +52,7 @@ public interface ConsultaRepository extends JpaRepository<Consulta, Long> {
     @Query("""
             select c from Consulta c
             where c.estado = :estado
-              and c.fechaConsulta < :limite
+              and c.actualizadaEn < :limite
               and not exists (select 1 from Venta v where v.consulta = c)
             """)
     List<Consulta> vencidasSinVenta(@Param("estado") EstadoConsulta estado,

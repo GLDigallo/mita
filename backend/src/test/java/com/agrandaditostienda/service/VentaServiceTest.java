@@ -1,11 +1,11 @@
 package com.agrandaditostienda.service;
 
-import com.agrandaditostienda.dto.ConfirmarVentaRequest;
 import com.agrandaditostienda.entity.Categoria;
 import com.agrandaditostienda.entity.Cliente;
 import com.agrandaditostienda.entity.Consulta;
 import com.agrandaditostienda.entity.EstadoConsulta;
 import com.agrandaditostienda.entity.EstadoVenta;
+import com.agrandaditostienda.entity.FormaPago;
 import com.agrandaditostienda.entity.Genero;
 import com.agrandaditostienda.entity.MetodoPago;
 import com.agrandaditostienda.entity.Producto;
@@ -44,7 +44,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -90,8 +89,10 @@ class VentaServiceTest {
     }
 
     private Producto producto(Tienda tienda) {
-        return new Producto("Remera", "Remera lisa", new BigDecimal("100"), "remera.png",
+        Producto producto = new Producto("Remera", "Remera lisa", new BigDecimal("100"), "remera.png",
                 "T1,T2", Genero.NINO, false, tienda, new Categoria("Ropa", "ropa", 1, tienda));
+        producto.setId(10L);
+        return producto;
     }
 
     private Consulta consultaConItem(Tienda tienda, Producto producto, EstadoConsulta estado) {
@@ -101,6 +102,7 @@ class VentaServiceTest {
         consulta.setEstado(estado);
         consulta.setTienda(tienda);
         consulta.setCliente(new Cliente("Juan", "1122334455"));
+        consulta.setFormaPago(FormaPago.EFECTIVO);
         consulta.agregarProductoConsultado(
                 new ProductoConsultado(producto, "T1", "Azul", 2, null, producto.getPrecio()));
         return consulta;
@@ -122,174 +124,175 @@ class VentaServiceTest {
     }
 
     @Test
-    void creaVentaDesdeConsultaCopiandoLosProductos() {
+    void confirmaConsultaCreandoVentaConfirmadaYDescontandoStock() {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
         Producto producto = producto(tienda);
-        producto.setId(10L);
-        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.PENDIENTE);
+        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.EN_PREPARACION);
         VarianteProducto variante = new VarianteProducto(producto, "Azul", "T1", 10);
 
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.empty());
         when(ventaRepository.siguienteNumero()).thenReturn(42L);
-        when(varianteProductoRepository.findByProductoIdIn(any()))
-                .thenReturn(List.of(variante));
+        when(varianteProductoRepository.findByProductoIdIn(any())).thenReturn(List.of(variante));
         when(ventaRepository.saveAndFlush(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(varianteProductoRepository.descontarStock(any(), anyInt(), any(Instant.class))).thenReturn(1);
+        when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
         when(ventaRepository.findDetalle(any())).thenReturn(Optional.of(new Venta()));
         when(ventaMapper.toDTO(any())).thenReturn(null);
 
-        ventaService.crearDesdeConsulta(1L, "Encargada");
+        ventaService.confirmar(1L, "Encargada");
 
         ArgumentCaptor<Venta> captor = ArgumentCaptor.forClass(Venta.class);
         verify(ventaRepository).saveAndFlush(captor.capture());
-        Venta guardada = captor.getValue();
-        assertThat(guardada.getNumero()).isEqualTo(42L);
-        assertThat(guardada.getEmpleado()).isEqualTo("Encargada");
-        assertThat(guardada.getCliente().getTelefono()).isEqualTo("1122334455");
-        assertThat(guardada.getItems()).hasSize(1);
+        Venta venta = captor.getValue();
+        assertThat(venta.getNumero()).isEqualTo(42L);
+        assertThat(venta.getEmpleado()).isEqualTo("Encargada");
+        assertThat(venta.getEstado()).isEqualTo(EstadoVenta.CONFIRMADA);
+        assertThat(venta.getMetodoPago()).isEqualTo(MetodoPago.EFECTIVO);
+        assertThat(venta.getImporteTotal()).isEqualByComparingTo(new BigDecimal("200"));
+        assertThat(venta.getItems()).hasSize(1);
+        assertThat(venta.getCliente().getTelefono()).isEqualTo("1122334455");
+
+        verify(varianteProductoRepository).descontarStock(eq(variante.getId()), eq(2), any(Instant.class));
+        ArgumentCaptor<Consulta> captorConsulta = ArgumentCaptor.forClass(Consulta.class);
+        verify(consultaRepository).save(captorConsulta.capture());
+        assertThat(captorConsulta.getValue().getEstado()).isEqualTo(EstadoConsulta.CONFIRMADA);
     }
 
     @Test
-    void noCreaVentaDeConsultaCancelada() {
+    void mapeaFormaDePagoTarjeta() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Producto producto = producto(tienda);
+        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.EN_PREPARACION);
+        consulta.setFormaPago(FormaPago.TARJETA);
+
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+        when(ventaRepository.siguienteNumero()).thenReturn(42L);
+        when(varianteProductoRepository.findByProductoIdIn(any()))
+                .thenReturn(List.of(new VarianteProducto(producto, "Azul", "T1", 10)));
+        when(ventaRepository.saveAndFlush(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(varianteProductoRepository.descontarStock(any(), anyInt(), any(Instant.class))).thenReturn(1);
+        when(ventaRepository.findDetalle(any())).thenReturn(Optional.of(new Venta()));
+        when(ventaMapper.toDTO(any())).thenReturn(null);
+
+        ventaService.confirmar(1L, "Encargada");
+
+        ArgumentCaptor<Venta> captor = ArgumentCaptor.forClass(Venta.class);
+        verify(ventaRepository).saveAndFlush(captor.capture());
+        assertThat(captor.getValue().getMetodoPago()).isEqualTo(MetodoPago.TARJETA_CREDITO);
+    }
+
+    @Test
+    void mapeaFormaDePagoDigitalAMercadoPago() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Producto producto = producto(tienda);
+        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.EN_PREPARACION);
+        consulta.setFormaPago(FormaPago.DIGITAL);
+
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+        when(ventaRepository.siguienteNumero()).thenReturn(42L);
+        when(varianteProductoRepository.findByProductoIdIn(any()))
+                .thenReturn(List.of(new VarianteProducto(producto, "Azul", "T1", 10)));
+        when(ventaRepository.saveAndFlush(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(varianteProductoRepository.descontarStock(any(), anyInt(), any(Instant.class))).thenReturn(1);
+        when(ventaRepository.findDetalle(any())).thenReturn(Optional.of(new Venta()));
+        when(ventaMapper.toDTO(any())).thenReturn(null);
+
+        ventaService.confirmar(1L, "Encargada");
+
+        ArgumentCaptor<Venta> captor = ArgumentCaptor.forClass(Venta.class);
+        verify(ventaRepository).saveAndFlush(captor.capture());
+        assertThat(captor.getValue().getMetodoPago()).isEqualTo(MetodoPago.MERCADO_PAGO);
+    }
+
+    @Test
+    void noConfirmaConsultaSinFormaDePago() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.EN_PREPARACION);
+        consulta.setFormaPago(null);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
+                .isInstanceOf(VentaInvalidaException.class)
+                .hasMessageContaining("forma de pago");
+        verify(ventaRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void noConfirmaConsultaCancelada() {
         autenticar(RolUsuario.DUENO, null);
         Consulta consulta = consultaConItem(tienda(1L), producto(tienda(1L)), EstadoConsulta.CANCELADA);
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
 
-        assertThatThrownBy(() -> ventaService.crearDesdeConsulta(1L, "Encargada"))
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
                 .isInstanceOf(VentaInvalidaException.class)
-                .hasMessageContaining("cancelada");
-        verify(ventaRepository, never()).save(any());
+                .hasMessageContaining("en preparación");
         verify(ventaRepository, never()).saveAndFlush(any());
     }
 
     @Test
-    void noCreaVentaDeConsultaFinalizada() {
+    void noConfirmaConsultaFinalizada() {
         autenticar(RolUsuario.DUENO, null);
         Consulta consulta = consultaConItem(tienda(1L), producto(tienda(1L)), EstadoConsulta.FINALIZADA);
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
 
-        assertThatThrownBy(() -> ventaService.crearDesdeConsulta(1L, "Encargada"))
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
                 .isInstanceOf(VentaInvalidaException.class);
-        verify(ventaRepository, never()).save(any());
+        verify(ventaRepository, never()).saveAndFlush(any());
     }
 
     @Test
-    void reutilizaVentaEnPreparacionExistente() {
+    void noConfirmaConsultaSinProductos() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = new Consulta();
+        consulta.setId(1L);
+        consulta.setNumero(7L);
+        consulta.setEstado(EstadoConsulta.EN_PREPARACION);
+        consulta.setTienda(tienda);
+        consulta.setCliente(new Cliente("Juan", "1122334455"));
+        consulta.setFormaPago(FormaPago.EFECTIVO);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
+                .isInstanceOf(VentaInvalidaException.class)
+                .hasMessageContaining("no tiene productos");
+        verify(ventaRepository, never()).saveAndFlush(any());
+    }
+
+    @Test
+    void noConfirmaSiElStockNoAlcanza() {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
         Producto producto = producto(tienda);
-        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.PENDIENTE);
-        Venta existente = ventaConItem(tienda, consulta, EstadoVenta.EN_PREPARACION);
+        Consulta consulta = consultaConItem(tienda, producto, EstadoConsulta.EN_PREPARACION);
 
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.of(existente));
-        when(ventaMapper.toDTO(any())).thenReturn(null);
-
-        ventaService.crearDesdeConsulta(1L, "Encargada");
-
-        verify(ventaRepository).findByConsultaId(1L);
-        verify(ventaRepository, never()).saveAndFlush(any());
-        verify(ventaRepository, never()).siguienteNumero();
-    }
-
-    @Test
-    void noCreaVentaSiYaExisteUnaConfirmada() {
-        autenticar(RolUsuario.DUENO, null);
-        Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.PENDIENTE);
-        Venta existente = ventaConItem(tienda, consulta, EstadoVenta.CONFIRMADA);
-
-        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.of(existente));
-
-        assertThatThrownBy(() -> ventaService.crearDesdeConsulta(1L, "Encargada"))
-                .isInstanceOf(VentaInvalidaException.class)
-                .hasMessageContaining("ya tiene una venta");
-        verify(ventaRepository, never()).saveAndFlush(any());
-    }
-
-    @Test
-    void noPermiteCrearVentaDeOtraTienda() {
-        autenticar(RolUsuario.ENCARGADA, 1L);
-        Consulta consulta = consultaConItem(tienda(2L), producto(tienda(2L)), EstadoConsulta.PENDIENTE);
-        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-
-        assertThatThrownBy(() -> ventaService.crearDesdeConsulta(1L, "Encargada"))
-                .isInstanceOf(VentaInvalidaException.class)
-                .hasMessageContaining("acceso");
-    }
-
-    @Test
-    void noConfirmaVentaSinProductos() {
-        autenticar(RolUsuario.DUENO, null);
-        Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.PENDIENTE);
-        Venta venta = new Venta();
-        venta.setId(5L);
-        venta.setEstado(EstadoVenta.EN_PREPARACION);
-        venta.setTienda(tienda);
-        venta.setCliente(consulta.getCliente());
-        venta.setConsulta(consulta);
-
-        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
-
-        assertThatThrownBy(() -> ventaService.confirmar(5L, new ConfirmarVentaRequest(MetodoPago.EFECTIVO), "Encargada"))
-                .isInstanceOf(VentaInvalidaException.class)
-                .hasMessageContaining("no tiene productos");
-    }
-
-    @Test
-    void noConfirmaVentaQueNoEstaEnPreparacion() {
-        autenticar(RolUsuario.DUENO, null);
-        Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.PENDIENTE);
-        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.CONFIRMADA);
-
-        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
-
-        assertThatThrownBy(() -> ventaService.confirmar(5L, new ConfirmarVentaRequest(MetodoPago.EFECTIVO), "Encargada"))
-                .isInstanceOf(VentaInvalidaException.class)
-                .hasMessageContaining("en preparación");
-    }
-
-    @Test
-    void confirmaVentaDescontandoStockYConfirmandoLaConsulta() {
-        autenticar(RolUsuario.DUENO, null);
-        Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.PENDIENTE);
-        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.EN_PREPARACION);
-        VarianteProducto variante = venta.getItems().get(0).getVariante();
-
-        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
-        when(varianteProductoRepository.descontarStock(any(), anyInt(), any(Instant.class))).thenReturn(1);
+        when(ventaRepository.siguienteNumero()).thenReturn(42L);
+        when(varianteProductoRepository.findByProductoIdIn(any()))
+                .thenReturn(List.of(new VarianteProducto(producto, "Azul", "T1", 10)));
         when(ventaRepository.saveAndFlush(any(Venta.class))).thenAnswer(inv -> inv.getArgument(0));
-        when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
-
-        ventaService.confirmar(5L, new ConfirmarVentaRequest(MetodoPago.EFECTIVO), "Encargada");
-
-        verify(varianteProductoRepository).descontarStock(any(), eq(2), any(Instant.class));
-        assertThat(venta.getEstado()).isEqualTo(EstadoVenta.CONFIRMADA);
-        assertThat(venta.getMetodoPago()).isEqualTo(MetodoPago.EFECTIVO);
-        assertThat(venta.getImporteTotal()).isEqualByComparingTo(new BigDecimal("200"));
-        assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.CONFIRMADA);
-    }
-
-    @Test
-    void noConfirmaVentaSiElStockNoAlcanza() {
-        autenticar(RolUsuario.DUENO, null);
-        Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.PENDIENTE);
-        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.EN_PREPARACION);
-        VarianteProducto variante = venta.getItems().get(0).getVariante();
-
-        when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
         when(varianteProductoRepository.descontarStock(any(), anyInt(), any(Instant.class))).thenReturn(0);
 
-        assertThatThrownBy(() -> ventaService.confirmar(5L, new ConfirmarVentaRequest(MetodoPago.EFECTIVO), "Encargada"))
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
                 .isInstanceOf(VentaInvalidaException.class)
                 .hasMessageContaining("Stock insuficiente");
-        assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.PENDIENTE);
+        verify(consultaRepository, never()).save(any());
+        assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.EN_PREPARACION);
+    }
+
+    @Test
+    void noPermiteConfirmarConsultaDeOtraTienda() {
+        autenticar(RolUsuario.ENCARGADA, 1L);
+        Consulta consulta = consultaConItem(tienda(2L), producto(tienda(2L)), EstadoConsulta.EN_PREPARACION);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> ventaService.confirmar(1L, "Encargada"))
+                .isInstanceOf(VentaInvalidaException.class)
+                .hasMessageContaining("acceso");
     }
 
     @Test
@@ -334,7 +337,7 @@ class VentaServiceTest {
 
         ventaService.cancelar(5L, "Encargada");
 
-        verify(varianteProductoRepository).reponerStock(any(), eq(2), any(Instant.class));
+        verify(varianteProductoRepository).reponerStock(eq(variante.getId()), eq(2), any(Instant.class));
         assertThat(venta.getEstado()).isEqualTo(EstadoVenta.CANCELADA);
         assertThat(consulta.getEstado()).isEqualTo(EstadoConsulta.CANCELADA);
     }
@@ -358,11 +361,11 @@ class VentaServiceTest {
     }
 
     @Test
-    void noEntregaVentaEnPreparacion() {
+    void noEntregaVentaNoConfirmada() {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
-        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.EN_REVISION);
-        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.EN_PREPARACION);
+        Consulta consulta = consultaConItem(tienda, producto(tienda), EstadoConsulta.CANCELADA);
+        Venta venta = ventaConItem(tienda, consulta, EstadoVenta.CANCELADA);
 
         when(ventaRepository.findDetalle(5L)).thenReturn(Optional.of(venta));
 

@@ -1,13 +1,12 @@
 package com.agrandaditostienda.service;
 
-import com.agrandaditostienda.dto.ActualizarItemsVentaRequest;
-import com.agrandaditostienda.dto.ConfirmarVentaRequest;
 import com.agrandaditostienda.dto.VentaDTO;
 import com.agrandaditostienda.dto.VentaResumenDTO;
 import com.agrandaditostienda.entity.Consulta;
 import com.agrandaditostienda.entity.EstadoConsulta;
 import com.agrandaditostienda.entity.EstadoVenta;
-import com.agrandaditostienda.entity.Producto;
+import com.agrandaditostienda.entity.FormaPago;
+import com.agrandaditostienda.entity.MetodoPago;
 import com.agrandaditostienda.entity.ProductoConsultado;
 import com.agrandaditostienda.entity.VarianteProducto;
 import com.agrandaditostienda.entity.Venta;
@@ -49,21 +48,18 @@ public class VentaService {
     private final EntityManager entityManager;
 
     @Transactional
-    public VentaDTO crearDesdeConsulta(Long consultaId, String empleado) {
+    public VentaDTO confirmar(Long consultaId, String empleado) {
         Consulta consulta = consultaRepository.findDetalle(consultaId)
                 .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + consultaId));
         verificarAcceso(consulta);
-        if (consulta.getEstado() == EstadoConsulta.CANCELADA || consulta.getEstado() == EstadoConsulta.FINALIZADA) {
-            throw new VentaInvalidaException(
-                    "No se puede generar una venta de una consulta " + etiquetaEstado(consulta.getEstado()));
+        if (consulta.getEstado() != EstadoConsulta.EN_PREPARACION) {
+            throw new VentaInvalidaException("Solo se puede confirmar una consulta en preparación");
         }
-        Venta existente = ventaRepository.findByConsultaId(consultaId).orElse(null);
-        if (existente != null) {
-            if (existente.getEstado() != EstadoVenta.EN_PREPARACION) {
-                throw new VentaInvalidaException(
-                        "La consulta ya tiene una venta asociada (" + etiquetaEstado(existente.getEstado()) + ")");
-            }
-            return ventaMapper.toDTO(existente);
+        if (consulta.getProductosConsultados().isEmpty()) {
+            throw new VentaInvalidaException("La consulta no tiene productos");
+        }
+        if (consulta.getFormaPago() == null) {
+            throw new VentaInvalidaException("Elegí la forma de pago antes de confirmar la compra");
         }
 
         Venta venta = new Venta();
@@ -72,12 +68,16 @@ public class VentaService {
         venta.setTienda(consulta.getTienda());
         venta.setCliente(consulta.getCliente());
         venta.setEmpleado(empleado);
+        venta.setEstado(EstadoVenta.CONFIRMADA);
+        venta.setFechaVenta(Instant.now());
+        venta.setMetodoPago(aMetodoPago(consulta.getFormaPago()));
 
         List<Long> productoIds = consulta.getProductosConsultados().stream()
                 .map(pc -> pc.getProducto().getId()).toList();
         Map<Long, List<VarianteProducto>> variantesPorProducto = varianteProductoRepository.findByProductoIdIn(productoIds).stream()
                 .collect(java.util.stream.Collectors.groupingBy(v -> v.getProducto().getId()));
 
+        BigDecimal importe = BigDecimal.ZERO;
         for (ProductoConsultado pc : consulta.getProductosConsultados()) {
             String color = pc.getColor();
             String talle = pc.getTalle();
@@ -94,101 +94,15 @@ public class VentaService {
                     pc.getColor(),
                     pc.getCantidad(),
                     pc.getPrecioUnitario()));
+            importe = importe.add(pc.getPrecioUnitario().multiply(BigDecimal.valueOf(pc.getCantidad())));
         }
+        venta.setImporteTotal(importe);
 
         try {
-            Venta guardada = ventaRepository.saveAndFlush(venta);
-            return ventaMapper.toDTO(ventaRepository.findDetalle(guardada.getId()).orElseThrow());
+            ventaRepository.saveAndFlush(venta);
         } catch (DataIntegrityViolationException conflicto) {
-            Venta ganadora = ventaRepository.findByConsultaId(consultaId).orElseThrow();
-            if (ganadora.getEstado() != EstadoVenta.EN_PREPARACION) {
-                throw new VentaInvalidaException(
-                        "La consulta ya tiene una venta asociada (" + etiquetaEstado(ganadora.getEstado()) + ")");
-            }
-            return ventaMapper.toDTO(ganadora);
+            throw new VentaInvalidaException("La consulta ya tiene una venta asociada");
         }
-    }
-
-    @Transactional
-    public VentaDTO actualizarItems(Long ventaId, ActualizarItemsVentaRequest request, String empleado) {
-        Venta venta = ventaRepository.findDetalle(ventaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
-        verificarAcceso(venta);
-        if (venta.getEstado() != EstadoVenta.EN_PREPARACION) {
-            throw new VentaInvalidaException("Solo se pueden modificar los productos de una venta en preparación");
-        }
-
-        venta.getItems().clear();
-
-        List<Long> productoIds = request.items().stream().map(ActualizarItemsVentaRequest.ItemVentaRequest::productoId).toList();
-        List<Long> varianteIds = request.items().stream().map(ActualizarItemsVentaRequest.ItemVentaRequest::varianteId).toList();
-        Map<Long, Producto> productosPorId = productoRepository.findAllById(productoIds).stream()
-                .collect(java.util.stream.Collectors.toMap(Producto::getId, p -> p));
-        Map<Long, VarianteProducto> variantesPorId = varianteProductoRepository.findAllById(varianteIds).stream()
-                .collect(java.util.stream.Collectors.toMap(VarianteProducto::getId, v -> v));
-
-        for (ActualizarItemsVentaRequest.ItemVentaRequest item : request.items()) {
-            Producto producto = productosPorId.get(item.productoId());
-            if (producto == null) {
-                throw new RecursoNoEncontradoException("Producto no encontrado: " + item.productoId());
-            }
-            VarianteProducto variante = variantesPorId.get(item.varianteId());
-            if (variante == null) {
-                throw new RecursoNoEncontradoException("Variante no encontrada: " + item.varianteId());
-            }
-            if (!variante.getProducto().getId().equals(producto.getId())) {
-                throw new VentaInvalidaException(
-                        "La variante seleccionada no corresponde al producto '" + producto.getNombre() + "'");
-            }
-            if (!producto.getTienda().getId().equals(venta.getTienda().getId())) {
-                throw new VentaInvalidaException(
-                        "El producto '" + producto.getNombre() + "' no pertenece a la sucursal " + venta.getTienda().getNombre());
-            }
-            if (!variante.isActivo()) {
-                throw new VentaInvalidaException(
-                        "La variante no está activa: " + producto.getNombre() + " (" + variante.getColor() + ", talle " + variante.getTalle() + ")");
-            }
-            if (item.cantidad() > variante.getStock()) {
-                throw new VentaInvalidaException(
-                        "Stock insuficiente para " + producto.getNombre()
-                                + " (" + variante.getColor() + ", talle " + variante.getTalle()
-                                + "): hay " + variante.getStock() + " unidades");
-            }
-            venta.agregarItem(new VentaItem(
-                    producto,
-                    variante,
-                    variante.getTalle(),
-                    variante.getColor(),
-                    item.cantidad(),
-                    producto.getPrecio()));
-        }
-
-        venta.setEmpleado(empleado);
-        Venta guardada = ventaRepository.save(venta);
-        return ventaMapper.toDTO(ventaRepository.findDetalle(guardada.getId()).orElseThrow());
-    }
-
-    @Transactional
-    public VentaDTO confirmar(Long ventaId, ConfirmarVentaRequest request, String empleado) {
-        Venta venta = ventaRepository.findDetalle(ventaId)
-                .orElseThrow(() -> new RecursoNoEncontradoException("Venta no encontrada: " + ventaId));
-        verificarAcceso(venta);
-        if (venta.getEstado() != EstadoVenta.EN_PREPARACION) {
-            throw new VentaInvalidaException("Solo se puede confirmar una venta en preparación");
-        }
-        if (venta.getItems().isEmpty()) {
-            throw new VentaInvalidaException("La venta no tiene productos");
-        }
-
-        BigDecimal importe = venta.getItems().stream()
-                .map(i -> i.getPrecioUnitario().multiply(BigDecimal.valueOf(i.getCantidad())))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        venta.setEstado(EstadoVenta.CONFIRMADA);
-        venta.setFechaVenta(Instant.now());
-        venta.setMetodoPago(request.metodoPago());
-        venta.setImporteTotal(importe);
-        venta.setEmpleado(empleado);
-        ventaRepository.saveAndFlush(venta);
 
         for (VentaItem item : venta.getItems()) {
             int descontados = varianteProductoRepository
@@ -201,12 +115,19 @@ public class VentaService {
             }
         }
 
-        Consulta consulta = venta.getConsulta();
         consulta.setEstado(EstadoConsulta.CONFIRMADA);
         consultaRepository.save(consulta);
 
         refrescarStock(venta);
         return ventaMapper.toDTO(ventaRepository.findDetalle(venta.getId()).orElseThrow());
+    }
+
+    private static MetodoPago aMetodoPago(FormaPago formaPago) {
+        return switch (formaPago) {
+            case EFECTIVO -> MetodoPago.EFECTIVO;
+            case TARJETA -> MetodoPago.TARJETA_CREDITO;
+            case DIGITAL -> MetodoPago.MERCADO_PAGO;
+        };
     }
 
     @Transactional
@@ -334,9 +255,7 @@ public class VentaService {
 
     private String etiquetaEstado(EstadoConsulta estado) {
         return switch (estado) {
-            case PENDIENTE -> "pendiente";
-            case EN_REVISION -> "en revisión";
-            case ESPERANDO_CLIENTE -> "esperando respuesta del cliente";
+            case EN_PREPARACION -> "en preparación";
             case CONFIRMADA -> "confirmada";
             case CANCELADA -> "cancelada";
             case FINALIZADA -> "finalizada";
@@ -345,7 +264,6 @@ public class VentaService {
 
     private String etiquetaEstado(EstadoVenta estado) {
         return switch (estado) {
-            case EN_PREPARACION -> "en preparación";
             case CONFIRMADA -> "confirmada";
             case ENTREGADA -> "entregada";
             case CANCELADA -> "cancelada";

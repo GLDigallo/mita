@@ -17,8 +17,6 @@ import com.agrandaditostienda.entity.RolUsuario;
 import com.agrandaditostienda.entity.Tienda;
 import com.agrandaditostienda.entity.TipoCambio;
 import com.agrandaditostienda.entity.VarianteProducto;
-import com.agrandaditostienda.entity.Venta;
-import com.agrandaditostienda.entity.EstadoVenta;
 import com.agrandaditostienda.exception.ConsultaInvalidaException;
 import com.agrandaditostienda.mapper.ConsultaMapper;
 import com.agrandaditostienda.repository.ClienteRepository;
@@ -40,6 +38,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -146,7 +145,7 @@ class ConsultaServiceTest {
         consulta.setNumero(7L);
         consulta.setVersion(0);
         consulta.setTienda(tienda);
-        consulta.setEstado(EstadoConsulta.PENDIENTE);
+        consulta.setEstado(EstadoConsulta.EN_PREPARACION);
         consulta.setObservaciones("nota original");
         consulta.agregarProductoConsultado(new ProductoConsultado(
                 producto(10L, tienda), "T1", "Azul", 2, "sin", new BigDecimal("100")));
@@ -247,12 +246,12 @@ class ConsultaServiceTest {
     @Test
     void listaSoloConsultasDeLaTiendaDeLaEncargada() {
         autenticar(RolUsuario.ENCARGADA, 1L);
-        when(consultaRepository.buscar(EstadoConsulta.PENDIENTE, 1L, null)).thenReturn(List.of());
+        when(consultaRepository.buscar(EstadoConsulta.EN_PREPARACION, 1L, null)).thenReturn(List.of());
 
-        var resultado = consultaService.listar(EstadoConsulta.PENDIENTE, null, null);
+        var resultado = consultaService.listar(EstadoConsulta.EN_PREPARACION, null, null);
 
         assertThat(resultado).isEmpty();
-        verify(consultaRepository).buscar(EstadoConsulta.PENDIENTE, 1L, null);
+        verify(consultaRepository).buscar(EstadoConsulta.EN_PREPARACION, 1L, null);
     }
 
     @Test
@@ -349,19 +348,90 @@ class ConsultaServiceTest {
     }
 
     @Test
-    void noModificaConsultaConVentaEnPreparacion() {
+    void editarConsultaCanceladaReactivableLaReactiva() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Producto producto = producto(10L, tienda);
+        Consulta consulta = consultaModificable(tienda);
+        consulta.setEstado(EstadoConsulta.CANCELADA);
+        consulta.setFechaCancelacion(Instant.now());
+        prepararModificacion(tienda, producto, consulta);
+
+        consultaService.modificar(1L, new ModificarConsultaRequest(
+                MotivoModificacion.CAMBIO_CANTIDAD,
+                "nota nueva",
+                List.of(new CrearConsultaRequest.ItemConsultaRequest(10L, "Azul", "T1", 3, "sin"))));
+
+        ArgumentCaptor<Consulta> consultaCaptor = ArgumentCaptor.forClass(Consulta.class);
+        verify(consultaRepository).save(consultaCaptor.capture());
+        assertThat(consultaCaptor.getValue().getEstado()).isEqualTo(EstadoConsulta.EN_PREPARACION);
+        assertThat(consultaCaptor.getValue().isReabierta()).isTrue();
+        assertThat(consultaCaptor.getValue().getFechaCancelacion()).isNull();
+    }
+
+    @Test
+    void noModificaConsultaCanceladaDefinitiva() {
         autenticar(RolUsuario.DUENO, null);
         Tienda tienda = tienda(1L);
         Consulta consulta = consultaModificable(tienda);
+        consulta.setEstado(EstadoConsulta.CANCELADA);
+        consulta.setFechaCancelacion(Instant.now());
+        consulta.setReabierta(true);
         when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
-        Venta ventaEnPreparacion = new Venta();
-        ventaEnPreparacion.setEstado(EstadoVenta.EN_PREPARACION);
-        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.of(ventaEnPreparacion));
 
         assertThatThrownBy(() -> consultaService.modificar(1L, new ModificarConsultaRequest(
                 MotivoModificacion.OTRO, null, List.of())))
                 .isInstanceOf(ConsultaInvalidaException.class)
-                .hasMessageContaining("venta");
+                .hasMessageContaining("No se puede modificar");
+        verify(consultaRepository, never()).save(any());
+    }
+
+    @Test
+    void noModificaConsultaCanceladaFueraDeLaVentana() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaModificable(tienda);
+        consulta.setEstado(EstadoConsulta.CANCELADA);
+        consulta.setFechaCancelacion(Instant.now().minus(java.time.Duration.ofHours(49)));
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> consultaService.modificar(1L, new ModificarConsultaRequest(
+                MotivoModificacion.OTRO, null, List.of())))
+                .isInstanceOf(ConsultaInvalidaException.class)
+                .hasMessageContaining("No se puede modificar");
+        verify(consultaRepository, never()).save(any());
+    }
+
+    @Test
+    void cancelaConsultaEnPreparacion() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaModificable(tienda);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+        when(consultaRepository.save(any(Consulta.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(ventaRepository.findByConsultaId(1L)).thenReturn(Optional.empty());
+        when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
+
+        consultaService.cancelar(1L);
+
+        ArgumentCaptor<Consulta> captor = ArgumentCaptor.forClass(Consulta.class);
+        verify(consultaRepository).save(captor.capture());
+        assertThat(captor.getValue().getEstado()).isEqualTo(EstadoConsulta.CANCELADA);
+        assertThat(captor.getValue().getFechaCancelacion()).isNotNull();
+    }
+
+    @Test
+    void noCancelaConsultaYaConfirmada() {
+        autenticar(RolUsuario.DUENO, null);
+        Tienda tienda = tienda(1L);
+        Consulta consulta = consultaModificable(tienda);
+        consulta.setEstado(EstadoConsulta.CONFIRMADA);
+        when(consultaRepository.findDetalle(1L)).thenReturn(Optional.of(consulta));
+
+        assertThatThrownBy(() -> consultaService.cancelar(1L))
+                .isInstanceOf(ConsultaInvalidaException.class)
+                .hasMessageContaining("en preparación");
         verify(consultaRepository, never()).save(any());
     }
 

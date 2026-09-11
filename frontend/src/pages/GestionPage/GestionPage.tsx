@@ -5,7 +5,6 @@ import { colorContraste } from '../../utils/textoContraste'
 import EstadoBadge from '../../components/EstadoBadge/EstadoBadge'
 import ConsultaDetalle from '../../components/ConsultaDetalle/ConsultaDetalle'
 import ErrorBoundary from '../../components/ErrorBoundary/ErrorBoundary'
-import VentaArmado from '../../components/VentaArmado/VentaArmado'
 import VentaDetalle from '../../components/VentaDetalle/VentaDetalle'
 import EmptyState from '../../components/EmptyState/EmptyState'
 import ToastHost from '../../components/Toast/Toast'
@@ -14,9 +13,10 @@ import PromosView from './PromosView/PromosView'
 import MetricasView from './MetricasView/MetricasView'
 import ProductosView from './ProductosView/ProductosView'
 import {
+  cancelarConsulta,
   cancelarVenta,
   cambiarFormaPagoConsulta,
-  confirmarVenta,
+  confirmarConsulta,
   entregarVenta,
   fetchConsulta,
   fetchConsultas,
@@ -34,23 +34,12 @@ import type {
   ConsultaDetalle as ConsultaDetalleTipo,
   ConsultaLista,
   FormaPago,
-  MetodoPago,
   Tienda,
   Usuario,
-  VentaDetalle as VentaDetalleTipo,
   VentaLista,
 } from '../../types'
 
 type Sesion = 'cargando' | 'anonimo' | 'autenticado'
-
-interface ConsultaParaArmar {
-  id: number
-  numero: string
-  tiendaSlug: string
-  clienteNombre: string
-  clienteTelefono: string
-  formaPago: FormaPago
-}
 
 const brilloFila =
   'animate-brillar h-[92px] border-0 bg-[linear-gradient(90deg,#eeece6_25%,#f6f4ef_50%,#eeece6_75%)] bg-[length:200%_100%]'
@@ -94,7 +83,6 @@ function GestionPage() {
   const [errorDetalle, setErrorDetalle] = useState('')
   const [cambiandoEstado, setCambiandoEstado] = useState(false)
 
-  const [armando, setArmando] = useState<{ consulta: ConsultaParaArmar; ventaInicial: VentaDetalleTipo | null } | null>(null)
   const [ventaDetalleId, setVentaDetalleId] = useState<number | null>(null)
   const [notificacion, setNotificacion] = useState<string | null>(null)
   const consultasSnapshot = useRef(0)
@@ -142,7 +130,6 @@ function GestionPage() {
       setVentas([])
       setDetalleId(null)
       setDetalle(null)
-      setArmando(null)
     }
     window.addEventListener('auth:expired', onAuthExpired)
     return () => window.removeEventListener('auth:expired', onAuthExpired)
@@ -171,7 +158,7 @@ function GestionPage() {
       })
       setConsultas(datos)
       if (consultasSnapshot.current === 0) {
-        consultasSnapshot.current = datos.filter((c) => c.estado === 'PENDIENTE').length
+        consultasSnapshot.current = datos.filter((c) => c.estado === 'EN_PREPARACION').length
       }
     } catch (err) {
       mostrar('error', (err as Error).message)
@@ -242,11 +229,11 @@ function GestionPage() {
     const intervalo = setInterval(() => {
       fetchConsultas({ estado: '', tiendaId: esDueno ? '' : String(usuario?.tiendaId ?? ''), busqueda: '' })
         .then((datos) => {
-          const pendientes = datos.filter((c) => c.estado === 'PENDIENTE').length
+          const pendientes = datos.filter((c) => c.estado === 'EN_PREPARACION').length
           const snapshot = consultasSnapshot.current
           if (snapshot > 0 && pendientes > snapshot) {
             const nuevas = pendientes - snapshot
-            setNotificacion(`${nuevas} nueva${nuevas > 1 ? 's' : ''} consulta${nuevas > 1 ? 's' : ''} pendiente${nuevas > 1 ? 's' : ''}`)
+            setNotificacion(`${nuevas} nueva${nuevas > 1 ? 's' : ''} consulta${nuevas > 1 ? 's' : ''} en preparación`)
             try {
               playBeep()
             } catch {}
@@ -321,7 +308,6 @@ function GestionPage() {
     setDetalleId(null)
     setDetalle(null)
     setErrorDetalle('')
-    setArmando(null)
     setVentaDetalleId(null)
     setNotificacion(null)
     setEstadoFiltro('')
@@ -345,11 +331,11 @@ function GestionPage() {
     setVentaBusquedaAplicada(ventaBusquedaInput.trim())
   }
 
-  async function manejarConfirmarVenta(metodoPago: MetodoPago) {
-    if (!detalle?.ventaId) return
+  async function manejarConfirmarConsulta() {
+    if (!detalle?.id) return
     setCambiandoEstado(true)
     try {
-      await confirmarVenta(detalle.ventaId, metodoPago)
+      await confirmarConsulta(detalle.id)
       const actualizada = await fetchConsulta(detalle.id)
       setDetalle(actualizada)
       const indices = consultas
@@ -363,6 +349,29 @@ function GestionPage() {
         })
       }
       cargarVentas()
+    } catch (err) {
+      mostrar('error', (err as Error).message)
+    } finally {
+      setCambiandoEstado(false)
+    }
+  }
+
+  async function manejarCancelarConsulta() {
+    if (!detalle?.id) return
+    setCambiandoEstado(true)
+    try {
+      const actualizada = await cancelarConsulta(detalle.id)
+      setDetalle(actualizada)
+      const indices = consultas
+        .map((c, i) => (c.id === actualizada.id ? i : -1))
+        .filter((i) => i !== -1)
+      if (indices.length > 0) {
+        setConsultas((actuales) => {
+          const copia = [...actuales]
+          copia[indices[0]] = { ...copia[indices[0]], estado: actualizada.estado }
+          return copia
+        })
+      }
     } catch (err) {
       mostrar('error', (err as Error).message)
     } finally {
@@ -461,26 +470,6 @@ function GestionPage() {
     }
   }
 
-  function manejarArmarVenta(consulta: ConsultaDetalleTipo) {
-    setDetalleId(null)
-    setArmando({ consulta, ventaInicial: null })
-  }
-
-  function manejarEditarVenta(venta: VentaDetalleTipo) {
-    setVentaDetalleId(null)
-    setArmando({
-      consulta: {
-        id: venta.consultaId,
-        numero: venta.consultaNumero,
-        tiendaSlug: venta.tiendaSlug,
-        clienteNombre: venta.clienteNombre,
-        clienteTelefono: venta.clienteTelefono,
-        formaPago: 'EFECTIVO',
-      },
-      ventaInicial: venta,
-    })
-  }
-
   function refrescar() {
     if (seccion === 'consultas') cargarConsultas()
     cargarVentas()
@@ -548,27 +537,18 @@ function GestionPage() {
             <p className="mt-1 text-[15px] text-[var(--color-texto-suave)]">¿Qué necesitás hacer hoy?</p>
 
             {esEncargada &&
-              (consultas.filter((c) => c.estado === 'PENDIENTE').length > 0 ||
-                consultas.filter((c) => c.estado === 'EN_REVISION').length > 0) && (
+              (consultas.filter((c) => c.estado === 'EN_PREPARACION').length > 0) && (
                 <div className="rounded-[var(--radius-md)] border border-[var(--color-borde)] border-t-[3px] border-t-[var(--gestion-color,var(--color-marca))] bg-[var(--color-superficie)] p-4">
                   <h3 className="mb-3 text-[14px] font-bold uppercase tracking-[0.04em] text-[var(--color-texto-suave)]">
                     Lo que tengo que hacer hoy
                   </h3>
                   <div className="grid grid-cols-2 gap-2.5">
-                    {consultas.filter((c) => c.estado === 'PENDIENTE').length > 0 && (
+                    {consultas.filter((c) => c.estado === 'EN_PREPARACION').length > 0 && (
                       <Link to="/home/consultas" className="flex flex-col items-center rounded-[var(--radius-sm)] border border-[var(--color-borde)] p-3 transition-colors duration-200 hover:-translate-y-px hover:border-[var(--gestion-color,var(--color-marca))]">
                         <span className="text-[24px] font-extrabold leading-none text-[var(--gestion-color,var(--color-marca))]">
-                          {consultas.filter((c) => c.estado === 'PENDIENTE').length}
+                          {consultas.filter((c) => c.estado === 'EN_PREPARACION').length}
                         </span>
-                        <span className="mt-1 text-center text-[12px] text-[var(--color-texto-suave)]">consultas pendientes</span>
-                      </Link>
-                    )}
-                    {consultas.filter((c) => c.estado === 'EN_REVISION').length > 0 && (
-                      <Link to="/home/consultas" className="flex flex-col items-center rounded-[var(--radius-sm)] border border-[var(--color-borde)] p-3 transition-colors duration-200 hover:-translate-y-px hover:border-[var(--gestion-color,var(--color-marca))]">
-                        <span className="text-[24px] font-extrabold leading-none text-[var(--gestion-color,var(--color-marca))]">
-                          {consultas.filter((c) => c.estado === 'EN_REVISION').length}
-                        </span>
-                        <span className="mt-1 text-center text-[12px] text-[var(--color-texto-suave)]">en revisión</span>
+                        <span className="mt-1 text-center text-[12px] text-[var(--color-texto-suave)]">consultas en preparación</span>
                       </Link>
                     )}
                   </div>
@@ -584,7 +564,7 @@ function GestionPage() {
                   <span className="text-[16px] font-bold">Consultas</span>
                   <span className="text-center text-[13px] text-[var(--color-texto-suave)]">
                     {tiendaUsuario ? `${tiendaUsuario.nombre}: ` : ''}
-                    {consultas.filter((c) => c.estado === 'PENDIENTE').length} pendientes
+                    {consultas.filter((c) => c.estado === 'EN_PREPARACION').length} en preparación
                   </span>
                 </Link>
               )}
@@ -827,29 +807,13 @@ function GestionPage() {
             onCerrar={() => { setDetalleId(null); setErrorDetalle('') }}
             cambiandoEstado={cambiandoEstado}
             onCambiarFormaPago={manejarCambioFormaPago}
-            onArmarVenta={manejarArmarVenta}
             onModificada={manejarModificada}
-            onConfirmarVenta={manejarConfirmarVenta}
+            onConfirmarConsulta={manejarConfirmarConsulta}
+            onCancelarConsulta={manejarCancelarConsulta}
             onEntregarVenta={manejarEntregarVenta}
             onCancelarVenta={manejarCancelarVenta}
           />
         </ErrorBoundary>
-      )}
-
-      {armando && (
-        <VentaArmado
-          consulta={armando.consulta}
-          ventaInicial={armando.ventaInicial}
-          onCerrar={() => setArmando(null)}
-          onConfirmada={() => {
-            setArmando(null)
-            refrescar()
-          }}
-          onCancelada={() => {
-            setArmando(null)
-            refrescar()
-          }}
-        />
       )}
 
       {ventaDetalleId && (
@@ -857,7 +821,6 @@ function GestionPage() {
           ventaId={ventaDetalleId}
           onCerrar={() => setVentaDetalleId(null)}
           onActualizada={() => refrescar()}
-          onEditar={manejarEditarVenta}
         />
       )}
 

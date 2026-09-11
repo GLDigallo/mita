@@ -56,9 +56,9 @@ export interface CarritoItem {
   cantidad: number
 }
 
-export type EstadoConsulta = 'PENDIENTE' | 'EN_REVISION' | 'ESPERANDO_CLIENTE' | 'CONFIRMADA' | 'CANCELADA' | 'FINALIZADA'
+export type EstadoConsulta = 'EN_PREPARACION' | 'CONFIRMADA' | 'CANCELADA' | 'FINALIZADA'
 
-export type EstadoVenta = 'EN_PREPARACION' | 'CONFIRMADA' | 'ENTREGADA' | 'CANCELADA'
+export type EstadoVenta = 'CONFIRMADA' | 'ENTREGADA' | 'CANCELADA'
 
 export type FormaPago = 'EFECTIVO' | 'TARJETA' | 'DIGITAL'
 

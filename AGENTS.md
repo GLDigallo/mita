@@ -24,12 +24,13 @@ El corazón del sistema es el ciclo **consulta → venta**:
 
 ```
 CONSULTA          VENTA
-PENDIENTE ──────► EN_PREPARACION   (armado desde los ítems de la consulta)
-EN_PREPARACION ──► ...             (edición de ítems, nada se descuenta)
-CONFIRMADA ─────► CONFIRMADA       (descuenta stock, atómico)
-FINALIZADA ◄───── ENTREGADA        (se entregó en el local)
-CANCELADA ◄────── CANCELADA        (si estaba CONFIRMADA, repone stock)
+EN_PREPARACION ──► (no existe venta aún: edición de ítems, nada se descuenta)
+                 ──confirmar──► CONFIRMADA        (la venta NACE en la confirmación, descuenta stock, atómico)
+FINALIZADA ◄────── ENTREGADA    (se entregó en el local)
+CANCELADA ◄────── CANCELADA     (si estaba CONFIRMADA, repone stock)
+CANCELADA (sin venta ──► editarla la REACTIVA a EN_PREPARACION, una sola vez, dentro de 48hs)
 ```
+el auto-cierre: EN_PREPARACION sin venta a las 48hs de la última actualización → CANCELADA
 
 Tu trabajo es que ese ciclo funcione **sin perder stock, sin perder trazabilidad y sin romper la cara pública**.
 

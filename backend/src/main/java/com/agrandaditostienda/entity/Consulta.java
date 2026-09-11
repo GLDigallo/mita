@@ -33,7 +33,7 @@ public class Consulta {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private EstadoConsulta estado = EstadoConsulta.PENDIENTE;
+    private EstadoConsulta estado = EstadoConsulta.EN_PREPARACION;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cliente_id", nullable = false)
@@ -48,6 +48,9 @@ public class Consulta {
 
     @Column(name = "fecha_cancelacion")
     private Instant fechaCancelacion;
+
+    @Column(nullable = false)
+    private boolean reabierta = false;
 
     @Column(length = 1000)
     private String observaciones;

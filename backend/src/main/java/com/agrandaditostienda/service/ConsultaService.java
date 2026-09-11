@@ -74,7 +74,7 @@ public class ConsultaService {
         Consulta consulta = new Consulta();
         consulta.setTienda(tienda);
         consulta.setCliente(cliente);
-        consulta.setEstado(EstadoConsulta.PENDIENTE);
+        consulta.setEstado(EstadoConsulta.EN_PREPARACION);
         consulta.setNumero(consultaRepository.siguienteNumero());
         consulta.setObservaciones(observacionLimpia(request.observaciones()));
         agregarProductos(consulta, request.items());
@@ -105,6 +105,11 @@ public class ConsultaService {
         agregarProductos(consulta, request.items());
         consulta.setObservaciones(observacionLimpia(request.observaciones()));
         consulta.setVersion(consulta.getVersion() + 1);
+        if (consulta.getEstado() == EstadoConsulta.CANCELADA && esCanceladaReactivable(consulta)) {
+            consulta.setEstado(EstadoConsulta.EN_PREPARACION);
+            consulta.setReabierta(true);
+            consulta.setFechaCancelacion(null);
+        }
         Consulta guardada = consultaRepository.save(consulta);
 
         List<LineaItem> nuevos = guardada.getProductosConsultados().stream()
@@ -115,6 +120,26 @@ public class ConsultaService {
 
         var infoMod = resolveEditableInfo(guardada);
         return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), infoMod.editable(), infoMod.ventaEstado(), infoMod.ventaId());
+    }
+
+    @Transactional
+    public ConsultaDTO cancelar(Long id) {
+        Consulta consulta = consultaRepository.findDetalle(id)
+                .orElseThrow(() -> new RecursoNoEncontradoException("Consulta no encontrada: " + id));
+        verificarAcceso(consulta);
+        if (consulta.getEstado() != EstadoConsulta.EN_PREPARACION) {
+            throw new ConsultaInvalidaException(
+                    "Solo se puede cancelar una consulta en preparación");
+        }
+        if (ventaRepository.findByConsultaId(id).isPresent()) {
+            throw new ConsultaInvalidaException(
+                    "Esta consulta tiene una venta asociada; cancelá la venta si corresponde");
+        }
+        consulta.setEstado(EstadoConsulta.CANCELADA);
+        consulta.setFechaCancelacion(Instant.now());
+        Consulta guardada = consultaRepository.save(consulta);
+        var info = resolveEditableInfo(guardada);
+        return consultaMapper.toDTO(guardada, variantesDe(guardada.getProductosConsultados()), info.editable(), info.ventaEstado(), info.ventaId());
     }
 
     @Transactional(readOnly = true)
@@ -189,7 +214,7 @@ public class ConsultaService {
     @Transactional
     public void cancelarPendientesVencidas() {
         Instant limite = Instant.now().minus(TIEMPO_CANCELACION_PENDIENTE);
-        List<Consulta> vencidas = consultaRepository.vencidasSinVenta(EstadoConsulta.PENDIENTE, limite);
+        List<Consulta> vencidas = consultaRepository.vencidasSinVenta(EstadoConsulta.EN_PREPARACION, limite);
         if (vencidas.isEmpty()) {
             return;
         }
@@ -198,7 +223,7 @@ public class ConsultaService {
             consulta.setFechaCancelacion(Instant.now());
         }
         consultaRepository.saveAll(vencidas);
-        log.info("{} consulta(s) PENDIENTE canceladas automáticamente por superar las 48h", vencidas.size());
+        log.info("{} consulta(s) EN_PREPARACION canceladas automáticamente por superar las 48h", vencidas.size());
     }
 
     private Long tiendaIdPermitida(Long tiendaId) {
@@ -221,36 +246,33 @@ public class ConsultaService {
 
     private void validarModificable(Consulta consulta) {
         if (esEstadoCerrado(consulta.getEstado())) {
-            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hsCancelacion(consulta)) {
-                // permitir editar consultas canceladas dentro de las 48h desde la cancelación
-            } else {
+            if (!esCanceladaReactivable(consulta)) {
                 throw new ConsultaInvalidaException("No se puede modificar una consulta " + etiquetaEstado(consulta.getEstado()));
             }
-        }
-        var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
-        if (venta != null && venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.EN_PREPARACION) {
-            throw new ConsultaInvalidaException("No se puede modificar una consulta mientras se arma la venta");
         }
     }
 
     private record EditableInfo(boolean editable, String ventaEstado, Long ventaId) {}
 
     private EditableInfo resolveEditableInfo(Consulta consulta) {
-        if (esEstadoCerrado(consulta.getEstado())) {
-            if (consulta.getEstado() == EstadoConsulta.CANCELADA && dentrodDe48hsCancelacion(consulta)) {
-                var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
-                return new EditableInfo(true, null, venta != null ? venta.getId() : null);
-            }
-            var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
-            return new EditableInfo(false, null, venta != null ? venta.getId() : null);
-        }
         var venta = ventaRepository.findByConsultaId(consulta.getId()).orElse(null);
-        if (venta == null) {
-            return new EditableInfo(true, null, null);
+        if (esEstadoCerrado(consulta.getEstado())) {
+            return new EditableInfo(esCanceladaReactivable(consulta), null, venta != null ? venta.getId() : null);
         }
-        boolean editable = venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CONFIRMADA
-                || venta.getEstado() == com.agrandaditostienda.entity.EstadoVenta.CANCELADA;
-        return new EditableInfo(editable, venta.getEstado().name(), venta.getId());
+        return new EditableInfo(true, venta != null ? venta.getEstado().name() : null, venta != null ? venta.getId() : null);
+    }
+
+    private boolean esCanceladaReactivable(Consulta consulta) {
+        if (consulta.getEstado() != EstadoConsulta.CANCELADA) {
+            return false;
+        }
+        if (consulta.isReabierta()) {
+            return false;
+        }
+        if (ventaRepository.findByConsultaId(consulta.getId()).isPresent()) {
+            return false;
+        }
+        return dentrodDe48hsCancelacion(consulta);
     }
 
     private boolean esEstadoCerrado(EstadoConsulta estado) {
@@ -503,9 +525,7 @@ public class ConsultaService {
 
     private String etiquetaEstado(EstadoConsulta estado) {
         return switch (estado) {
-            case PENDIENTE -> "pendiente";
-            case EN_REVISION -> "en revisión";
-            case ESPERANDO_CLIENTE -> "esperando respuesta del cliente";
+            case EN_PREPARACION -> "en preparación";
             case CONFIRMADA -> "confirmada";
             case CANCELADA -> "cancelada";
             case FINALIZADA -> "finalizada";
