@@ -73,6 +73,8 @@ class ConsultaServiceTest {
     private ConsultaVersionRepository consultaVersionRepository;
     @Mock
     private VentaRepository ventaRepository;
+    @Mock
+    private PromoService promoService;
     @InjectMocks
     private ConsultaService consultaService;
 
@@ -122,6 +124,7 @@ class ConsultaServiceTest {
                 .thenReturn(List.of());
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
         when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
+        when(promoService.precioConPromo(producto)).thenReturn(producto.getPrecio());
     }
 
     private void prepararModificacion(Tienda tienda, Producto producto, Consulta consulta) {
@@ -134,6 +137,7 @@ class ConsultaServiceTest {
                 .thenReturn(List.of());
         when(ventaRepository.findByConsultaId(any())).thenReturn(Optional.empty());
         when(consultaMapper.toDTO(any(Consulta.class), anyMap(), anyBoolean(), any(), any())).thenReturn(null);
+        when(promoService.precioConPromo(producto)).thenReturn(producto.getPrecio());
     }
 
     private Consulta consultaModificable(Tienda tienda) {

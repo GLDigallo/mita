@@ -1,5 +1,6 @@
 package com.agrandaditostienda.service;
 
+import com.agrandaditostienda.dto.PromoAplicadaDTO;
 import com.agrandaditostienda.dto.CategoriaDTO;
 import com.agrandaditostienda.dto.CategoriaRequest;
 import com.agrandaditostienda.dto.ProductoDTO;
@@ -35,6 +36,7 @@ public class CatalogoService {
     private final CategoriaMapper categoriaMapper;
     private final ProductoMapper productoMapper;
     private final TiendaService tiendaService;
+    private final PromoService promoService;
 
     @Transactional(readOnly = true)
     public List<CategoriaDTO> listarCategoriasDeTienda(String tiendaSlug) {
@@ -82,6 +84,13 @@ public class CatalogoService {
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarProductosGlobales() {
         return toDTOs(productoRepository.findTop12ByActivoTrueOrderByCreadoEnDesc());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProductoDTO> buscarProductos(String termino) {
+        UsuarioPrincipal usuario = Seguridad.principalRequerido();
+        List<Producto> productos = promoService.buscarProductos(termino, usuario);
+        return toDTOs(productos);
     }
 
     @Transactional
@@ -271,8 +280,12 @@ public class CatalogoService {
 
     private List<ProductoDTO> toDTOs(List<Producto> productos) {
         Map<Long, List<VarianteProducto>> variantesPorProducto = variantesDe(productos);
+        Map<Long, PromoAplicadaDTO> promosPorProducto = promoService.aplicar(productos);
         return productos.stream()
-                .map(producto -> productoMapper.toDTO(producto, variantesPorProducto.getOrDefault(producto.getId(), List.of())))
+                .map(producto -> productoMapper.toDTO(
+                        producto,
+                        variantesPorProducto.getOrDefault(producto.getId(), List.of()),
+                        promosPorProducto.get(producto.getId())))
                 .toList();
     }
 

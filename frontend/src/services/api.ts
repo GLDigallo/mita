@@ -99,6 +99,51 @@ export async function eliminarCategoria(id: number) {
   return enviarJson(`${API_BASE}/categorias/${id}`, { method: 'DELETE' })
 }
 
+export type TipoPromo = 'PORCENTAJE' | 'MONTO' | 'DOS_POR_UNO' | 'ENVIO_GRATIS'
+
+export interface Promo {
+  id: number
+  titulo: string
+  tipo: TipoPromo
+  valor: number | null
+  tiendaSlug: string | null
+  productoId: number | null
+  productoNombre: string | null
+  productoImagen: string | null
+  esDeProducto: boolean
+  fechaInicio: string
+  fechaFin: string
+  activa: boolean
+}
+
+export async function fetchPromos(): Promise<Promo[]> {
+  return enviarJson(`${API_BASE}/promos`)
+}
+
+export async function crearPromo(payload: {
+  titulo: string
+  tipo: TipoPromo
+  valor: number | null
+  tiendaSlug: string | null
+  productoId: number | null
+  fechaInicio: string
+  fechaFin: string
+}): Promise<Promo> {
+  return enviarJson(`${API_BASE}/promos`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function alternarPromo(id: number, activa: boolean): Promise<Promo> {
+  return enviarJson(`${API_BASE}/promos/${id}`, { method: 'PATCH', body: JSON.stringify({ activa }) })
+}
+
+export async function eliminarPromo(id: number) {
+  return enviarJson(`${API_BASE}/promos/${id}`, { method: 'DELETE' })
+}
+
+export async function buscarProductos(q: string): Promise<Producto[]> {
+  return enviarJson(`${API_BASE}/productos/busqueda?q=${encodeURIComponent(q)}`)
+}
+
 export async function subirImagen(archivo: File): Promise<{ url: string }> {
   const formData = new FormData()
   formData.append('archivo', archivo)

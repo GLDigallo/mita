@@ -1,5 +1,6 @@
 package com.agrandaditostienda.mapper;
 
+import com.agrandaditostienda.dto.PromoAplicadaDTO;
 import com.agrandaditostienda.dto.ProductoDTO;
 import com.agrandaditostienda.dto.VarianteDTO;
 import com.agrandaditostienda.entity.Producto;
@@ -18,6 +19,10 @@ public class ProductoMapper {
     }
 
     public ProductoDTO toDTO(Producto producto, List<VarianteProducto> variantes) {
+        return toDTO(producto, variantes, null);
+    }
+
+    public ProductoDTO toDTO(Producto producto, List<VarianteProducto> variantes, PromoAplicadaDTO promo) {
         List<VarianteDTO> variantesDTO = variantes == null
                 ? List.of()
                 : variantes.stream().map(varianteMapper::toDTO).toList();
@@ -34,7 +39,12 @@ public class ProductoMapper {
                 producto.getTienda().getNombre(),
                 producto.getCategoria().getSlug(),
                 producto.getCategoria().getNombre(),
-                variantesDTO
+                variantesDTO,
+                promo != null ? promo.precio() : null,
+                promo != null && promo.cambiaPrecio() ? producto.getPrecio() : null,
+                promo != null ? promo.titulo() : null,
+                promo != null ? promo.tipo() : null,
+                promo != null ? promo.badge() : null
         );
     }
 }

@@ -34,7 +34,7 @@ function StoreCard({ tienda }: PropsStoreCard) {
           className="absolute inset-x-0 bottom-0 flex items-end justify-center p-[30%_12px_16px]"
           style={{
             background:
-              'linear-gradient(180deg, rgba(0,0,0,0) 0%, color-mix(in srgb, var(--primario) 65%, transparent) 45%, var(--primario) 72%, var(--secundario) 100%)',
+              'linear-gradient(180deg, rgba(0,0,0,0) 0%, color-mix(in srgb, var(--primario) 55%, transparent) 38%, color-mix(in srgb, var(--primario) 88%, #ffffff 12%) 68%, color-mix(in srgb, var(--primario) 68%, #ffffff 32%) 100%)',
           }}
         >
           <NombreTienda

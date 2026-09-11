@@ -8,6 +8,8 @@ interface PropsProductCard {
 }
 
 function ProductCard({ producto, onSeleccionar, mostrarTienda }: PropsProductCard) {
+  const enPromo = producto.precioPromocional !== undefined && producto.precioPromocional !== null
+
   return (
     <article className="group flex h-full flex-col overflow-hidden rounded-[var(--radius-md)] border border-[var(--color-borde)] bg-[var(--color-superficie)] shadow-[var(--shadow-sm)] transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:-translate-y-1 hover:shadow-[var(--shadow-md)]">
       <button
@@ -23,6 +25,16 @@ function ProductCard({ producto, onSeleccionar, mostrarTienda }: PropsProductCar
             alt={producto.nombre}
             loading="lazy"
           />
+          <span className="absolute left-0 top-3 flex flex-col gap-1.5">
+            {producto.promoBadge && (
+              <span
+                className="w-fit rounded-r-full py-1.5 pl-2.5 pr-3.5 text-[12px] font-bold uppercase tracking-[0.04em] text-white shadow-sm"
+                style={{ background: enPromo ? '#c0392b' : 'var(--color-texto)' }}
+              >
+                {producto.promoBadge}
+              </span>
+            )}
+          </span>
           {producto.destacado && (
             <span className="absolute right-3 top-3 rounded-full bg-[var(--color-texto)] px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.04em] text-white">
               Destacado
@@ -39,7 +51,18 @@ function ProductCard({ producto, onSeleccionar, mostrarTienda }: PropsProductCar
             {producto.categoriaNombre}
           </p>
           <h3 className="mb-2 text-[16.5px] leading-[1.3]">{producto.nombre}</h3>
-          <p className="mt-auto text-[18px] font-bold">{formatearPrecio(producto.precio)}</p>
+          <div className="mt-auto">
+            {enPromo ? (
+              <div className="flex items-baseline gap-2">
+                <span className="text-[18px] font-bold text-[#c0392b]">{formatearPrecio(producto.precioPromocional!)}</span>
+                <span className="text-[14px] font-semibold text-[var(--color-texto-suave)] line-through">
+                  {formatearPrecio(producto.precioAnterior ?? producto.precio)}
+                </span>
+              </div>
+            ) : (
+              <p className="text-[18px] font-bold">{formatearPrecio(producto.precio)}</p>
+            )}
+          </div>
         </div>
       </button>
     </article>

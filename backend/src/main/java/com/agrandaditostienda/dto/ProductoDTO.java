@@ -1,6 +1,7 @@
 package com.agrandaditostienda.dto;
 
 import com.agrandaditostienda.entity.Genero;
+import com.agrandaditostienda.entity.TipoPromo;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -18,6 +19,11 @@ public record ProductoDTO(
         String tiendaNombre,
         String categoriaSlug,
         String categoriaNombre,
-        List<VarianteDTO> variantes
+        List<VarianteDTO> variantes,
+        BigDecimal precioPromocional,
+        BigDecimal precioAnterior,
+        String promoTitulo,
+        TipoPromo promoTipo,
+        String promoBadge
 ) {
 }

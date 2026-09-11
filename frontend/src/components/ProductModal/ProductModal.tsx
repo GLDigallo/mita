@@ -67,6 +67,7 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
   }, [tallesDisponibles])
 
   const puedeAgregar = color && talle && variantes.length > 0
+  const enPromo = producto.precioPromocional !== undefined && producto.precioPromocional !== null
 
   function manejarAgregar() {
     if (!puedeAgregar) return
@@ -74,7 +75,7 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
       productoId: producto.id,
       nombre: producto.nombre,
       imagen: producto.imagen,
-      precio: producto.precio,
+      precio: enPromo ? producto.precioPromocional! : producto.precio,
       color,
       talle,
       cantidad,
@@ -115,7 +116,23 @@ function ProductModal({ producto, tienda, onCerrar, onAgregar }: PropsProductMod
             {producto.descripcion && (
               <p className="mb-4 text-[15px] leading-relaxed text-[var(--color-texto-suave)]">{producto.descripcion}</p>
             )}
-            <p className="mb-4 text-[28px] font-bold">{formatearPrecio(producto.precio)}</p>
+            <div className="mb-4">
+              {enPromo && (
+                <span className="mb-2 inline-block rounded-full bg-[#c0392b] px-3 py-1 text-[12px] font-bold uppercase tracking-[0.04em] text-white">
+                  {producto.promoBadge ?? 'Promo'}
+                </span>
+              )}
+              {enPromo ? (
+                <p className="flex flex-wrap items-baseline gap-2.5 text-[28px] font-bold">
+                  <span className="text-[#c0392b]">{formatearPrecio(producto.precioPromocional!)}</span>
+                  <span className="text-[18px] font-semibold text-[var(--color-texto-suave)] line-through">
+                    {formatearPrecio(producto.precioAnterior ?? producto.precio)}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-[28px] font-bold">{formatearPrecio(producto.precio)}</p>
+              )}
+            </div>
 
             {variantes.length === 0 && (
               <p className="mb-3 mt-1 text-[14px] text-[var(--color-texto-suave)]">

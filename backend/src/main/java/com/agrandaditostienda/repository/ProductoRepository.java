@@ -24,6 +24,15 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
 
     List<Producto> findTop12ByActivoTrueOrderByCreadoEnDesc();
 
+    @Query("""
+            select p from Producto p
+            where p.activo = true
+              and (:tiendaId is null or p.tienda.id = :tiendaId)
+              and lower(p.nombre) like lower(concat('%', :termino, '%'))
+            order by p.creadoEn desc
+            """)
+    List<Producto> buscarPorNombre(@Param("tiendaId") Long tiendaId, @Param("termino") String termino);
+
     @Query("select distinct p.genero from Producto p where p.tienda.id = :tiendaId and p.activo = true order by p.genero")
     List<Genero> findGenerosByTiendaId(@Param("tiendaId") Long tiendaId);
 

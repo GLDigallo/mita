@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { Genero } from '../../types'
-import { textoConContraste } from '../../utils/textoContraste'
+import { colorContraste, textoConContraste } from '../../utils/textoContraste'
 
 interface PropsGeneroFilter {
   generos: Genero[]
@@ -34,7 +34,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
         <button
           type="button"
           className={`${chipBase} ${todoActivo ? `${chipActivo} ${textoActivo}` : ''}`}
-          style={(todoActivo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined}
+          style={(todoActivo ? { '--chip-color': colorPrimario ?? '#4f46e5', color: colorContraste(colorPrimario) } : undefined) as CSSProperties | undefined}
           onClick={onTodo}
           aria-pressed={todoActivo}
         >
@@ -48,7 +48,7 @@ function GeneroFilter({ generos, seleccionado, onSeleccionar, colorPrimario, onT
             key={genero}
             type="button"
             className={`${chipBase} ${activo ? `${chipActivo} ${textoActivo}` : ''}`}
-            style={(activo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined}
+            style={(activo ? { '--chip-color': colorPrimario ?? '#4f46e5', color: colorContraste(colorPrimario) } : undefined) as CSSProperties | undefined}
             onClick={() => onSeleccionar(genero)}
             aria-pressed={activo}
           >

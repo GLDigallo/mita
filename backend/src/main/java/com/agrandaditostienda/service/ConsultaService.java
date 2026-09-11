@@ -64,6 +64,7 @@ public class ConsultaService {
     private final ConsultaMapper consultaMapper;
     private final ConsultaVersionRepository consultaVersionRepository;
     private final VentaRepository ventaRepository;
+    private final PromoService promoService;
 
     @Transactional
     public ConsultaCreadaDTO crear(CrearConsultaRequest request) {
@@ -326,7 +327,7 @@ public class ConsultaService {
                     color,
                     item.cantidad(),
                     observacionLimpia(item.observaciones()),
-                    producto.getPrecio()));
+                    promoService.precioConPromo(producto)));
         }
     }
 

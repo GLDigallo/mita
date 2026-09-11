@@ -61,6 +61,11 @@ public class CatalogoController {
         return catalogoService.listarProductosGlobales();
     }
 
+    @GetMapping("/productos/busqueda")
+    public List<ProductoDTO> buscarProductos(@RequestParam String q) {
+        return catalogoService.buscarProductos(q);
+    }
+
     @PostMapping("/tiendas/{slug}/productos")
     @ResponseStatus(HttpStatus.CREATED)
     public ProductoDTO crearProducto(@PathVariable String slug, @Valid @RequestBody ProductoRequest request) {

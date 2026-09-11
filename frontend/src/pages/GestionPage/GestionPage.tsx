@@ -789,7 +789,7 @@ function GestionPage() {
         ) : esDueno && seccion === 'promos' ? (
           <PromosView tiendas={tiendas} usuario={usuario} />
         ) : seccion === 'productos' && esEncargada ? (
-          <ProductosView tienda={tiendaUsuario} esDueno={esDueno} />
+          <ProductosView tienda={tiendaUsuario} />
         ) : esDueno && seccion === 'metricas' ? (
           <MetricasView tiendas={tiendas} consultas={consultasTodas} ventas={ventasTodas} />
         ) : (

@@ -19,7 +19,6 @@ import type { Categoria, Genero, Producto, Tienda } from '../../../types'
 
 interface PropsProductosView {
   tienda: Tienda | null
-  esDueno: boolean
 }
 
 interface VarianteForm {
@@ -64,7 +63,7 @@ const botonSecundario =
 const botonPeligro =
   'min-h-[36px] rounded-[var(--radius-sm)] border border-[var(--color-borde)] bg-[var(--color-superficie)] px-3 text-[13px] font-semibold text-[#c0392b] transition-colors duration-200 hover:border-[#c0392b]'
 
-function ProductosView({ tienda, esDueno }: PropsProductosView) {
+function ProductosView({ tienda }: PropsProductosView) {
   const [productos, setProductos] = useState<Producto[]>([])
   const [categorias, setCategorias] = useState<Categoria[]>([])
   const [cargando, setCargando] = useState(true)
@@ -480,8 +479,7 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
             />
           </label>
 
-          {esDueno && (
-            <label className="flex cursor-pointer items-center gap-2 text-[14px] font-semibold">
+          <label className="flex cursor-pointer items-center gap-2 text-[14px] font-semibold">
               <input
                 type="checkbox"
                 className="h-[18px] w-[18px] accent-[var(--color-marca)]"
@@ -490,7 +488,9 @@ function ProductosView({ tienda, esDueno }: PropsProductosView) {
               />
               Destacado
             </label>
-          )}
+            {editando.datos.destacado && (
+              <p className="text-[12.5px] text-[var(--color-texto-suave)]">Aparecerá con la estrella en fila destacada (✦ Destacados) y en la portada.</p>
+            )}
 
           <div className="flex items-center justify-between">
             <h4 className="text-[15px] font-bold">Variantes (color + talle + stock)</h4>

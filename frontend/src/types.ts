@@ -39,6 +39,11 @@ export interface Producto {
   tiendaSlug: string
   tiendaNombre: string
   variantes: VarianteProducto[]
+  precioPromocional?: number
+  precioAnterior?: number
+  promoTitulo?: string
+  promoTipo?: string
+  promoBadge?: string
 }
 
 export interface CarritoItem {

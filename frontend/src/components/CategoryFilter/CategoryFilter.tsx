@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react'
 import type { Categoria } from '../../types'
-import { textoConContraste } from '../../utils/textoContraste'
+import { colorContraste, textoConContraste } from '../../utils/textoContraste'
 
 interface PropsCategoryFilter {
   categorias: Categoria[]
@@ -22,7 +22,7 @@ function CategoryFilter({ categorias, tieneDestacados, seleccionada, onSeleccion
   const textoActivo = textoConContraste(colorPrimario)
   const renderChip = (slug: string, etiqueta: string, extraClase?: string) => {
     const activo = seleccionada === slug
-    const estilo = (activo ? { '--chip-color': colorPrimario ?? '#4f46e5' } : undefined) as CSSProperties | undefined
+    const estilo = (activo ? { '--chip-color': colorPrimario ?? '#4f46e5', color: colorContraste(colorPrimario) } : undefined) as CSSProperties | undefined
     return (
       <button
         key={slug}

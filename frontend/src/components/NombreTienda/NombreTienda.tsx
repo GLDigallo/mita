@@ -1,6 +1,6 @@
 import type { Tienda } from '../../types'
 
-const PALETA_DISNEY = ['#ff5a5f', '#ff9f1c', '#ffd23f', '#2ee6a8', '#38bdf8', '#818cf8', '#e879f9']
+const PALETA_DISNEY = ['#ff4a56', '#ffa41f', '#ffe14d', '#3df2c4', '#4fc8ff', '#95a3ff', '#f58bff']
 
 interface PropsLetras {
   nombre: string
@@ -18,7 +18,7 @@ function LetrasDisney({ nombre }: PropsLetras) {
             transform: `rotate(${((i * 47) % 9) - 4}deg) translateY(${(((i + 1) * 31) % 5) - 2}px)`,
             WebkitTextStroke: '2px #23263a',
             textShadow:
-              '3px 0 0 #23263a, -3px 0 0 #23263a, 0 3px 0 #23263a, 0 -3px 0 #23263a, 2px 2px 0 #23263a, -2px 2px 0 #23263a, 2px -2px 0 #23263a, -2px -2px 0 #23263a, 0 4px 0 #2a2e45, 0 6px 0 #1e2233, 0 8px 14px rgba(0,0,0,0.35)',
+              '3px 0 0 #23263a, -3px 0 0 #23263a, 0 3px 0 #23263a, 0 -3px 0 #23263a, 2px 2px 0 #23263a, -2px 2px 0 #23263a, 2px -2px 0 #23263a, -2px -2px 0 #23263a, 0 4px 0 #2a2e45, 0 6px 0 #1e2233, 0 0 18px rgba(255,255,255,0.65), 0 0 42px rgba(255,255,255,0.3), 0 8px 14px rgba(0,0,0,0.35)',
           }}
         >
           {letra}
