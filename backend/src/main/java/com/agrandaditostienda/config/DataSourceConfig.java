@@ -48,6 +48,15 @@ public class DataSourceConfig {
         config.setUsername(user);
         config.setPassword(password);
 
+        // Pool adaptado a Neon scale-to-zero: sin conexiones idle, así el compute
+        // se suspende a los 5 min sin tráfico real y despierta solo (~300ms).
+        // connectionTimeout amplio para tolerar el arranque del compute dormido.
+        config.setMinimumIdle(0);
+        config.setMaximumPoolSize(10);
+        config.setIdleTimeout(300_000);
+        config.setConnectionTimeout(30_000);
+        config.setMaxLifetime(1_800_000);
+
         if (query != null && query.contains("sslmode=require")) {
             config.addDataSourceProperty("ssl", "true");
             config.addDataSourceProperty("sslmode", "require");
