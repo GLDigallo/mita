@@ -28,7 +28,6 @@ function TiendaPage() {
   const { slug } = useParams()
   const [categoria, setCategoria] = useState('')
   const [genero, setGenero] = useState('')
-  const [hayDestacados, setHayDestacados] = useState(false)
   const [productoSeleccionado, setProductoSeleccionado] = useState<Producto | null>(null)
   const [carrito, setCarrito] = useState<CarritoItem[]>([])
   const [carritoAbierto, setCarritoAbierto] = useState(false)
@@ -46,10 +45,20 @@ function TiendaPage() {
   const categorias = useFetch(() => fetchCategorias(slug ?? ''), [slug])
   const generos = useFetch(() => fetchGeneros(slug ?? ''), [slug])
   const productos = useFetch(() => {
-    const categoriaBackend = categoria === 'destacados' ? '' : categoria
-    return fetchProductos(slug ?? '', categoriaBackend, genero)
+    const enDestacados = categoria === 'destacados'
+    return fetchProductos(
+      slug ?? '',
+      enDestacados ? '' : categoria,
+      genero,
+      enDestacados ? 'solo' : undefined,
+    )
   }, [slug, categoria, genero])
   const tiendas = useFetch(fetchTiendas, [])
+  const destacados = useFetch(
+    () => (slug ? fetchProductos(slug, '', '', 'solo') : Promise.resolve([] as Producto[])),
+    [slug],
+  )
+  const hayDestacados = (destacados.data?.length ?? 0) > 0
 
   const jsonLdTienda = tienda.data
     ? {
@@ -87,18 +96,11 @@ function TiendaPage() {
   useEffect(() => {
     setCategoria('')
     setGenero('')
-    setHayDestacados(false)
     setProductoSeleccionado(null)
     setCarrito([])
     setCarritoAbierto(false)
     window.scrollTo(0, 0)
   }, [slug])
-
-  useEffect(() => {
-    if (productos.data && categoria === '' && genero === '') {
-      setHayDestacados(productos.data.some((p) => p.destacado))
-    }
-  }, [productos.data, categoria, genero])
 
   const cantidadCarrito = carrito.reduce((suma, item) => suma + item.cantidad, 0)
 
@@ -123,11 +125,6 @@ function TiendaPage() {
   }
 
   const limpiarCarrito = () => setCarrito([])
-
-  const productosVisibles =
-    categoria === 'destacados'
-      ? (productos.data ?? []).filter((p) => p.destacado)
-      : (productos.data ?? [])
 
   if (tienda.isLoading) {
     return (
@@ -234,7 +231,7 @@ function TiendaPage() {
             {productos.error && <ErrorMessage message={productos.error} />}
             {productos.data && (
               <ProductGrid
-                productos={productosVisibles}
+                productos={productos.data ?? []}
                 onSeleccionar={setProductoSeleccionado}
                 mensajeVacio={
                   categoria === 'destacados'

@@ -79,13 +79,15 @@ function HomePage() {
               </button>
               {hayDestacados && (
                 <button
-                  className={`-mb-0.5 border-b-2 px-5 py-2.5 text-[15px] font-semibold transition-colors duration-200 ${
-                    pestana === 'destacados'
-                      ? 'border-[var(--color-marca)] text-[var(--color-marca)]'
-                      : 'border-transparent text-[var(--color-texto-suave)] hover:text-[var(--color-texto)]'
+                  className={`ml-auto inline-flex items-center gap-1.5 self-center whitespace-nowrap rounded-full border-2 border-[#9a6710] bg-[linear-gradient(100deg,#f7e3a7_0%,#efc04a_30%,#fff2c8_50%,#efc04a_70%,#f7e3a7_100%)] bg-[length:200%_100%] px-4 py-2 text-[14px] font-bold text-[#4a3310] shadow-[0_0_18px_rgba(239,192,74,0.45)] animate-destacado-brillo transition-transform duration-200 ${
+                    pestana === 'destacados' ? 'scale-[1.06]' : 'hover:scale-[1.04]'
                   }`}
                   onClick={() => setPestana('destacados')}
+                  aria-pressed={pestana === 'destacados'}
                 >
+                  <span aria-hidden="true" className="inline-block animate-destacado-estrella">
+                    ✦
+                  </span>
                   Destacados
                 </button>
               )}

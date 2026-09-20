@@ -35,11 +35,6 @@ function ProductCard({ producto, onSeleccionar, mostrarTienda }: PropsProductCar
               </span>
             )}
           </span>
-          {producto.destacado && (
-            <span className="absolute right-3 top-3 rounded-full bg-[var(--color-texto)] px-2.5 py-1.5 text-[12px] font-bold uppercase tracking-[0.04em] text-white">
-              Destacado
-            </span>
-          )}
         </div>
         <div className="flex flex-1 flex-col p-4">
           {mostrarTienda && producto.tiendaNombre && (

@@ -42,10 +42,16 @@ export async function fetchGeneros(slug: string): Promise<Genero[]> {
   return response.json()
 }
 
-export async function fetchProductos(slug: string, categoria: string = '', genero: string = ''): Promise<Producto[]> {
+export async function fetchProductos(
+  slug: string,
+  categoria: string = '',
+  genero: string = '',
+  destacados?: 'solo' | 'todos',
+): Promise<Producto[]> {
   const params = new URLSearchParams()
   if (categoria) params.set('categoria', categoria)
   if (genero) params.set('genero', genero)
+  if (destacados === 'solo' || destacados === 'todos') params.set('destacados', destacados)
   const query = params.toString()
   const response = await fetch(`${API_BASE}/tiendas/${slug}/productos${query ? `?${query}` : ''}`)
   if (!response.ok) throw new Error('No se pudieron cargar los productos')

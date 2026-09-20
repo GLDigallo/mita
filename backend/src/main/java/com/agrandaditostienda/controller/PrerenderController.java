@@ -69,7 +69,7 @@ public class PrerenderController {
         List<ProductoDTO> productos;
         try {
             tienda = tiendaService.obtenerTiendaPorSlug(slug);
-            productos = catalogoService.listarProductosDeTienda(slug, null, null).stream()
+            productos = catalogoService.listarProductosDeTienda(slug, null, null, null).stream()
                     .limit(MAX_PRODUCTOS)
                     .toList();
         } catch (RecursoNoEncontradoException e) {

@@ -89,7 +89,7 @@ function ProductosView({ tienda }: PropsProductosView) {
     setCargando(true)
     try {
       const [prods, cats] = await Promise.all([
-        fetchProductos(tiendaSlug, catFiltro, generoFiltro),
+        fetchProductos(tiendaSlug, catFiltro, generoFiltro, 'todos'),
         fetchCategorias(tiendaSlug),
       ])
       setProductos(prods)
@@ -288,7 +288,7 @@ function ProductosView({ tienda }: PropsProductosView) {
       if (editando?.datos?.categoriaSlug === cat.slug) {
         actualizarCampo('categoriaSlug', '')
       }
-      const prods = await fetchProductos(tiendaSlug, catFiltro === cat.slug ? '' : catFiltro, generoFiltro)
+      const prods = await fetchProductos(tiendaSlug, catFiltro === cat.slug ? '' : catFiltro, generoFiltro, 'todos')
       setProductos(prods)
     } catch (err) {
       mostrar('error', (err as Error).message)
@@ -489,7 +489,7 @@ function ProductosView({ tienda }: PropsProductosView) {
               Destacado
             </label>
             {editando.datos.destacado && (
-              <p className="text-[12.5px] text-[var(--color-texto-suave)]">Aparecerá con la estrella en fila destacada (✦ Destacados) y en la portada.</p>
+              <p className="text-[12.5px] text-[var(--color-texto-suave)]">Aparecerá solo en la pestaña ✦ Destacados de la portada y de la tienda.</p>
             )}
 
           <div className="flex items-center justify-between">

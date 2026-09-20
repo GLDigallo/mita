@@ -76,6 +76,36 @@
       opacity: 1;
     }
   }
+
+  --animate-destacado-brillo: destacadoBrillo 1.8s linear infinite;
+
+  @keyframes destacadoBrillo {
+    0% {
+      background-position: 200% 0;
+      box-shadow: 0 0 0 0 rgba(214, 158, 46, 0.6);
+    }
+    45% {
+      box-shadow: 0 0 0 14px rgba(214, 158, 46, 0);
+    }
+    100% {
+      background-position: -200% 0;
+      box-shadow: 0 0 0 0 rgba(214, 158, 46, 0.6);
+    }
+  }
+
+  --animate-destacado-estrella: destacadoEstrella 1.3s ease-in-out infinite;
+
+  @keyframes destacadoEstrella {
+    0%,
+    100% {
+      transform: rotate(-10deg) scale(0.85);
+      opacity: 0.75;
+    }
+    50% {
+      transform: rotate(10deg) scale(1.45);
+      opacity: 1;
+    }
+  }
 }
 
 @layer base {

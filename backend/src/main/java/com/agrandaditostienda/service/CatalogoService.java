@@ -53,21 +53,50 @@ public class CatalogoService {
     }
 
     @Transactional(readOnly = true)
-    public List<ProductoDTO> listarProductosDeTienda(String tiendaSlug, String categoriaSlug, String genero) {
+    public List<ProductoDTO> listarProductosDeTienda(String tiendaSlug, String categoriaSlug, String genero, String destacados) {
         Tienda tienda = tiendaService.obtenerEntidadPorSlug(tiendaSlug);
         List<Genero> generos = resolverGeneros(genero);
         boolean sinCategoria = categoriaSlug == null || categoriaSlug.isBlank();
 
+        if ("solo".equals(destacados)) {
+            if (generos == null) {
+                return toDTOs(productoRepository.findTop20ByTiendaIdAndDestacadoTrueAndActivoTrueOrderByCreadoEnDesc(tienda.getId()));
+            }
+            return toDTOs(productoRepository.findByTiendaIdAndDestacadoTrueAndGeneroInAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), generos));
+        }
+
+        if ("todos".equals(destacados)) {
+            return listarTodos(tienda, categoriaSlug, generos, sinCategoria);
+        }
+
+        if (sinCategoria && generos == null) {
+            return toDTOs(productoRepository.findTop20ByTiendaIdAndDestacadoFalseAndActivoTrueOrderByCreadoEnDesc(tienda.getId()));
+        }
+        if (sinCategoria) {
+            return toDTOs(productoRepository.findByTiendaIdAndDestacadoFalseAndGeneroInAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), generos));
+        }
+
+        Categoria categoria = categoriaRepository.findByTiendaIdAndSlug(tienda.getId(), categoriaSlug)
+                .orElseThrow(() -> new RecursoNoEncontradoException(
+                        "Categoría no encontrada en la tienda " + tiendaSlug + ": " + categoriaSlug));
+        if (generos == null) {
+            return toDTOs(productoRepository
+                    .findByTiendaIdAndDestacadoFalseAndCategoriaIdAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), categoria.getId()));
+        }
+        return toDTOs(productoRepository
+                .findByTiendaIdAndDestacadoFalseAndCategoriaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), categoria.getId(), generos));
+    }
+
+    private List<ProductoDTO> listarTodos(Tienda tienda, String categoriaSlug, List<Genero> generos, boolean sinCategoria) {
         if (sinCategoria && generos == null) {
             return toDTOs(productoRepository.findTop20ByTiendaIdAndActivoTrueOrderByCreadoEnDesc(tienda.getId()));
         }
         if (sinCategoria) {
             return toDTOs(productoRepository.findByTiendaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), generos));
         }
-
         Categoria categoria = categoriaRepository.findByTiendaIdAndSlug(tienda.getId(), categoriaSlug)
                 .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "Categoría no encontrada en la tienda " + tiendaSlug + ": " + categoriaSlug));
+                        "Categoría no encontrada en la tienda " + tienda.getSlug() + ": " + categoriaSlug));
         if (generos == null) {
             return toDTOs(productoRepository
                     .findByTiendaIdAndCategoriaIdAndActivoTrueOrderByCreadoEnDesc(tienda.getId(), categoria.getId()));
@@ -83,7 +112,7 @@ public class CatalogoService {
 
     @Transactional(readOnly = true)
     public List<ProductoDTO> listarProductosGlobales() {
-        return toDTOs(productoRepository.findTop12ByActivoTrueOrderByCreadoEnDesc());
+        return toDTOs(productoRepository.findTop12ByDestacadoFalseAndActivoTrueOrderByCreadoEnDesc());
     }
 
     @Transactional(readOnly = true)

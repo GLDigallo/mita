@@ -20,9 +20,25 @@ public interface ProductoRepository extends JpaRepository<Producto, Long> {
     List<Producto> findByTiendaIdAndCategoriaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(
             Long tiendaId, Long categoriaId, List<Genero> generos);
 
+    List<Producto> findTop20ByTiendaIdAndDestacadoTrueAndActivoTrueOrderByCreadoEnDesc(Long tiendaId);
+
+    List<Producto> findByTiendaIdAndDestacadoTrueAndGeneroInAndActivoTrueOrderByCreadoEnDesc(
+            Long tiendaId, List<Genero> generos);
+
+    List<Producto> findTop20ByTiendaIdAndDestacadoFalseAndActivoTrueOrderByCreadoEnDesc(Long tiendaId);
+
+    List<Producto> findByTiendaIdAndDestacadoFalseAndGeneroInAndActivoTrueOrderByCreadoEnDesc(
+            Long tiendaId, List<Genero> generos);
+
+    List<Producto> findByTiendaIdAndDestacadoFalseAndCategoriaIdAndActivoTrueOrderByCreadoEnDesc(
+            Long tiendaId, Long categoriaId);
+
+    List<Producto> findByTiendaIdAndDestacadoFalseAndCategoriaIdAndGeneroInAndActivoTrueOrderByCreadoEnDesc(
+            Long tiendaId, Long categoriaId, List<Genero> generos);
+
     List<Producto> findTop12ByDestacadoTrueAndActivoTrueOrderByCreadoEnDesc();
 
-    List<Producto> findTop12ByActivoTrueOrderByCreadoEnDesc();
+    List<Producto> findTop12ByDestacadoFalseAndActivoTrueOrderByCreadoEnDesc();
 
     @Query("""
             select p from Producto p

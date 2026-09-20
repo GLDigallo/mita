@@ -47,8 +47,9 @@ public class CatalogoController {
     @GetMapping("/tiendas/{slug}/productos")
     public List<ProductoDTO> listarProductos(@PathVariable String slug,
                                              @RequestParam(required = false) String categoria,
-                                             @RequestParam(required = false) String genero) {
-        return catalogoService.listarProductosDeTienda(slug, categoria, genero);
+                                             @RequestParam(required = false) String genero,
+                                             @RequestParam(required = false) String destacados) {
+        return catalogoService.listarProductosDeTienda(slug, categoria, genero, destacados);
     }
 
     @GetMapping("/productos/destacados")
